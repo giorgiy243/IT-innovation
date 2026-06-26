@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Таблицы и Формы — IT-innovation UI Test</title>
+<style>
+:root{
+  --brand:#81B446;--brand-l:rgba(129,180,70,.12);--brand-d:#6a9338;
+  --dark:#1E2832;--slate:#323C50;--mid:#8296AA;--light:#D7DCE6;--bg:#F5FAFA;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Vela Sans GX',system-ui,sans-serif;background:var(--bg);color:var(--dark);}
+.page{max-width:1100px;margin:0 auto;padding:48px 32px 80px;}
+.sec{margin-bottom:60px;}
+.sec-lbl{font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mid);margin-bottom:16px;}
+.sw{display:flex;gap:3px;background:#fff;border:1px solid var(--light);border-radius:8px;padding:4px;width:fit-content;margin-bottom:22px;}
+.sw button{padding:6px 14px;border:none;background:transparent;border-radius:5px;font-size:13px;font-weight:500;color:var(--mid);cursor:pointer;transition:all .15s;font-family:inherit;}
+.sw button.on{background:var(--dark);color:#fff;}
+.vr{display:none;}.vr.on{display:block;}
+
+/* кнопки — вар. Г */
+.btn{display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 14px;border:none;border-radius:6px;font-size:12.5px;font-weight:500;cursor:pointer;transition:background .15s;white-space:nowrap;font-family:inherit;}
+.btn-p{background:rgba(129,180,70,.12);color:#6a9338;}.btn-p:hover{background:rgba(129,180,70,.2);}
+.btn-s{background:rgba(30,40,50,.07);color:var(--dark);}.btn-s:hover{background:rgba(30,40,50,.13);}
+.btn-o{background:transparent;border:1px solid var(--light);color:var(--slate);}.btn-o:hover{border-color:var(--brand);color:var(--brand-d);}
+.btn-g{background:transparent;color:var(--mid);}.btn-g:hover{color:var(--slate);}
+.btn-sm{height:26px;padding:0 10px;font-size:12px;}
+
+/* бейджи */
+.bdg{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;white-space:nowrap;}
+.bdg-g{background:rgba(129,180,70,.13);color:#5a8028;}
+.bdg-a{background:rgba(180,120,20,.12);color:#9a5500;}
+.bdg-b{background:rgba(37,99,235,.10);color:#1d4ed8;}
+.bdg-n{background:rgba(130,150,170,.12);color:var(--mid);}
+
+/* тулбар */
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.srch{position:relative;flex:1;max-width:300px;}
+.srch svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--mid);pointer-events:none;}
+.srch input{width:100%;height:34px;padding:0 12px 0 34px;border:1px solid var(--light);border-radius:6px;font-size:13px;color:var(--dark);background:#fff;outline:none;transition:border .15s;font-family:inherit;}
+.srch input:focus{border-color:var(--brand);}
+.srch input::placeholder{color:var(--mid);}
+
+/* пагинация */
+.pager{display:flex;align-items:center;gap:5px;margin-top:14px;}
+.pg-info{font-size:12px;color:var(--mid);flex:1;}
+.pg-btn{width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--light);border-radius:6px;background:#fff;font-size:13px;font-weight:500;color:var(--slate);cursor:pointer;transition:all .15s;}
+.pg-btn:hover{border-color:var(--brand);color:var(--brand-d);}
+.pg-btn.cur{background:var(--dark);border-color:var(--dark);color:#fff;}
+
+/* ─── ТАБЛИЦА А: Линейная ─── */
+#ta .wrap{background:#fff;border:1px solid var(--light);border-radius:10px;overflow:hidden;}
+#ta table{width:100%;border-collapse:collapse;}
+#ta thead th{background:var(--dark);padding:10px 14px;font-size:11.5px;font-weight:600;color:rgba(255,255,255,.6);text-align:left;white-space:nowrap;}
+#ta td{padding:11px 14px;font-size:13px;border-bottom:1px solid var(--bg);}
+#ta tbody tr:last-child td{border-bottom:none;}
+#ta tbody tr:hover td{background:#f7fbf7;}
+#ta .nm{font-weight:600;}
+#ta .dim{font-size:11.5px;color:var(--mid);}
+#ta .acts{display:flex;gap:6px;}
+
+/* ─── ТАБЛИЦА Б: Зебра ─── */
+#tb .wrap{background:#fff;border:1px solid var(--light);border-radius:10px;overflow:hidden;}
+#tb table{width:100%;border-collapse:collapse;}
+#tb thead th{background:var(--dark);padding:10px 14px;font-size:11.5px;font-weight:600;color:rgba(255,255,255,.6);text-align:left;white-space:nowrap;}
+#tb td{padding:11px 14px;font-size:13px;}
+#tb tbody tr:nth-child(odd) td{background:#fff;}
+#tb tbody tr:nth-child(even) td{background:rgba(245,250,250,.9);}
+#tb tbody tr:hover td{background:rgba(129,180,70,.06)!important;}
+#tb .nm{font-weight:600;}
+#tb .dim{font-size:11.5px;color:var(--mid);}
+#tb .acts{display:flex;gap:6px;}
+
+/* ─── ТАБЛИЦА В: Акцентная ─── */
+#tc .wrap{background:#fff;border:1px solid var(--light);border-radius:10px;overflow:hidden;}
+#tc table{width:100%;border-collapse:collapse;}
+#tc thead th{background:linear-gradient(90deg,#1a2d40,#283d52);padding:10px 14px;font-size:11.5px;font-weight:600;color:rgba(255,255,255,.65);text-align:left;white-space:nowrap;}
+#tc thead th:first-child{border-left:3px solid var(--brand);}
+#tc td{padding:11px 14px;font-size:13px;border-bottom:1px solid var(--bg);transition:background .12s;}
+#tc td:first-child{border-left:3px solid transparent;transition:border-color .15s,background .12s;}
+#tc tbody tr:last-child td{border-bottom:none;}
+#tc tbody tr:hover td{background:rgba(129,180,70,.04);}
+#tc tbody tr:hover td:first-child{border-left-color:var(--brand);}
+#tc .nm{font-weight:600;}
+#tc .dim{font-size:11.5px;color:var(--mid);}
+#tc .acts{display:flex;gap:6px;}
+
+/* ─── ТАБЛИЦА Г: Карточные строки ─── */
+#td .tbl-hd{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 120px;gap:0 12px;padding:0 14px 10px;border-bottom:1px solid var(--light);}
+#td .tbl-hd span{font-size:11px;font-weight:700;color:var(--mid);letter-spacing:.06em;text-transform:uppercase;}
+#td .rows{display:flex;flex-direction:column;gap:6px;margin-top:8px;}
+#td .row{background:#fff;border:1px solid var(--light);border-radius:8px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 120px;gap:0 12px;padding:11px 14px;align-items:center;transition:box-shadow .17s,transform .17s;}
+#td .row:hover{box-shadow:0 2px 10px rgba(30,40,50,.09);transform:translateY(-1px);}
+#td .nm{font-size:13px;font-weight:600;}
+#td .sub{font-size:11.5px;color:var(--mid);}
+#td .cell{font-size:13px;}
+#td .acts{display:flex;gap:6px;justify-content:flex-end;}
+
+/* ─── ФОРМА панель ─── */
+.fp{background:#fff;border:1px solid var(--light);border-radius:10px;overflow:hidden;}
+.fp-hd{padding:13px 18px;border-bottom:1px solid var(--light);display:flex;align-items:center;gap:10px;}
+.fp-ttl{font-size:14px;font-weight:700;flex:1;}
+.fp-body{padding:22px 24px;}
+
+/* сетка формы */
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:16px 20px;}
+.ff{grid-column:1/-1;}
+.fgrp{display:flex;flex-direction:column;}
+.flbl{font-size:12px;font-weight:600;color:var(--slate);margin-bottom:5px;}
+.freq{color:var(--brand-d);}
+.fchk-row{display:flex;flex-wrap:wrap;gap:8px 20px;}
+
+/* ─── ФОРМА А: Рамочная ─── */
+#fa .fc{width:100%;height:36px;padding:0 12px;border:1px solid var(--light);border-radius:6px;font-size:13px;color:var(--dark);background:#fff;outline:none;transition:border .15s,box-shadow .15s;font-family:inherit;}
+#fa .fc:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(129,180,70,.11);}
+#fa .fc::placeholder{color:var(--mid);}
+#fa select.fc{appearance:none;cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238296AA' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 10px center;padding-right:30px;}
+#fa textarea.fc{height:76px;padding:9px 12px;resize:vertical;}
+#fa .fchk{display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;}
+#fa .fchk input{width:15px;height:15px;accent-color:var(--brand);}
+#fa .fdiv{grid-column:1/-1;border:none;border-top:1px solid var(--bg);margin:4px 0;}
+
+/* ─── ФОРМА Б: Заливка ─── */
+#fb .fc{width:100%;height:36px;padding:0 12px;border:1.5px solid transparent;border-radius:6px;font-size:13px;color:var(--dark);background:rgba(30,40,50,.06);outline:none;transition:background .15s,border-color .15s;font-family:inherit;}
+#fb .fc:focus{background:rgba(129,180,70,.07);border-color:rgba(129,180,70,.35);}
+#fb .fc::placeholder{color:var(--mid);}
+#fb select.fc{appearance:none;cursor:pointer;background:rgba(30,40,50,.06) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238296AA' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 10px center;padding-right:30px;}
+#fb select.fc:focus{background-color:rgba(129,180,70,.07);}
+#fb textarea.fc{height:76px;padding:9px 12px;resize:vertical;}
+#fb .fchk{display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;}
+#fb .fchk input{width:15px;height:15px;accent-color:var(--brand);}
+#fb .fdiv{grid-column:1/-1;border:none;border-top:1px solid rgba(30,40,50,.07);margin:4px 0;}
+
+/* ─── ФОРМА В: Подчёркивание ─── */
+#fc .fc{width:100%;height:36px;padding:0 2px;border:none;border-bottom:1.5px solid var(--light);border-radius:0;background:transparent;font-size:13px;color:var(--dark);outline:none;transition:border-color .18s;font-family:inherit;}
+#fc .fc:focus{border-bottom-color:var(--brand);}
+#fc .fc::placeholder{color:var(--mid);}
+#fc select.fc{appearance:none;cursor:pointer;background:transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%238296AA' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 2px center;padding-right:20px;}
+#fc textarea.fc{height:72px;padding:8px 2px;resize:vertical;border-bottom:1.5px solid var(--light);}
+#fc textarea.fc:focus{border-bottom-color:var(--brand);}
+#fc .fchk{display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;}
+#fc .fchk input{width:15px;height:15px;accent-color:var(--brand);}
+#fc .fdiv{grid-column:1/-1;border:none;border-top:1px dashed var(--light);margin:4px 0;}
+
+/* ─── ФОРМА Г: Секционная ─── */
+#fd .f-sec{margin-bottom:24px;}
+#fd .f-sec-ttl{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--mid);padding-bottom:9px;border-bottom:1px solid var(--bg);margin-bottom:14px;}
+#fd .fc{width:100%;height:36px;padding:0 12px;border:1px solid var(--light);border-radius:6px;font-size:13px;color:var(--dark);background:#fff;outline:none;transition:border .15s;font-family:inherit;}
+#fd .fc:focus{border-color:var(--brand);}
+#fd .fc::placeholder{color:var(--mid);}
+#fd select.fc{appearance:none;cursor:pointer;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238296AA' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 10px center;padding-right:30px;}
+#fd textarea.fc{height:76px;padding:9px 12px;resize:vertical;}
+#fd .fchk{display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;}
+#fd .fchk input{width:15px;height:15px;accent-color:var(--brand);}
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1 style="font-size:22px;font-weight:800;color:var(--dark);margin-bottom:6px;">Таблицы и Формы</h1>
+<p style="font-size:13px;color:var(--mid);margin-bottom:44px;">IT-innovation UI Test · выбери вариант и зафиксируй</p>
+
+<!-- ══ ТАБЛИЦЫ ══ -->
+<div class="sec">
+  <div class="sec-lbl">Таблицы — клиентская база</div>
+  <div class="sw">
+    <button class="on" onclick="sw('t','ta',this)">А — Линейная</button>
+    <button onclick="sw('t','tb',this)">Б — Зебра</button>
+    <button onclick="sw('t','tc',this)">В — Акцентная</button>
+    <button onclick="sw('t','td',this)">Г — Карточные строки</button>
+  </div>
+
+  <div class="toolbar">
+    <div class="srch">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input placeholder="Поиск по клиентам...">
+    </div>
+    <button class="btn btn-s btn-sm">Статус</button>
+    <button class="btn btn-s btn-sm">Сегмент</button>
+    <button class="btn btn-s btn-sm">Менеджер</button>
+    <div style="flex:1"></div>
+    <button class="btn btn-p">+ Добавить</button>
+  </div>
+
+  <!-- А: Линейная -->
+  <div class="vr on" id="ta">
+    <div class="wrap">
+      <table>
+        <thead><tr>
+          <th>Клиент</th><th>ИНН</th><th>Сегмент</th><th>Статус</th><th>Менеджер</th><th>Активность</th><th></th>
+        </tr></thead>
+        <tbody>
+          <tr><td><div class="nm">World Class</div><div class="dim">Москва</div></td><td class="dim">7701234567</td><td>Крупный</td><td><span class="bdg bdg-g">Активный</span></td><td>Петров А.</td><td class="dim">Вчера</td><td><div class="acts"><button class="btn btn-o btn-sm">Карточка</button><button class="btn btn-p btn-sm">Передать</button></div></td></tr>
+          <tr><td><div class="nm">Газпром ВНИИГАЗ</div><div class="dim">Москва</div></td><td class="dim">5003012345</td><td>Крупный</td><td><span class="bdg bdg-a">Передача</span></td><td>Иванов С.</td><td class="dim">15 июня</td><td><div class="acts"><button class="btn btn-o btn-sm">Карточка</button></div></td></tr>
+          <tr><td><div class="nm">ТК Центр</div><div class="dim">Москва</div></td><td class="dim">7714567890</td><td>Средний</td><td><span class="bdg bdg-b">В проработке</span></td><td style="color:var(--mid)">не назначен</td><td class="dim">3 дня назад</td><td><div class="acts"><button class="btn btn-o btn-sm">Карточка</button><button class="btn btn-p btn-sm">Назначить</button></div></td></tr>
+          <tr><td><div class="nm">АКБ Ланта-Банк</div><div class="dim">Москва</div></td><td class="dim">7708123456</td><td>Средний</td><td><span class="bdg bdg-g">Активный</span></td><td>Сидорова М.</td><td class="dim">Сегодня</td><td><div class="acts"><button class="btn btn-o btn-sm">Карточка</button><button class="btn btn-p btn-sm">Передать</button></div></td></tr>
+          <tr><td><div class="nm">Завод Полимерных Труб</div><div class="dim">Иваново</div></td><td class="dim">3702987654</td><td>Малый</td><td><span class="bdg bdg-n">Нет статуса</span></td><td style="color:var(--mid)">не назначен</td><td class="dim">10 дней назад</td><td><div class="acts"><button class="btn btn-o btn-sm">Карточка</button></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pager"><span class="pg-info">1–5 из 247 клиентов</span><button class="pg-btn">‹</button><button class="pg-btn cur">1</button><button class="pg-btn">2</button><button class="pg-btn">3</button><span style="color:var(--mid);font-size:12px;padding:0 3px">…</span><button class="pg-btn">50</button><button class="pg-btn">›</button></div>
+  </div>
+
+  <!-- Б: Зебра -->
+  <div class="vr" id="tb">
+    <div class="wrap">
+      <table>
+        <thead><tr>
+          <th>Клиент</th><th>ИНН</th><th>Сегмент</th><th>Статус</th><th>Менеджер</th><th>Активность</th><th></th>
+        </tr></thead>
+        <tbody>
+          <tr><td><div class="nm">World Class</div><div class="dim">Москва</div></td><td class="dim">7701234567</td><td>Крупный</td><td><span class="bdg bdg-g">Активный</span></td><td>Петров А.</td><td class="dim">Вчера</td><td><div class="acts"><button class="btn btn-o btn-sm">Карточка</button><button class="btn btn-p btn-sm">Передать</button></div></td></tr>
+          <tr><td><div class="nm">Газпром ВНИИГАЗ</div><div class="dim">Москва</div></td><td class="dim">5003012345</td><td>Крупный</td><td><span class="bdg bdg-a">Передача</span></td><td>Иванов С.</td><td class="dim">15 июня</td><td><div class="acts"><button class="btn btn-o btn-sm">Карточка</button></div></td></tr>
+          <tr><td><div class="nm">ТК Центр</div><div class="dim">Москва</div></td><td class="dim">7714567890</td><td>Средний</td><td><span class="bdg bdg-b">В проработке</span></td><td style="color:var(--mid)">не назначен</td><td class="dim">3 дня назад</td><td><div class="acts"><button class="btn btn-o btn-sm">Карточка</button><button class="btn btn-p btn-sm">Назначить</button></div></td></tr>
+          <tr><td><div class="nm">АКБ Ланта-Банк</div><div class="dim">Москва</div></td><td class="dim">7708123456</td><td>Средний</td><td><span class="bdg bdg-g">Активный</span></td><td>Сидорова М.</td><td class="dim">Сегодня</td><td><div class="acts"><button class="btn btn-o btn-sm">Карточка</button><button class="btn btn-p btn-sm">Передать</button></div></td></tr>
+          <tr><td><div class="nm">Завод Полимерных Труб</div><div class="dim">Иваново</div></td><td class="dim">3702987654</td><td>Малый</td><td><span class="bdg bdg-n">Нет статуса</span></td><td style="color:var(--mid)">не назначен</td><td class="dim">10 дней назад</td><td><div class="acts"><button class="btn btn-o btn-sm">Карточка</button></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pager"><span class="pg-info">1–5 из 247 клиентов</span><button class="pg-btn">‹</button><button class="pg-btn cur">1</button><button class="pg-btn">2</button><button class="pg-btn">3</button><span style="color:var(--mid);font-size:12px;padding:0 3px">…</span><button class="pg-btn">50</button><button class="pg-btn">›</button></div>
+  </div>
+
+  <!-- В: Акцентная -->
+  <div class="vr" id="tc">
+    <div class="wrap">
+      <table>
+        <thead><tr>
+          <th>Клиент</th><th>ИНН</th><th>Сегмент</th><th>Статус</th><th>Менеджер</th><th>Активность</th><th></th>
+        </tr></thead>
+        <tbody>
+          <tr><td><div class="nm">World Class</div><div class="dim">Москва</div></td><td class="dim">7701234567</td><td>Крупный</td><td><span class="bdg bdg-g">Активный</span></td><td>Петров А.</td><td class="dim">Вчера</td><td><div class="acts"><button class="btn btn-o btn-sm">Карточка</button><button class="btn btn-p btn-sm">Передать</button></div></td></tr>
+          <tr><td><div class="nm">Газпром ВНИИГАЗ</div><div class="dim">Москва</div></td><td class="dim">5003012345</td><td>Крупный</td><td><span class="bdg bdg-a">Передача</span></td><td>Иванов С.</td><td class="dim">15 июня</td><td><div class="acts"><button class="btn btn-o btn-sm">Карточка</button></div></td></tr>
+          <tr><td><div class="nm">ТК Центр</div><div class="dim">Москва</div></td><td class="dim">7714567890</td><td>Средний</td><td><span class="bdg bdg-b">В проработке</span></td><td style="color:var(--mid)">не назначен</td><td class="dim">3 дня назад</td><td><div class="acts"><button class="btn btn-o btn-sm">Карточка</button><button class="btn btn-p btn-sm">Назначить</button></div></td></tr>
+          <tr><td><div class="nm">АКБ Ланта-Банк</div><div class="dim">Москва</div></td><td class="dim">7708123456</td><td>Средний</td><td><span class="bdg bdg-g">Активный</span></td><td>Сидорова М.</td><td class="dim">Сегодня</td><td><div class="acts"><button class="btn btn-o btn-sm">Карточка</button><button class="btn btn-p btn-sm">Передать</button></div></td></tr>
+          <tr><td><div class="nm">Завод Полимерных Труб</div><div class="dim">Иваново</div></td><td class="dim">3702987654</td><td>Малый</td><td><span class="bdg bdg-n">Нет статуса</span></td><td style="color:var(--mid)">не назначен</td><td class="dim">10 дней назад</td><td><div class="acts"><button class="btn btn-o btn-sm">Карточка</button></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pager"><span class="pg-info">1–5 из 247 клиентов</span><button class="pg-btn">‹</button><button class="pg-btn cur">1</button><button class="pg-btn">2</button><button class="pg-btn">3</button><span style="color:var(--mid);font-size:12px;padding:0 3px">…</span><button class="pg-btn">50</button><button class="pg-btn">›</button></div>
+  </div>
+
+  <!-- Г: Карточные строки -->
+  <div class="vr" id="td">
+    <div class="tbl-hd">
+      <span>Клиент</span><span>Сегмент</span><span>Статус</span><span>Менеджер</span><span>Активность</span><span></span>
+    </div>
+    <div class="rows">
+      <div class="row"><div><div class="nm">World Class</div><div class="sub">ИНН 7701234567 · Москва</div></div><div class="cell">Крупный</div><div><span class="bdg bdg-g">Активный</span></div><div class="cell">Петров А.</div><div class="sub">Вчера</div><div class="acts"><button class="btn btn-o btn-sm">Карточка</button><button class="btn btn-p btn-sm">Передать</button></div></div>
+      <div class="row"><div><div class="nm">Газпром ВНИИГАЗ</div><div class="sub">ИНН 5003012345 · Москва</div></div><div class="cell">Крупный</div><div><span class="bdg bdg-a">Передача</span></div><div class="cell">Иванов С.</div><div class="sub">15 июня</div><div class="acts"><button class="btn btn-o btn-sm">Карточка</button></div></div>
+      <div class="row"><div><div class="nm">ТК Центр</div><div class="sub">ИНН 7714567890 · Москва</div></div><div class="cell">Средний</div><div><span class="bdg bdg-b">В проработке</span></div><div class="sub" style="color:var(--mid)">не назначен</div><div class="sub">3 дня назад</div><div class="acts"><button class="btn btn-o btn-sm">Карточка</button><button class="btn btn-p btn-sm">Назначить</button></div></div>
+      <div class="row"><div><div class="nm">АКБ Ланта-Банк</div><div class="sub">ИНН 7708123456 · Москва</div></div><div class="cell">Средний</div><div><span class="bdg bdg-g">Активный</span></div><div class="cell">Сидорова М.</div><div class="sub">Сегодня</div><div class="acts"><button class="btn btn-o btn-sm">Карточка</button><button class="btn btn-p btn-sm">Передать</button></div></div>
+      <div class="row"><div><div class="nm">Завод Полимерных Труб</div><div class="sub">ИНН 3702987654 · Иваново</div></div><div class="cell">Малый</div><div><span class="bdg bdg-n">Нет статуса</span></div><div class="sub" style="color:var(--mid)">не назначен</div><div class="sub">10 дней назад</div><div class="acts"><button class="btn btn-o btn-sm">Карточка</button></div></div>
+    </div>
+    <div class="pager"><span class="pg-info">1–5 из 247 клиентов</span><button class="pg-btn">‹</button><button class="pg-btn cur">1</button><button class="pg-btn">2</button><button class="pg-btn">3</button><span style="color:var(--mid);font-size:12px;padding:0 3px">…</span><button class="pg-btn">50</button><button class="pg-btn">›</button></div>
+  </div>
+</div>
+
+<!-- ══ ФОРМЫ ══ -->
+<div class="sec">
+  <div class="sec-lbl">Формы — добавление клиента</div>
+  <div class="sw">
+    <button class="on" onclick="sw('f','fa',this)">А — Рамочная</button>
+    <button onclick="sw('f','fb',this)">Б — Заливка</button>
+    <button onclick="sw('f','fc',this)">В — Подчёркивание</button>
+    <button onclick="sw('f','fd',this)">Г — Секционная</button>
+  </div>
+
+  <!-- А: Рамочная -->
+  <div class="vr on" id="fa">
+    <div class="fp">
+      <div class="fp-hd"><div class="fp-ttl">Добавить клиента</div><button class="btn btn-g">Отмена</button><button class="btn btn-p">Сохранить</button></div>
+      <div class="fp-body">
+        <div class="fg">
+          <div class="fgrp"><label class="flbl">Название <span class="freq">*</span></label><input class="fc" placeholder="ООО Название компании"></div>
+          <div class="fgrp"><label class="flbl">ИНН <span class="freq">*</span></label><input class="fc" placeholder="0000000000"></div>
+          <div class="fgrp"><label class="flbl">Сегмент</label><select class="fc"><option value="">Выбрать...</option><option>Крупный</option><option>Средний</option><option>Малый</option></select></div>
+          <div class="fgrp"><label class="flbl">Статус</label><select class="fc"><option value="">Выбрать...</option><option>Активный</option><option>Передача</option><option>В проработке</option></select></div>
+          <div class="fgrp"><label class="flbl">Город</label><input class="fc" placeholder="Москва"></div>
+          <div class="fgrp"><label class="flbl">Менеджер</label><select class="fc"><option value="">Не назначен</option><option>Петров А.</option><option>Иванов С.</option><option>Сидорова М.</option></select></div>
+          <div class="fgrp ff"><label class="flbl">Комментарий</label><textarea class="fc" placeholder="Дополнительная информация..."></textarea></div>
+          <div class="fdiv"></div>
+          <div class="fgrp ff"><label class="flbl" style="margin-bottom:8px">Уведомления</label><div class="fchk-row"><label class="fchk"><input type="checkbox" checked><span>Смена статуса</span></label><label class="fchk"><input type="checkbox" checked><span>Новый комментарий</span></label><label class="fchk"><input type="checkbox"><span>Изменение ответственного</span></label></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Б: Заливка -->
+  <div class="vr" id="fb">
+    <div class="fp">
+      <div class="fp-hd"><div class="fp-ttl">Добавить клиента</div><button class="btn btn-g">Отмена</button><button class="btn btn-p">Сохранить</button></div>
+      <div class="fp-body">
+        <div class="fg">
+          <div class="fgrp"><label class="flbl">Название <span class="freq">*</span></label><input class="fc" placeholder="ООО Название компании"></div>
+          <div class="fgrp"><label class="flbl">ИНН <span class="freq">*</span></label><input class="fc" placeholder="0000000000"></div>
+          <div class="fgrp"><label class="flbl">Сегмент</label><select class="fc"><option value="">Выбрать...</option><option>Крупный</option><option>Средний</option><option>Малый</option></select></div>
+          <div class="fgrp"><label class="flbl">Статус</label><select class="fc"><option value="">Выбрать...</option><option>Активный</option><option>Передача</option><option>В проработке</option></select></div>
+          <div class="fgrp"><label class="flbl">Город</label><input class="fc" placeholder="Москва"></div>
+          <div class="fgrp"><label class="flbl">Менеджер</label><select class="fc"><option value="">Не назначен</option><option>Петров А.</option><option>Иванов С.</option><option>Сидорова М.</option></select></div>
+          <div class="fgrp ff"><label class="flbl">Комментарий</label><textarea class="fc" placeholder="Дополнительная информация..."></textarea></div>
+          <div class="fdiv"></div>
+          <div class="fgrp ff"><label class="flbl" style="margin-bottom:8px">Уведомления</label><div class="fchk-row"><label class="fchk"><input type="checkbox" checked><span>Смена статуса</span></label><label class="fchk"><input type="checkbox" checked><span>Новый комментарий</span></label><label class="fchk"><input type="checkbox"><span>Изменение ответственного</span></label></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- В: Подчёркивание -->
+  <div class="vr" id="fc">
+    <div class="fp">
+      <div class="fp-hd"><div class="fp-ttl">Добавить клиента</div><button class="btn btn-g">Отмена</button><button class="btn btn-p">Сохранить</button></div>
+      <div class="fp-body">
+        <div class="fg">
+          <div class="fgrp"><label class="flbl">Название <span class="freq">*</span></label><input class="fc" placeholder="ООО Название компании"></div>
+          <div class="fgrp"><label class="flbl">ИНН <span class="freq">*</span></label><input class="fc" placeholder="0000000000"></div>
+          <div class="fgrp"><label class="flbl">Сегмент</label><select class="fc"><option value="">Выбрать...</option><option>Крупный</option><option>Средний</option><option>Малый</option></select></div>
+          <div class="fgrp"><label class="flbl">Статус</label><select class="fc"><option value="">Выбрать...</option><option>Активный</option><option>Передача</option><option>В проработке</option></select></div>
+          <div class="fgrp"><label class="flbl">Город</label><input class="fc" placeholder="Москва"></div>
+          <div class="fgrp"><label class="flbl">Менеджер</label><select class="fc"><option value="">Не назначен</option><option>Петров А.</option><option>Иванов С.</option><option>Сидорова М.</option></select></div>
+          <div class="fgrp ff"><label class="flbl">Комментарий</label><textarea class="fc" placeholder="Дополнительная информация..."></textarea></div>
+          <div class="fdiv"></div>
+          <div class="fgrp ff"><label class="flbl" style="margin-bottom:8px">Уведомления</label><div class="fchk-row"><label class="fchk"><input type="checkbox" checked><span>Смена статуса</span></label><label class="fchk"><input type="checkbox" checked><span>Новый комментарий</span></label><label class="fchk"><input type="checkbox"><span>Изменение ответственного</span></label></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Г: Секционная -->
+  <div class="vr" id="fd">
+    <div class="fp">
+      <div class="fp-hd"><div class="fp-ttl">Добавить клиента</div><button class="btn btn-g">Отмена</button><button class="btn btn-p">Сохранить</button></div>
+      <div class="fp-body">
+        <div class="f-sec">
+          <div class="f-sec-ttl">Основная информация</div>
+          <div class="fg">
+            <div class="fgrp"><label class="flbl">Название <span class="freq">*</span></label><input class="fc" placeholder="ООО Название компании"></div>
+            <div class="fgrp"><label class="flbl">ИНН <span class="freq">*</span></label><input class="fc" placeholder="0000000000"></div>
+            <div class="fgrp"><label class="flbl">Город</label><input class="fc" placeholder="Москва"></div>
+            <div class="fgrp"><label class="flbl">Сегмент</label><select class="fc"><option value="">Выбрать...</option><option>Крупный</option><option>Средний</option><option>Малый</option></select></div>
+          </div>
+        </div>
+        <div class="f-sec">
+          <div class="f-sec-ttl">Ответственный и статус</div>
+          <div class="fg">
+            <div class="fgrp"><label class="flbl">Менеджер</label><select class="fc"><option value="">Не назначен</option><option>Петров А.</option><option>Иванов С.</option><option>Сидорова М.</option></select></div>
+            <div class="fgrp"><label class="flbl">Статус</label><select class="fc"><option value="">Выбрать...</option><option>Активный</option><option>Передача</option><option>В проработке</option></select></div>
+          </div>
+        </div>
+        <div class="f-sec" style="margin-bottom:0">
+          <div class="f-sec-ttl">Дополнительно</div>
+          <div class="fg">
+            <div class="fgrp ff"><label class="flbl">Комментарий</label><textarea class="fc" placeholder="Дополнительная информация..."></textarea></div>
+            <div class="fgrp ff"><label class="flbl" style="margin-bottom:8px">Уведомления</label><div class="fchk-row"><label class="fchk"><input type="checkbox" checked><span>Смена статуса</span></label><label class="fchk"><input type="checkbox" checked><span>Новый комментарий</span></label><label class="fchk"><input type="checkbox"><span>Изменение ответственного</span></label></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+<script>
+function sw(group, id, btn) {
+  document.querySelectorAll('.vr').forEach(v => {
+    if (v.id.startsWith(group)) v.classList.remove('on');
+  });
+  document.getElementById(id).classList.add('on');
+  btn.closest('.sw').querySelectorAll('button').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+}
+</script>
+</body>
+</html>

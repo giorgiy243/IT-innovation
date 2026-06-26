@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IT-innovation — Варианты кнопок</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vela+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --brand:#81B446; --brand-d:#6a9338; --brand-l:rgba(129,180,70,.12);
+  --dark:#1E2832; --slate:#323C50; --mid:#8296AA;
+  --light:#D7DCE6; --bg:#F5FAFA; --white:#fff;
+  --red:#DC2626; --red-d:#b91c1c;
+  --font:'Vela Sans',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100%;background:var(--bg);font-family:var(--font);color:var(--dark);-webkit-font-smoothing:antialiased;}
+
+.page-wrap{max-width:900px;margin:0 auto;padding:80px 32px 60px;}
+
+/* Switcher */
+.switcher{
+  position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:9999;
+  display:flex;gap:6px;align-items:center;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);
+  border:1px solid var(--light);border-radius:12px;padding:7px 12px;
+  box-shadow:0 4px 20px rgba(30,40,50,.14);
+}
+.sw-label{font-size:11.5px;color:var(--mid);font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin-right:2px;}
+.sw-btn{
+  height:32px;padding:0 14px;border:1.5px solid var(--light);border-radius:8px;
+  background:var(--white);color:var(--slate);font-family:var(--font);font-size:12.5px;font-weight:600;
+  cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.sw-btn:hover{border-color:var(--brand);color:var(--brand);}
+.sw-btn.active{background:var(--brand);border-color:var(--brand);color:#fff;box-shadow:0 2px 8px rgba(129,180,70,.3);}
+
+/* Section layout */
+.variant{display:none;}
+.variant.visible{display:block;}
+.v-header{margin-bottom:28px;}
+.v-title{font-size:22px;font-weight:700;color:var(--dark);margin-bottom:6px;}
+.v-desc{font-size:13.5px;color:var(--mid);line-height:1.6;max-width:560px;}
+
+.block{background:var(--white);border:1px solid var(--light);border-radius:10px;padding:22px 24px;margin-bottom:16px;}
+.block-label{font-size:11px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.07em;margin-bottom:16px;}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px;}
+.row:last-child{margin-bottom:0;}
+.divider{height:1px;background:var(--bg);margin:14px 0;}
+
+/* ─── VARIANT A: Soft rounded (r=8) ─── */
+#va .b{
+  display:inline-flex;align-items:center;gap:7px;
+  height:36px;padding:0 18px;border-radius:8px;
+  font-family:var(--font);font-size:13px;font-weight:600;
+  cursor:pointer;border:none;transition:all .15s;
+}
+#va .b-p{background:var(--brand);color:#fff;}
+#va .b-p:hover{background:var(--brand-d);box-shadow:0 3px 10px rgba(129,180,70,.35);}
+#va .b-d{background:var(--dark);color:#fff;}
+#va .b-d:hover{background:var(--slate);}
+#va .b-o{background:transparent;color:var(--dark);border:1.5px solid var(--light);}
+#va .b-o:hover{border-color:var(--brand);color:var(--brand);}
+#va .b-g{background:transparent;color:var(--mid);border:none;}
+#va .b-g:hover{background:var(--bg);color:var(--dark);}
+#va .b-r{background:var(--red);color:#fff;}
+#va .b-r:hover{background:var(--red-d);}
+#va .b-lnk{background:none;border:none;color:var(--brand);font-size:13px;font-weight:600;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px;}
+#va .sm{height:28px;padding:0 12px;font-size:12px;}
+#va .lg{height:42px;padding:0 22px;font-size:14px;}
+#va .ico{padding:0;width:36px;justify-content:center;}
+#va .ico.sm{width:28px;}
+
+/* ─── VARIANT B: Corporate (r=4) ─── */
+#vb .b{
+  display:inline-flex;align-items:center;gap:7px;
+  height:36px;padding:0 18px;border-radius:4px;
+  font-family:var(--font);font-size:13px;font-weight:600;
+  cursor:pointer;border:none;transition:all .15s;letter-spacing:.01em;text-transform:uppercase;font-size:12px;
+}
+#vb .b-p{background:var(--brand);color:#fff;}
+#vb .b-p:hover{background:var(--brand-d);}
+#vb .b-d{background:var(--dark);color:#fff;}
+#vb .b-d:hover{background:var(--slate);}
+#vb .b-o{background:transparent;color:var(--dark);border:1.5px solid var(--dark);}
+#vb .b-o:hover{background:var(--dark);color:#fff;}
+#vb .b-g{background:transparent;color:var(--mid);border:1.5px solid var(--light);}
+#vb .b-g:hover{border-color:var(--mid);color:var(--slate);}
+#vb .b-r{background:var(--red);color:#fff;}
+#vb .b-r:hover{background:var(--red-d);}
+#vb .b-lnk{background:none;border:none;color:var(--slate);font-size:12px;font-weight:600;cursor:pointer;padding:0;letter-spacing:.01em;text-transform:uppercase;}
+#vb .b-lnk:hover{color:var(--brand);}
+#vb .sm{height:28px;padding:0 12px;font-size:11px;}
+#vb .lg{height:42px;padding:0 22px;font-size:13px;}
+
+/* ─── VARIANT C: Pill (r=50px) ─── */
+#vc .b{
+  display:inline-flex;align-items:center;gap:7px;
+  height:36px;padding:0 20px;border-radius:50px;
+  font-family:var(--font);font-size:13px;font-weight:600;
+  cursor:pointer;border:none;transition:all .15s;
+}
+#vc .b-p{background:var(--brand);color:#fff;}
+#vc .b-p:hover{background:var(--brand-d);box-shadow:0 4px 14px rgba(129,180,70,.4);}
+#vc .b-d{background:var(--dark);color:#fff;}
+#vc .b-d:hover{background:var(--slate);}
+#vc .b-o{background:transparent;color:var(--brand);border:1.5px solid var(--brand);}
+#vc .b-o:hover{background:var(--brand-l);}
+#vc .b-g{background:var(--bg);color:var(--slate);border:1.5px solid var(--light);}
+#vc .b-g:hover{background:var(--light);}
+#vc .b-r{background:var(--red);color:#fff;}
+#vc .b-r:hover{background:var(--red-d);}
+#vc .b-lnk{background:none;border:none;color:var(--brand);font-size:13px;font-weight:600;cursor:pointer;padding:0;}
+#vc .b-lnk:hover{opacity:.8;}
+#vc .sm{height:26px;padding:0 14px;font-size:12px;}
+#vc .lg{height:44px;padding:0 26px;font-size:14px;}
+
+/* ─── VARIANT D: Flat minimal ─── */
+#vd .b{
+  display:inline-flex;align-items:center;gap:7px;
+  height:34px;padding:0 16px;border-radius:6px;
+  font-family:var(--font);font-size:13px;font-weight:500;
+  cursor:pointer;transition:all .15s;
+}
+#vd .b-p{background:var(--brand-l);color:var(--brand-d);border:1px solid transparent;}
+#vd .b-p:hover{background:rgba(129,180,70,.2);color:var(--brand-d);}
+#vd .b-d{background:rgba(30,40,50,.07);color:var(--dark);border:1px solid transparent;}
+#vd .b-d:hover{background:rgba(30,40,50,.12);}
+#vd .b-o{background:transparent;color:var(--slate);border:1px solid var(--light);}
+#vd .b-o:hover{border-color:var(--brand);color:var(--brand-d);background:var(--brand-l);}
+#vd .b-g{background:transparent;color:var(--mid);border:none;}
+#vd .b-g:hover{color:var(--slate);}
+#vd .b-r{background:rgba(220,38,38,.1);color:var(--red);border:1px solid transparent;}
+#vd .b-r:hover{background:rgba(220,38,38,.18);}
+#vd .b-lnk{background:none;border:none;color:var(--brand);font-size:13px;font-weight:500;cursor:pointer;padding:0;}
+#vd .b-lnk:hover{color:var(--brand-d);}
+#vd .sm{height:26px;padding:0 10px;font-size:12px;}
+#vd .lg{height:40px;padding:0 20px;font-size:14px;}
+
+/* Context demo */
+.demo-bar{
+  display:flex;align-items:center;gap:10px;padding:12px 16px;
+  background:var(--white);border:1px solid var(--light);border-radius:8px;
+  margin-bottom:10px;
+}
+.demo-title{font-size:14px;font-weight:700;color:var(--dark);flex:1;}
+.demo-form{padding:16px;background:var(--bg);border-radius:8px;display:flex;flex-direction:column;gap:12px;}
+.demo-field label{display:block;font-size:12px;font-weight:600;color:var(--slate);margin-bottom:4px;}
+.demo-input{
+  width:100%;height:34px;padding:0 12px;border:1.5px solid var(--light);border-radius:7px;
+  font-family:var(--font);font-size:13px;color:var(--dark);outline:none;
+}
+.demo-input:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(129,180,70,.12);}
+.demo-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:4px;}
+
+::-webkit-scrollbar{width:8px;}
+::-webkit-scrollbar-thumb{background:var(--light);border-radius:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+</style>
+</head>
+<body>
+
+<div class="switcher">
+  <span class="sw-label">Стиль кнопок:</span>
+  <button class="sw-btn active" onclick="go('a')">А — Мягкие скругления</button>
+  <button class="sw-btn" onclick="go('b')">Б — Корпоративный</button>
+  <button class="sw-btn" onclick="go('c')">В — Пилл (овал)</button>
+  <button class="sw-btn" onclick="go('d')">Г — Плоский/мягкий</button>
+</div>
+
+<svg style="display:none">
+  <symbol id="ic-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></symbol>
+  <symbol id="ic-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+  <symbol id="ic-dl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+  <symbol id="ic-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></symbol>
+  <symbol id="ic-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></symbol>
+  <symbol id="ic-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+</svg>
+
+<div class="page-wrap">
+
+<!-- ═══ VARIANT A ═══ -->
+<div class="variant visible" id="va">
+  <div class="v-header">
+    <div class="v-title">А - Мягкие скругления (r=8)</div>
+    <div class="v-desc">Современный деловой стиль. Скруглённые, но не овальные. Neutral, без навязчивости. Хорошо сочетается с тёмным сайдбаром и светлым контентом.</div>
+  </div>
+
+  <div class="block">
+    <div class="block-label">Все варианты</div>
+    <div class="row">
+      <button class="b b-p"><svg width="14" height="14"><use href="#ic-save"/></svg> Сохранить</button>
+      <button class="b b-d">Действие</button>
+      <button class="b b-o">Отмена</button>
+      <button class="b b-g">Ещё</button>
+      <button class="b b-r"><svg width="14" height="14"><use href="#ic-trash"/></svg> Удалить</button>
+      <button class="b b-lnk">Подробнее →</button>
+    </div>
+    <div class="divider"></div>
+    <div class="block-label">Размеры</div>
+    <div class="row">
+      <button class="b b-p sm">Маленькая</button>
+      <button class="b b-p">Средняя</button>
+      <button class="b b-p lg">Большая</button>
+    </div>
+    <div class="row">
+      <button class="b b-o sm">Отмена</button>
+      <button class="b b-o">Отмена</button>
+      <button class="b b-o lg">Отмена</button>
+    </div>
+    <div class="divider"></div>
+    <div class="block-label">Иконки</div>
+    <div class="row">
+      <button class="b b-p"><svg width="14" height="14"><use href="#ic-plus"/></svg> Создать клиента</button>
+      <button class="b b-o"><svg width="14" height="14"><use href="#ic-dl"/></svg> Выгрузить</button>
+      <button class="b b-o ico"><svg width="14" height="14"><use href="#ic-edit"/></svg></button>
+      <button class="b b-g ico"><svg width="14" height="14"><use href="#ic-x"/></svg></button>
+      <button class="b b-r ico sm"><svg width="12" height="12"><use href="#ic-trash"/></svg></button>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-label">В контексте — строка инструментов</div>
+    <div class="demo-bar">
+      <span class="demo-title">Клиентская база</span>
+      <button class="b b-g sm"><svg width="12" height="12"><use href="#ic-dl"/></svg> Выгрузить</button>
+      <button class="b b-o sm"><svg width="12" height="12"><use href="#ic-edit"/></svg> Фильтры</button>
+      <button class="b b-p sm"><svg width="12" height="12"><use href="#ic-plus"/></svg> Новый клиент</button>
+    </div>
+    <div class="block-label" style="margin-top:14px;">В контексте — форма</div>
+    <div class="demo-form">
+      <div class="demo-field">
+        <label>Наименование</label>
+        <input class="demo-input" placeholder="ООО Название">
+      </div>
+      <div class="demo-actions">
+        <button class="b b-g sm">Отмена</button>
+        <button class="b b-p sm"><svg width="12" height="12"><use href="#ic-save"/></svg> Сохранить</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ VARIANT B ═══ -->
+<div class="variant" id="vb">
+  <div class="v-header">
+    <div class="v-title">Б - Корпоративный (r=4, uppercase)</div>
+    <div class="v-desc">Строгий деловой стиль. Прямые углы, заглавные буквы, большой межбуквенный интервал. Ощущение серьёзного enterprise-продукта.</div>
+  </div>
+
+  <div class="block">
+    <div class="block-label">Все варианты</div>
+    <div class="row">
+      <button class="b b-p"><svg width="14" height="14"><use href="#ic-save"/></svg> Сохранить</button>
+      <button class="b b-d">Действие</button>
+      <button class="b b-o">Отмена</button>
+      <button class="b b-g">Ещё</button>
+      <button class="b b-r"><svg width="14" height="14"><use href="#ic-trash"/></svg> Удалить</button>
+      <button class="b b-lnk">Подробнее →</button>
+    </div>
+    <div class="divider"></div>
+    <div class="block-label">Размеры</div>
+    <div class="row">
+      <button class="b b-p sm">Маленькая</button>
+      <button class="b b-p">Средняя</button>
+      <button class="b b-p lg">Большая</button>
+    </div>
+    <div class="row">
+      <button class="b b-o sm">Отмена</button>
+      <button class="b b-o">Отмена</button>
+      <button class="b b-o lg">Отмена</button>
+    </div>
+    <div class="divider"></div>
+    <div class="block-label">Иконки</div>
+    <div class="row">
+      <button class="b b-p"><svg width="14" height="14"><use href="#ic-plus"/></svg> Создать клиента</button>
+      <button class="b b-o"><svg width="14" height="14"><use href="#ic-dl"/></svg> Выгрузить</button>
+      <button class="b b-r"><svg width="14" height="14"><use href="#ic-trash"/></svg> Удалить</button>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-label">В контексте — строка инструментов</div>
+    <div class="demo-bar">
+      <span class="demo-title">Клиентская база</span>
+      <button class="b b-g sm"><svg width="12" height="12"><use href="#ic-dl"/></svg> Выгрузить</button>
+      <button class="b b-o sm">Фильтры</button>
+      <button class="b b-p sm"><svg width="12" height="12"><use href="#ic-plus"/></svg> Новый клиент</button>
+    </div>
+    <div class="block-label" style="margin-top:14px;">В контексте — форма</div>
+    <div class="demo-form">
+      <div class="demo-field"><label>Наименование</label><input class="demo-input" placeholder="ООО Название"></div>
+      <div class="demo-actions">
+        <button class="b b-g sm">Отмена</button>
+        <button class="b b-p sm"><svg width="12" height="12"><use href="#ic-save"/></svg> Сохранить</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ VARIANT C ═══ -->
+<div class="variant" id="vc">
+  <div class="v-header">
+    <div class="v-title">В - Пилл / Овал (r=50px)</div>
+    <div class="v-desc">Современный SaaS-стиль. Полностью скруглённые кнопки. Выглядит свежо и «продуктово», хорошо на светлых интерфейсах.</div>
+  </div>
+
+  <div class="block">
+    <div class="block-label">Все варианты</div>
+    <div class="row">
+      <button class="b b-p"><svg width="14" height="14"><use href="#ic-save"/></svg> Сохранить</button>
+      <button class="b b-d">Действие</button>
+      <button class="b b-o">Отмена</button>
+      <button class="b b-g">Ещё</button>
+      <button class="b b-r"><svg width="14" height="14"><use href="#ic-trash"/></svg> Удалить</button>
+      <button class="b b-lnk">Подробнее →</button>
+    </div>
+    <div class="divider"></div>
+    <div class="block-label">Размеры</div>
+    <div class="row">
+      <button class="b b-p sm">Маленькая</button>
+      <button class="b b-p">Средняя</button>
+      <button class="b b-p lg">Большая</button>
+    </div>
+    <div class="row">
+      <button class="b b-o sm">Отмена</button>
+      <button class="b b-o">Отмена</button>
+      <button class="b b-o lg">Отмена</button>
+    </div>
+    <div class="divider"></div>
+    <div class="block-label">Иконки</div>
+    <div class="row">
+      <button class="b b-p"><svg width="14" height="14"><use href="#ic-plus"/></svg> Создать клиента</button>
+      <button class="b b-o"><svg width="14" height="14"><use href="#ic-dl"/></svg> Выгрузить</button>
+      <button class="b b-r"><svg width="14" height="14"><use href="#ic-trash"/></svg> Удалить</button>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-label">В контексте — строка инструментов</div>
+    <div class="demo-bar">
+      <span class="demo-title">Клиентская база</span>
+      <button class="b b-g sm"><svg width="12" height="12"><use href="#ic-dl"/></svg> Выгрузить</button>
+      <button class="b b-o sm">Фильтры</button>
+      <button class="b b-p sm"><svg width="12" height="12"><use href="#ic-plus"/></svg> Новый клиент</button>
+    </div>
+    <div class="block-label" style="margin-top:14px;">В контексте — форма</div>
+    <div class="demo-form">
+      <div class="demo-field"><label>Наименование</label><input class="demo-input" placeholder="ООО Название"></div>
+      <div class="demo-actions">
+        <button class="b b-g sm">Отмена</button>
+        <button class="b b-p sm"><svg width="12" height="12"><use href="#ic-save"/></svg> Сохранить</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ VARIANT D ═══ -->
+<div class="variant" id="vd">
+  <div class="v-header">
+    <div class="v-title">Г - Плоский / Мягкий (r=6, без теней)</div>
+    <div class="v-desc">Минималистичный стиль. Акцентные кнопки используют цвет заливки без насыщенных теней. Даёт ощущение лёгкости и не перегружает интерфейс.</div>
+  </div>
+
+  <div class="block">
+    <div class="block-label">Все варианты</div>
+    <div class="row">
+      <button class="b b-p"><svg width="14" height="14"><use href="#ic-save"/></svg> Сохранить</button>
+      <button class="b b-d">Действие</button>
+      <button class="b b-o">Отмена</button>
+      <button class="b b-g">Ещё</button>
+      <button class="b b-r"><svg width="14" height="14"><use href="#ic-trash"/></svg> Удалить</button>
+      <button class="b b-lnk">Подробнее →</button>
+    </div>
+    <div class="divider"></div>
+    <div class="block-label">Размеры</div>
+    <div class="row">
+      <button class="b b-p sm">Маленькая</button>
+      <button class="b b-p">Средняя</button>
+      <button class="b b-p lg">Большая</button>
+    </div>
+    <div class="row">
+      <button class="b b-o sm">Отмена</button>
+      <button class="b b-o">Отмена</button>
+      <button class="b b-o lg">Отмена</button>
+    </div>
+    <div class="divider"></div>
+    <div class="block-label">Иконки</div>
+    <div class="row">
+      <button class="b b-p"><svg width="14" height="14"><use href="#ic-plus"/></svg> Создать клиента</button>
+      <button class="b b-o"><svg width="14" height="14"><use href="#ic-dl"/></svg> Выгрузить</button>
+      <button class="b b-r"><svg width="14" height="14"><use href="#ic-trash"/></svg> Удалить</button>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-label">В контексте — строка инструментов</div>
+    <div class="demo-bar">
+      <span class="demo-title">Клиентская база</span>
+      <button class="b b-g sm"><svg width="12" height="12"><use href="#ic-dl"/></svg> Выгрузить</button>
+      <button class="b b-o sm">Фильтры</button>
+      <button class="b b-p sm"><svg width="12" height="12"><use href="#ic-plus"/></svg> Новый клиент</button>
+    </div>
+    <div class="block-label" style="margin-top:14px;">В контексте — форма</div>
+    <div class="demo-form">
+      <div class="demo-field"><label>Наименование</label><input class="demo-input" placeholder="ООО Название"></div>
+      <div class="demo-actions">
+        <button class="b b-g sm">Отмена</button>
+        <button class="b b-p sm"><svg width="12" height="12"><use href="#ic-save"/></svg> Сохранить</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /page-wrap -->
+
+<script>
+function go(v){
+  ['a','b','c','d'].forEach(x=>{
+    document.getElementById('v'+x).classList.toggle('visible',x===v);
+  });
+  document.querySelectorAll('.sw-btn').forEach((b,i)=>{
+    b.classList.toggle('active',['a','b','c','d'][i]===v);
+  });
+}
+</script>
+</body>
+</html>

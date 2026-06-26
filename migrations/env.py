@@ -19,8 +19,10 @@ database_url = os.environ.get("DATABASE_URL")
 if database_url:
     config.set_main_option("sqlalchemy.url", database_url)
 
-# Фаза 1: заменить None на Base.metadata из core.models, когда появятся модели
-target_metadata = None
+# Метаданные схемы ядра - источник для autogenerate (Фаза 1.1).
+from core.models import Base  # noqa: E402
+
+target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:

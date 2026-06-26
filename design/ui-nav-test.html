@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IT-innovation — Навигация UI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vela+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --brand:   #81B446;
+  --brand-d: #6a9338;
+  --dark:    #1E2832;
+  --slate:   #323C50;
+  --mid:     #8296AA;
+  --light:   #D7DCE6;
+  --bg:      #F5FAFA;
+  --white:   #FFFFFF;
+  --nav-bg:  #1E2832;
+  --nav-hover: #323C50;
+  --font: 'Vela Sans', system-ui, sans-serif;
+  --r: 8px;
+  --sidebar-w: 232px;
+  --topbar-h: 56px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--dark);-webkit-font-smoothing:antialiased;}
+
+/* ── Switcher ── */
+.switcher{
+  position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:9999;
+  display:flex;gap:6px;align-items:center;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);
+  border:1px solid var(--light);border-radius:12px;padding:7px 12px;
+  box-shadow:0 4px 20px rgba(30,40,50,.14);
+}
+.sw-label{font-size:11.5px;color:var(--mid);font-weight:600;white-space:nowrap;letter-spacing:.04em;text-transform:uppercase;margin-right:2px;}
+.sw-btn{
+  height:32px;padding:0 14px;border:1.5px solid var(--light);border-radius:8px;
+  background:var(--white);color:var(--slate);font-family:var(--font);font-size:12.5px;font-weight:600;
+  cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.sw-btn:hover{border-color:var(--brand);color:var(--brand);}
+.sw-btn.active{background:var(--brand);border-color:var(--brand);color:#fff;box-shadow:0 2px 8px rgba(129,180,70,.3);}
+
+/* ── Layout shells ── */
+.layout{display:none;height:100vh;overflow:hidden;padding-top:0;}
+.layout.visible{display:flex;}
+
+/* ═══════════════════════════════════════════════════
+   VARIANT A: Wide sidebar (232px, dark)
+═══════════════════════════════════════════════════ */
+#la .sidebar{
+  width:var(--sidebar-w);flex:none;background:var(--nav-bg);
+  display:flex;flex-direction:column;
+  border-right:1px solid rgba(255,255,255,.05);
+}
+#la .s-logo{
+  height:var(--topbar-h);display:flex;align-items:center;padding:0 16px;gap:10px;
+  border-bottom:1px solid rgba(255,255,255,.07);
+}
+#la .logo-mark{
+  width:30px;height:30px;border-radius:8px;flex:none;
+  background:var(--brand);display:flex;align-items:center;justify-content:center;
+}
+#la .logo-text{font-size:14px;font-weight:700;color:#fff;letter-spacing:-.01em;}
+#la .nav-body{flex:1;overflow-y:auto;padding:10px 8px;}
+#la .nav-group-label{
+  font-size:10.5px;font-weight:600;color:rgba(130,150,170,.7);
+  text-transform:uppercase;letter-spacing:.08em;
+  padding:10px 10px 4px;
+}
+#la .nav-item{
+  display:flex;align-items:center;gap:9px;
+  height:38px;padding:0 10px;border-radius:7px;
+  font-size:13px;font-weight:500;color:rgba(255,255,255,.6);
+  cursor:pointer;margin-bottom:1px;
+  border-left:2px solid transparent;
+  transition:background .12s,color .12s;
+}
+#la .nav-item:hover{background:var(--nav-hover);color:#fff;}
+#la .nav-item.act{background:rgba(129,180,70,.14);color:#fff;border-left-color:var(--brand);}
+#la .nav-item svg{flex:none;opacity:.7;}
+#la .nav-item.act svg{opacity:1;}
+#la .nav-badge{
+  margin-left:auto;min-width:18px;height:18px;padding:0 5px;
+  border-radius:9px;background:rgba(129,180,70,.18);
+  color:var(--brand);font-size:11px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+}
+#la .s-footer{padding:10px 8px;border-top:1px solid rgba(255,255,255,.06);}
+#la .user-row{
+  display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;cursor:pointer;
+}
+#la .user-row:hover{background:var(--nav-hover);}
+#la .avatar{
+  width:30px;height:30px;border-radius:8px;flex:none;
+  background:var(--slate);display:flex;align-items:center;justify-content:center;
+  font-size:11.5px;font-weight:700;color:#fff;
+}
+#la .u-name{font-size:12.5px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#la .u-role{font-size:11px;color:var(--mid);}
+#la .u-info{flex:1;min-width:0;}
+
+/* A main */
+#la .main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+#la .topbar{
+  height:var(--topbar-h);flex:none;display:flex;align-items:center;
+  padding:0 24px;background:var(--white);border-bottom:1px solid var(--light);gap:12px;
+}
+#la .page-h{font-size:15px;font-weight:700;color:var(--dark);}
+#la .tb-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+#la .content{flex:1;overflow-y:auto;padding:24px;}
+
+/* ═══════════════════════════════════════════════════
+   VARIANT B: Top navigation (dark header)
+═══════════════════════════════════════════════════ */
+#lb{flex-direction:column;}
+#lb .topbar{
+  height:var(--topbar-h);flex:none;display:flex;align-items:center;
+  padding:0 24px;background:var(--nav-bg);gap:0;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+#lb .logo-area{display:flex;align-items:center;gap:10px;margin-right:28px;flex:none;}
+#lb .logo-mark{
+  width:28px;height:28px;border-radius:7px;flex:none;
+  background:var(--brand);display:flex;align-items:center;justify-content:center;
+}
+#lb .logo-text{font-size:14px;font-weight:700;color:#fff;letter-spacing:-.01em;}
+#lb .top-nav{display:flex;align-items:stretch;flex:1;gap:0;}
+#lb .tn-item{
+  display:flex;align-items:center;gap:7px;padding:0 14px;
+  font-size:13px;font-weight:500;color:rgba(255,255,255,.55);
+  cursor:pointer;white-space:nowrap;
+  border-bottom:2px solid transparent;margin-bottom:-1px;
+  transition:color .12s,background .12s;
+}
+#lb .tn-item:hover{color:#fff;background:rgba(255,255,255,.05);}
+#lb .tn-item.act{color:#fff;border-bottom-color:var(--brand);}
+#lb .tn-item.dim{color:rgba(255,255,255,.25);cursor:default;pointer-events:none;}
+#lb .tn-item .soon{font-size:10px;opacity:.6;margin-left:3px;}
+#lb .tb-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+#lb .user-pill{
+  display:flex;align-items:center;gap:8px;padding:4px 12px 4px 5px;
+  border-radius:20px;border:1px solid rgba(255,255,255,.12);cursor:pointer;
+  transition:background .12s;
+}
+#lb .user-pill:hover{background:rgba(255,255,255,.07);}
+#lb .avatar{
+  width:26px;height:26px;border-radius:50%;flex:none;
+  background:var(--brand);display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;color:#fff;
+}
+#lb .u-name{font-size:12.5px;font-weight:500;color:rgba(255,255,255,.8);}
+#lb .sub-bar{
+  height:40px;flex:none;background:var(--white);border-bottom:1px solid var(--light);
+  display:flex;align-items:center;padding:0 24px;gap:8px;
+}
+#lb .breadcrumb{font-size:12.5px;color:var(--mid);}
+#lb .breadcrumb b{color:var(--dark);font-weight:600;}
+#lb .sep{color:var(--light);margin:0 4px;}
+#lb .content{flex:1;overflow-y:auto;padding:24px;}
+
+/* ═══════════════════════════════════════════════════
+   VARIANT C: Icon-only sidebar (56px)
+═══════════════════════════════════════════════════ */
+#lc .sidebar{
+  width:56px;flex:none;background:var(--nav-bg);
+  display:flex;flex-direction:column;align-items:center;
+  padding:12px 0;border-right:1px solid rgba(255,255,255,.05);
+}
+#lc .logo-mark{
+  width:32px;height:32px;border-radius:8px;
+  background:var(--brand);display:flex;align-items:center;justify-content:center;
+  margin-bottom:20px;
+}
+#lc .sep-line{width:24px;height:1px;background:rgba(255,255,255,.08);margin:8px 0;}
+#lc .i-btn{
+  width:40px;height:40px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;margin-bottom:3px;position:relative;
+  color:rgba(255,255,255,.45);transition:all .12s;
+}
+#lc .i-btn:hover{background:var(--nav-hover);color:#fff;}
+#lc .i-btn.act{background:rgba(129,180,70,.16);color:var(--brand);}
+#lc .i-btn .tip{
+  position:absolute;left:50px;top:50%;transform:translateY(-50%);
+  background:var(--dark);color:#fff;font-size:12px;font-weight:500;
+  padding:4px 10px;border-radius:6px;white-space:nowrap;pointer-events:none;
+  opacity:0;transition:opacity .1s;box-shadow:0 4px 12px rgba(0,0,0,.25);
+  border:1px solid rgba(255,255,255,.06);
+}
+#lc .i-btn:hover .tip{opacity:1;}
+#lc .dot{
+  position:absolute;top:7px;right:7px;width:6px;height:6px;
+  border-radius:50%;background:var(--brand);flex:none;
+}
+#lc .s-bottom{margin-top:auto;display:flex;flex-direction:column;align-items:center;gap:4px;}
+#lc .avatar-sm{
+  width:32px;height:32px;border-radius:8px;
+  background:var(--slate);display:flex;align-items:center;justify-content:center;
+  font-size:11.5px;font-weight:700;color:#fff;cursor:pointer;
+}
+
+/* C main */
+#lc .main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+#lc .topbar{
+  height:var(--topbar-h);flex:none;background:var(--white);border-bottom:1px solid var(--light);
+  display:flex;align-items:center;padding:0 20px;gap:12px;
+}
+#lc .title-block{display:flex;flex-direction:column;gap:1px;}
+#lc .page-h{font-size:15px;font-weight:700;color:var(--dark);}
+#lc .breadcrumb{font-size:11.5px;color:var(--mid);}
+#lc .breadcrumb b{color:var(--slate);font-weight:500;}
+#lc .tb-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+#lc .content{flex:1;overflow-y:auto;padding:24px;}
+
+/* ═══════════════════════════════════════════════════
+   VARIANT D: Split header (brand top strip + icon sidebar)
+═══════════════════════════════════════════════════ */
+#ld{flex-direction:column;}
+#ld .brand-bar{
+  height:44px;flex:none;background:var(--dark);
+  display:flex;align-items:center;padding:0 16px;gap:12px;
+  border-bottom:2px solid var(--brand);
+}
+#ld .logo-area{display:flex;align-items:center;gap:10px;}
+#ld .logo-mark{
+  width:24px;height:24px;border-radius:6px;flex:none;
+  background:var(--brand);display:flex;align-items:center;justify-content:center;
+}
+#ld .logo-text{font-size:13.5px;font-weight:700;color:#fff;letter-spacing:-.01em;}
+#ld .env-badge{
+  margin-left:8px;height:18px;padding:0 7px;border-radius:4px;
+  background:rgba(129,180,70,.18);color:var(--brand);font-size:10.5px;font-weight:700;
+  display:flex;align-items:center;letter-spacing:.04em;text-transform:uppercase;
+}
+#ld .brand-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+#ld .notif-btn{
+  width:28px;height:28px;border-radius:6px;border:1px solid rgba(255,255,255,.1);
+  background:transparent;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:rgba(255,255,255,.6);position:relative;
+}
+#ld .notif-btn:hover{background:rgba(255,255,255,.07);color:#fff;}
+#ld .notif-dot{
+  position:absolute;top:5px;right:5px;width:6px;height:6px;
+  border-radius:50%;background:var(--brand);border:1.5px solid var(--dark);
+}
+#ld .user-pill{
+  display:flex;align-items:center;gap:7px;padding:3px 10px 3px 4px;
+  border-radius:16px;border:1px solid rgba(255,255,255,.1);cursor:pointer;
+}
+#ld .user-pill:hover{background:rgba(255,255,255,.06);}
+#ld .avatar{
+  width:24px;height:24px;border-radius:6px;
+  background:var(--brand);display:flex;align-items:center;justify-content:center;
+  font-size:10.5px;font-weight:700;color:#fff;
+}
+#ld .u-name{font-size:12px;font-weight:500;color:rgba(255,255,255,.75);}
+
+#ld .body{flex:1;display:flex;overflow:hidden;}
+#ld .sidebar{
+  width:200px;flex:none;background:var(--white);
+  border-right:1px solid var(--light);
+  display:flex;flex-direction:column;padding:12px 8px;
+}
+#ld .nav-group-label{
+  font-size:10.5px;font-weight:600;color:var(--mid);
+  text-transform:uppercase;letter-spacing:.07em;
+  padding:8px 10px 4px;
+}
+#ld .nav-item{
+  display:flex;align-items:center;gap:8px;
+  height:36px;padding:0 10px;border-radius:6px;
+  font-size:13px;font-weight:500;color:var(--slate);
+  cursor:pointer;margin-bottom:1px;transition:all .12s;
+}
+#ld .nav-item:hover{background:var(--bg);color:var(--dark);}
+#ld .nav-item.act{background:rgba(129,180,70,.1);color:var(--dark);font-weight:600;}
+#ld .nav-item.act svg{color:var(--brand);}
+#ld .nav-item svg{flex:none;color:var(--mid);}
+#ld .nav-badge{
+  margin-left:auto;min-width:18px;height:18px;padding:0 5px;
+  border-radius:9px;background:rgba(129,180,70,.15);
+  color:var(--brand);font-size:11px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+}
+#ld .main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+#ld .topbar{
+  height:48px;flex:none;background:var(--bg);border-bottom:1px solid var(--light);
+  display:flex;align-items:center;padding:0 20px;gap:12px;
+}
+#ld .breadcrumb{font-size:12.5px;color:var(--mid);}
+#ld .breadcrumb b{color:var(--dark);font-weight:600;}
+#ld .sep{margin:0 5px;color:var(--light);}
+#ld .tb-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+#ld .content{flex:1;overflow-y:auto;padding:24px;}
+
+/* ═══════════════════════════════════════════════════
+   Shared content
+═══════════════════════════════════════════════════ */
+.btn{
+  display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 16px;
+  border-radius:7px;font-family:var(--font);font-size:13px;font-weight:600;
+  cursor:pointer;border:none;transition:all .15s;
+}
+.btn-primary{background:var(--brand);color:#fff;}
+.btn-primary:hover{background:var(--brand-d);}
+.btn-outline{background:transparent;color:var(--dark);border:1.5px solid var(--light);}
+.btn-outline:hover{border-color:var(--brand);color:var(--brand);}
+.btn-sm{height:28px;padding:0 12px;font-size:12px;}
+
+.section{background:var(--white);border:1px solid var(--light);border-radius:var(--r);padding:18px 20px;}
+.section-head{font-size:11px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px;}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px;}
+.metric{background:var(--white);border:1px solid var(--light);border-radius:var(--r);padding:16px 18px;}
+.metric.accent{border-top:3px solid var(--brand);}
+.m-val{font-size:26px;font-weight:700;color:var(--dark);}
+.m-lbl{font-size:12px;color:var(--mid);margin-top:2px;}
+.m-dl{font-size:12px;font-weight:600;margin-top:4px;}
+.up{color:#5a8028;}.dn{color:#991b1b;}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.tbl th{text-align:left;padding:8px 12px;font-size:11px;font-weight:600;color:var(--mid);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--light);background:var(--bg);}
+.tbl td{padding:9px 12px;border-bottom:1px solid var(--bg);color:var(--dark);}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:rgba(129,180,70,.04);}
+.mono{font-size:12px;color:var(--mid);}
+.badge{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 8px;border-radius:10px;font-size:11.5px;font-weight:600;}
+.bg{background:rgba(129,180,70,.14);color:#5a8028;}
+.ba{background:rgba(245,158,11,.12);color:#b45309;}
+.bb{background:rgba(59,130,246,.12);color:#1d4ed8;}
+.bgr{background:var(--bg);color:var(--mid);border:1px solid var(--light);}
+.dot{width:5px;height:5px;border-radius:50%;flex:none;}
+
+::-webkit-scrollbar{width:8px;}
+::-webkit-scrollbar-thumb{background:var(--light);border-radius:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+</style>
+</head>
+<body>
+
+<!-- Switcher -->
+<div class="switcher">
+  <span class="sw-label">Навигация:</span>
+  <button class="sw-btn active" onclick="go('a')">А - Тёмный сайдбар</button>
+  <button class="sw-btn" onclick="go('b')">Б - Верхняя панель</button>
+  <button class="sw-btn" onclick="go('c')">В - Иконки (56px)</button>
+  <button class="sw-btn" onclick="go('d')">Г - Брендбар + светлый сайд</button>
+</div>
+
+<!-- SVG icons shorthand -->
+<svg style="display:none" id="icons">
+  <symbol id="ic-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></symbol>
+  <symbol id="ic-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="ic-rotate" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></symbol>
+  <symbol id="ic-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></symbol>
+  <symbol id="ic-bar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></symbol>
+  <symbol id="ic-log" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></symbol>
+  <symbol id="ic-cog" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+  <symbol id="ic-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
+  <symbol id="ic-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></symbol>
+  <symbol id="ic-wave" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M2 12c1.5-3 3-4.5 4.5-4.5S9 9 10.5 9 13.5 6 15 6s3 3 4.5 3S22 7.5 22 7.5"/></symbol>
+</svg>
+
+<!-- ═══════════ LAYOUT A ═══════════ -->
+<div class="layout visible" id="la">
+  <aside class="sidebar">
+    <div class="s-logo">
+      <div class="logo-mark"><svg width="16" height="16"><use href="#ic-wave"/></svg></div>
+      <span class="logo-text">IT-innovation</span>
+    </div>
+    <nav class="nav-body">
+      <div class="nav-group-label">Рабочее пространство</div>
+      <div class="nav-item act"><svg width="15" height="15"><use href="#ic-grid"/></svg> Обзор</div>
+
+      <div class="nav-group-label">Продажи</div>
+      <div class="nav-item"><svg width="15" height="15"><use href="#ic-users"/></svg> Клиентская база <span class="nav-badge">1235</span></div>
+      <div class="nav-item"><svg width="15" height="15"><use href="#ic-rotate"/></svg> Ротация</div>
+      <div class="nav-item"><svg width="15" height="15"><use href="#ic-bar"/></svg> Матрицы</div>
+
+      <div class="nav-group-label">Presale</div>
+      <div class="nav-item"><svg width="15" height="15"><use href="#ic-doc"/></svg> Datasheet Partners</div>
+
+      <div class="nav-group-label">Система</div>
+      <div class="nav-item"><svg width="15" height="15"><use href="#ic-log"/></svg> Аудит-лог</div>
+      <div class="nav-item"><svg width="15" height="15"><use href="#ic-cog"/></svg> Настройки</div>
+    </nav>
+    <div class="s-footer">
+      <div class="user-row">
+        <div class="avatar">ЕП</div>
+        <div class="u-info">
+          <div class="u-name">Евгений Паламарчук</div>
+          <div class="u-role">Администратор</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="topbar">
+      <span class="page-h">Обзор платформы</span>
+      <div class="tb-right">
+        <button class="btn btn-outline btn-sm"><svg width="13" height="13"><use href="#ic-search"/></svg> Поиск</button>
+        <button class="btn btn-primary btn-sm">+ Новый клиент</button>
+      </div>
+    </div>
+    <div class="content" id="ca"></div>
+  </main>
+</div>
+
+<!-- ═══════════ LAYOUT B ═══════════ -->
+<div class="layout" id="lb" style="flex-direction:column;">
+  <header class="topbar">
+    <div class="logo-area">
+      <div class="logo-mark"><svg width="14" height="14"><use href="#ic-wave"/></svg></div>
+      <span class="logo-text">IT-innovation</span>
+    </div>
+    <nav class="top-nav">
+      <div class="tn-item act"><svg width="14" height="14"><use href="#ic-grid"/></svg> Обзор</div>
+      <div class="tn-item"><svg width="14" height="14"><use href="#ic-users"/></svg> Продажи</div>
+      <div class="tn-item"><svg width="14" height="14"><use href="#ic-doc"/></svg> Presale</div>
+      <div class="tn-item dim"><svg width="14" height="14"><use href="#ic-bar"/></svg> Маркетинг <span class="soon">скоро</span></div>
+      <div class="tn-item dim"><svg width="14" height="14"><use href="#ic-log"/></svg> Торги <span class="soon">скоро</span></div>
+    </nav>
+    <div class="tb-right">
+      <div class="user-pill">
+        <div class="avatar">ЕП</div>
+        <span class="u-name">Евгений П.</span>
+      </div>
+    </div>
+  </header>
+  <div class="sub-bar">
+    <span class="breadcrumb">Платформа <span class="sep">›</span> <b>Обзор</b></span>
+    <div style="flex:1;"></div>
+    <button class="btn btn-primary btn-sm">+ Новый клиент</button>
+  </div>
+  <div class="content" id="cb"></div>
+</div>
+
+<!-- ═══════════ LAYOUT C ═══════════ -->
+<div class="layout" id="lc">
+  <aside class="sidebar">
+    <div class="logo-mark"><svg width="16" height="16"><use href="#ic-wave"/></svg></div>
+    <div class="i-btn act"><svg width="18" height="18"><use href="#ic-grid"/></svg><span class="tip">Обзор</span></div>
+    <div class="sep-line"></div>
+    <div class="i-btn"><svg width="18" height="18"><use href="#ic-users"/></svg><span class="tip">Клиентская база</span><span class="dot" style="position:absolute;top:7px;right:7px;width:6px;height:6px;border-radius:50%;background:var(--brand);"></span></div>
+    <div class="i-btn"><svg width="18" height="18"><use href="#ic-rotate"/></svg><span class="tip">Ротация</span></div>
+    <div class="i-btn"><svg width="18" height="18"><use href="#ic-bar"/></svg><span class="tip">Матрицы</span></div>
+    <div class="sep-line"></div>
+    <div class="i-btn"><svg width="18" height="18"><use href="#ic-doc"/></svg><span class="tip">Datasheet Partners</span></div>
+    <div class="s-bottom">
+      <div class="sep-line"></div>
+      <div class="i-btn"><svg width="18" height="18"><use href="#ic-log"/></svg><span class="tip">Аудит-лог</span></div>
+      <div class="i-btn"><svg width="18" height="18"><use href="#ic-cog"/></svg><span class="tip">Настройки</span></div>
+      <div class="avatar-sm" title="Евгений Паламарчук">ЕП</div>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="topbar">
+      <div class="title-block">
+        <span class="page-h">Обзор платформы</span>
+        <span class="breadcrumb">Платформа <span style="margin:0 3px;">›</span> <b>Обзор</b></span>
+      </div>
+      <div class="tb-right">
+        <button class="btn btn-outline btn-sm"><svg width="13" height="13"><use href="#ic-search"/></svg> Поиск</button>
+        <button class="btn btn-primary btn-sm">+ Новый клиент</button>
+      </div>
+    </div>
+    <div class="content" id="cc"></div>
+  </main>
+</div>
+
+<!-- ═══════════ LAYOUT D ═══════════ -->
+<div class="layout" id="ld" style="flex-direction:column;">
+  <div class="brand-bar">
+    <div class="logo-area">
+      <div class="logo-mark"><svg width="13" height="13"><use href="#ic-wave"/></svg></div>
+      <span class="logo-text">IT-innovation</span>
+      <span class="env-badge">beta</span>
+    </div>
+    <div class="brand-right">
+      <button class="notif-btn"><svg width="14" height="14"><use href="#ic-bell"/></svg><span class="notif-dot"></span></button>
+      <div class="user-pill">
+        <div class="avatar">ЕП</div>
+        <span class="u-name">Евгений П. · Администратор</span>
+      </div>
+    </div>
+  </div>
+  <div class="body">
+    <aside class="sidebar">
+      <div class="nav-group-label">Рабочее пространство</div>
+      <div class="nav-item act"><svg width="14" height="14"><use href="#ic-grid"/></svg> Обзор</div>
+      <div class="nav-group-label">Продажи</div>
+      <div class="nav-item"><svg width="14" height="14"><use href="#ic-users"/></svg> Клиентская база <span class="nav-badge">1235</span></div>
+      <div class="nav-item"><svg width="14" height="14"><use href="#ic-rotate"/></svg> Ротация</div>
+      <div class="nav-item"><svg width="14" height="14"><use href="#ic-bar"/></svg> Матрицы</div>
+      <div class="nav-group-label">Presale</div>
+      <div class="nav-item"><svg width="14" height="14"><use href="#ic-doc"/></svg> Datasheet Partners</div>
+      <div class="nav-group-label">Система</div>
+      <div class="nav-item"><svg width="14" height="14"><use href="#ic-log"/></svg> Аудит-лог</div>
+      <div class="nav-item"><svg width="14" height="14"><use href="#ic-cog"/></svg> Настройки</div>
+    </aside>
+    <main class="main">
+      <div class="topbar">
+        <span class="breadcrumb">Платформа <span class="sep">›</span> <b>Обзор</b></span>
+        <div class="tb-right">
+          <button class="btn btn-outline btn-sm"><svg width="13" height="13"><use href="#ic-search"/></svg> Поиск</button>
+          <button class="btn btn-primary btn-sm">+ Новый клиент</button>
+        </div>
+      </div>
+      <div class="content" id="cd"></div>
+    </main>
+  </div>
+</div>
+
+<script>
+function ic(id,w=14){return `<svg width="${w}" height="${w}"><use href="#${id}"/></svg>`}
+
+function contentHTML(){
+  return `
+  <div class="metrics">
+    <div class="metric accent"><div class="m-val">1 235</div><div class="m-lbl">Клиентов в базе</div><div class="m-dl up">▲ 24 за месяц</div></div>
+    <div class="metric"><div class="m-val">8</div><div class="m-lbl">Активных менеджеров</div><div class="m-dl up">▲ 2 новых</div></div>
+    <div class="metric"><div class="m-val">312</div><div class="m-lbl">На передаче</div><div class="m-dl dn">▼ 15 завершено</div></div>
+  </div>
+  <div class="two-col">
+    <div class="section">
+      <div class="section-head">Последние клиенты</div>
+      <table class="tbl">
+        <thead><tr><th>Клиент</th><th>ИНН</th><th>Статус</th><th>Менеджер</th></tr></thead>
+        <tbody>
+          <tr><td><b>World Class</b></td><td class="mono">7701234567</td><td><span class="badge bg"><span class="dot" style="background:#5a8028;"></span>Активный</span></td><td>Петров А.</td></tr>
+          <tr><td><b>Газпром ВНИИГАЗ</b></td><td class="mono">5003012345</td><td><span class="badge ba"><span class="dot" style="background:#b45309;"></span>Передача</span></td><td>Иванов С.</td></tr>
+          <tr><td><b>ТК Центр</b></td><td class="mono">7714567890</td><td><span class="badge bb"><span class="dot" style="background:#1d4ed8;"></span>В проработке</span></td><td>—</td></tr>
+          <tr><td><b>БХЗ</b></td><td class="mono">4400112233</td><td><span class="badge bgr"><span class="dot" style="background:var(--mid);"></span>Нет статуса</span></td><td>Сидоров К.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div class="section">
+        <div class="section-head">Карточка клиента</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--dark);">World Class</div>
+              <div style="font-size:12px;color:var(--mid);margin-top:2px;">ИНН 7701234567 · Москва · Крупный</div>
+            </div>
+            <span class="badge bg">Активный</span>
+          </div>
+          <div style="font-size:12.5px;color:var(--mid);line-height:1.6;">Менеджер: <span style="color:var(--dark);font-weight:500;">Петров А.</span><br>Последний контакт: <span style="color:var(--dark);">15 июня 2026</span></div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-outline btn-sm">Карточка</button>
+            <button class="btn btn-primary btn-sm">Передать</button>
+          </div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-head">Статусы</div>
+        <div style="display:flex;flex-wrap:wrap;gap:7px;">
+          <span class="badge bg"><span class="dot" style="background:#5a8028;"></span>Активный</span>
+          <span class="badge ba"><span class="dot" style="background:#b45309;"></span>Передача</span>
+          <span class="badge bb"><span class="dot" style="background:#1d4ed8;"></span>В проработке</span>
+          <span class="badge bgr">МОП</span>
+          <span class="badge bgr">РОП</span>
+          <span class="badge" style="background:rgba(129,180,70,.12);color:#5a8028;">Admin</span>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function go(v) {
+  ['a','b','c','d'].forEach(x => {
+    document.getElementById('l'+x).classList.toggle('visible', x===v);
+  });
+  document.querySelectorAll('.sw-btn').forEach((b,i)=>{
+    b.classList.toggle('active', ['a','b','c','d'][i]===v);
+  });
+  const el = document.getElementById('c'+v);
+  if(!el.innerHTML) el.innerHTML = contentHTML();
+}
+
+document.getElementById('ca').innerHTML = contentHTML();
+</script>
+</body>
+</html>

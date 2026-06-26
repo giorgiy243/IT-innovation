@@ -1,0 +1,954 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IT-innovation — Варианты карточек</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vela+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --brand:#81B446; --brand-d:#6a9338; --brand-l:rgba(129,180,70,.1);
+  --dark:#1E2832; --slate:#323C50; --mid:#8296AA;
+  --light:#D7DCE6; --bg:#F5FAFA; --white:#fff;
+  --font:'Vela Sans',system-ui,sans-serif;
+  --r:10px;
+  --sh: 0 2px 10px rgba(30,40,50,.08), 0 1px 3px rgba(30,40,50,.05);
+  --sh-hover: 0 8px 28px rgba(30,40,50,.13), 0 2px 6px rgba(30,40,50,.07);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100%;background:var(--bg);font-family:var(--font);color:var(--dark);-webkit-font-smoothing:antialiased;}
+.page{max-width:980px;margin:0 auto;padding:82px 32px 60px;}
+
+/* Switcher */
+.switcher{
+  position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:9999;
+  display:flex;gap:6px;align-items:center;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(10px);
+  border:1px solid var(--light);border-radius:12px;padding:7px 12px;
+  box-shadow:0 4px 20px rgba(30,40,50,.14);
+}
+.sw-label{font-size:11.5px;color:var(--mid);font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin-right:2px;}
+.sw-btn{height:32px;padding:0 14px;border:1.5px solid var(--light);border-radius:8px;background:var(--white);color:var(--slate);font-family:var(--font);font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.sw-btn:hover{border-color:var(--brand);color:var(--brand);}
+.sw-btn.active{background:var(--brand);border-color:var(--brand);color:#fff;box-shadow:0 2px 8px rgba(129,180,70,.3);}
+
+.variant{display:none;}
+.variant.visible{display:block;}
+.v-header{margin-bottom:24px;}
+.v-title{font-size:22px;font-weight:700;color:var(--dark);margin-bottom:6px;}
+.v-desc{font-size:13.5px;color:var(--mid);line-height:1.6;max-width:600px;}
+.v-badge{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:12px;font-size:12px;font-weight:700;background:rgba(129,180,70,.14);color:#5a8028;margin-bottom:10px;}
+
+.section{background:var(--white);border:1px solid var(--light);border-radius:var(--r);padding:22px 24px;margin-bottom:16px;}
+.sec-label{font-size:11px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.07em;margin-bottom:16px;}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+
+/* Shared */
+.badge{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 8px;border-radius:10px;font-size:11.5px;font-weight:600;}
+.bg{background:rgba(129,180,70,.13);color:#5a8028;}
+.bg-w{background:rgba(255,255,255,.18);color:#fff;}
+.ba{background:rgba(245,158,11,.12);color:#b45309;}
+.ba-w{background:rgba(255,255,255,.18);color:#fff;}
+.bb{background:rgba(59,130,246,.11);color:#1d4ed8;}
+.bb-w{background:rgba(255,255,255,.18);color:#fff;}
+.bgr{background:var(--bg);color:var(--mid);border:1px solid var(--light);}
+.bgr-w{background:rgba(255,255,255,.12);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.15);}
+.sdot{width:5px;height:5px;border-radius:50%;flex:none;}
+.btn{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 13px;border-radius:7px;font-family:var(--font);font-size:12.5px;font-weight:600;cursor:pointer;border:none;transition:all .15s;}
+.b-p{background:var(--brand);color:#fff;}
+.b-p:hover{background:var(--brand-d);}
+.b-o{background:transparent;color:var(--dark);border:1.5px solid var(--light);}
+.b-o:hover{border-color:var(--brand);color:var(--brand);}
+.b-w{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.2);}
+.b-w:hover{background:rgba(255,255,255,.25);}
+
+/* ═══════════════════════════════════════════
+   VARIANT Г — тёмная шапка УЛУЧШЕНА
+   Исправлено: белый текст, тень, hover-подъём
+═══════════════════════════════════════════ */
+#vd .card{
+  background:var(--white);
+  border:none;
+  border-radius:var(--r);
+  overflow:hidden;
+  box-shadow:var(--sh);
+  transition:transform .18s ease, box-shadow .18s ease;
+}
+#vd .card:hover{
+  transform:translateY(-3px);
+  box-shadow:var(--sh-hover);
+}
+#vd .card-head{
+  background:var(--slate); /* #323C50 — немного светлее чем --dark, лучше читаемость */
+  padding:11px 14px;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  border-bottom:2px solid var(--brand); /* акцентная линия бренда под шапкой */
+}
+#vd .card.c-green .card-head{background:#2a3d20;border-bottom-color:var(--brand);}
+#vd .card.c-amber .card-head{background:#3d2e10;border-bottom-color:#f59e0b;}
+#vd .card.c-blue  .card-head{background:#12243d;border-bottom-color:#3b82f6;}
+#vd .card-name{font-size:13.5px;font-weight:700;color:#fff;} /* БЕЛЫЙ — главное исправление */
+#vd .card-body-wrap{padding:14px;}
+#vd .card-sub{font-size:12px;color:var(--mid);margin-bottom:8px;}
+#vd .card-body{font-size:13px;color:var(--slate);line-height:1.7;margin-bottom:10px;}
+#vd .card-ft{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+#vd .card-meta{font-size:11.5px;color:var(--mid);}
+
+/* metric card Г */
+#vd .m-card{
+  background:var(--white);border:none;border-radius:var(--r);overflow:hidden;
+  box-shadow:var(--sh);transition:transform .18s ease, box-shadow .18s ease;
+}
+#vd .m-card:hover{transform:translateY(-3px);box-shadow:var(--sh-hover);}
+#vd .m-head{
+  background:var(--dark);padding:9px 16px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:2px solid var(--brand);
+}
+#vd .m-head-lbl{font-size:11px;font-weight:600;color:rgba(255,255,255,.75);text-transform:uppercase;letter-spacing:.06em;}
+#vd .m-body{padding:12px 16px;}
+#vd .m-val{font-size:26px;font-weight:700;color:var(--dark);}
+#vd .m-lbl{font-size:12px;color:var(--mid);margin-top:2px;}
+#vd .m-dl{font-size:12px;font-weight:600;margin-top:4px;}
+#vd .up{color:#5a8028;} #vd .dn{color:#991b1b;}
+
+/* ═══════════════════════════════════════════
+   VARIANT А — Светлая шапка с цветным статус-бордером
+   Тот же принцип «шапка + тело», но шапка светлая.
+   Статус кодируется цветной нижней полосой шапки.
+═══════════════════════════════════════════ */
+#va .card{
+  background:var(--white);border:none;border-radius:var(--r);overflow:hidden;
+  box-shadow:var(--sh);transition:transform .18s ease, box-shadow .18s ease;
+}
+#va .card:hover{transform:translateY(-3px);box-shadow:var(--sh-hover);}
+#va .card-head{
+  background:var(--bg);padding:11px 14px;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  border-bottom:2px solid var(--light);
+}
+#va .card.c-green .card-head{border-bottom-color:var(--brand);}
+#va .card.c-amber .card-head{border-bottom-color:#f59e0b;}
+#va .card.c-blue  .card-head{border-bottom-color:#3b82f6;}
+#va .card.c-gray  .card-head{border-bottom-color:var(--mid);}
+#va .card-name{font-size:13.5px;font-weight:700;color:var(--dark);}
+#va .card-body-wrap{padding:14px;}
+#va .card-sub{font-size:12px;color:var(--mid);margin-bottom:8px;}
+#va .card-body{font-size:13px;color:var(--slate);line-height:1.7;margin-bottom:10px;}
+#va .card-ft{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+#va .card-meta{font-size:11.5px;color:var(--mid);}
+
+#va .m-card{
+  background:var(--white);border:none;border-radius:var(--r);overflow:hidden;
+  box-shadow:var(--sh);transition:transform .18s ease, box-shadow .18s ease;
+}
+#va .m-card:hover{transform:translateY(-3px);box-shadow:var(--sh-hover);}
+#va .m-head{background:var(--bg);padding:9px 16px;border-bottom:2px solid var(--brand);display:flex;align-items:center;justify-content:space-between;}
+#va .m-head-lbl{font-size:11px;font-weight:600;color:var(--mid);text-transform:uppercase;letter-spacing:.06em;}
+#va .m-body{padding:12px 16px;}
+#va .m-val{font-size:26px;font-weight:700;color:var(--dark);}
+#va .m-lbl{font-size:12px;color:var(--mid);margin-top:2px;}
+#va .m-dl{font-size:12px;font-weight:600;margin-top:4px;}
+#va .up{color:#5a8028;} #va .dn{color:#991b1b;}
+
+/* ═══════════════════════════════════════════
+   VARIANT Б — Градиентная шапка
+   Брендовый градиент G1 (синий→зелёный) как фон шапки.
+   Белый текст. Тело — белое. Тень + подъём.
+═══════════════════════════════════════════ */
+#vb .card{
+  background:var(--white);border:none;border-radius:var(--r);overflow:hidden;
+  box-shadow:var(--sh);transition:transform .18s ease, box-shadow .18s ease;
+}
+#vb .card:hover{transform:translateY(-3px);box-shadow:var(--sh-hover);}
+#vb .card-head{
+  background:linear-gradient(120deg,#2a4a6e,#3a6e2a);
+  padding:11px 14px;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+}
+#vb .card.c-green .card-head{background:linear-gradient(120deg,#1f3d18,#3a6e2a);}
+#vb .card.c-amber .card-head{background:linear-gradient(120deg,#3d2600,#7a4a00);}
+#vb .card.c-blue  .card-head{background:linear-gradient(120deg,#0a2040,#1a4a80);}
+#vb .card-name{font-size:13.5px;font-weight:700;color:#fff;}
+#vb .card-body-wrap{padding:14px;}
+#vb .card-sub{font-size:12px;color:var(--mid);margin-bottom:8px;}
+#vb .card-body{font-size:13px;color:var(--slate);line-height:1.7;margin-bottom:10px;}
+#vb .card-ft{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+#vb .card-meta{font-size:11.5px;color:var(--mid);}
+
+#vb .m-card{
+  background:var(--white);border:none;border-radius:var(--r);overflow:hidden;
+  box-shadow:var(--sh);transition:transform .18s ease, box-shadow .18s ease;
+}
+#vb .m-card:hover{transform:translateY(-3px);box-shadow:var(--sh-hover);}
+#vb .m-head{background:linear-gradient(120deg,#459BFF,#5FAF2D);padding:9px 16px;display:flex;align-items:center;justify-content:space-between;}
+#vb .m-head-lbl{font-size:11px;font-weight:600;color:rgba(255,255,255,.9);text-transform:uppercase;letter-spacing:.06em;}
+#vb .m-body{padding:12px 16px;}
+#vb .m-val{font-size:26px;font-weight:700;color:var(--dark);}
+#vb .m-lbl{font-size:12px;color:var(--mid);margin-top:2px;}
+#vb .m-dl{font-size:12px;font-weight:600;margin-top:4px;}
+#vb .up{color:#5a8028;} #vb .dn{color:#991b1b;}
+
+/* ═══════════════════════════════════════════
+   VARIANT В — Двухколоночная карточка
+   Левая колонка: цветной статус-блок с иконкой/аватаром.
+   Правая колонка: белый контент.
+   Тень + подъём.
+═══════════════════════════════════════════ */
+#vc .card{
+  background:var(--white);border:none;border-radius:var(--r);overflow:hidden;
+  box-shadow:var(--sh);transition:transform .18s ease, box-shadow .18s ease;
+  display:flex;min-height:110px;
+}
+#vc .card:hover{transform:translateY(-3px);box-shadow:var(--sh-hover);}
+#vc .card-stripe{
+  width:52px;flex:none;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:6px;padding:10px 0;
+}
+#vc .card.c-green .card-stripe{background:#2a3d20;}
+#vc .card.c-amber .card-stripe{background:#3d2e10;}
+#vc .card.c-blue  .card-stripe{background:#12243d;}
+#vc .card.c-gray  .card-stripe{background:var(--slate);}
+#vc .stripe-icon{width:28px;height:28px;border-radius:7px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;}
+#vc .stripe-label{font-size:9.5px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.08em;writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);}
+#vc .card-content{flex:1;padding:13px 14px;display:flex;flex-direction:column;gap:6px;}
+#vc .card-hd{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+#vc .card-name{font-size:13.5px;font-weight:700;color:var(--dark);}
+#vc .card-sub{font-size:12px;color:var(--mid);}
+#vc .card-body{font-size:13px;color:var(--slate);line-height:1.65;flex:1;}
+#vc .card-ft{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;padding-top:8px;}
+#vc .card-meta{font-size:11.5px;color:var(--mid);}
+
+/* metric card В */
+#vc .m-card{
+  background:var(--white);border:none;border-radius:var(--r);overflow:hidden;
+  box-shadow:var(--sh);transition:transform .18s ease, box-shadow .18s ease;
+  display:flex;
+}
+#vc .m-card:hover{transform:translateY(-3px);box-shadow:var(--sh-hover);}
+#vc .m-stripe{width:6px;flex:none;}
+#vc .m-stripe.green{background:var(--brand);}
+#vc .m-stripe.blue{background:#3b82f6;}
+#vc .m-stripe.amber{background:#f59e0b;}
+#vc .m-body{padding:14px 16px;flex:1;}
+#vc .m-val{font-size:26px;font-weight:700;color:var(--dark);}
+#vc .m-lbl{font-size:12px;color:var(--mid);margin-top:2px;}
+#vc .m-dl{font-size:12px;font-weight:600;margin-top:4px;}
+#vc .up{color:#5a8028;} #vc .dn{color:#991b1b;}
+
+::-webkit-scrollbar{width:8px;}
+::-webkit-scrollbar-thumb{background:var(--light);border-radius:4px;}
+
+/* ═══════════════════════════════════════════
+   VARIANT Е — ИТОГОВЫЙ ГИБРИД
+   Клиентские: боковая колонка В + градиент Б
+   Сводки: градиентная шапка Б
+   Метрики: градиентная шапка Б
+═══════════════════════════════════════════ */
+
+/* --- Клиентские карточки (В-layout + Б-gradient) --- */
+#ve .cl-card{
+  background:var(--white);border:none;border-radius:var(--r);overflow:hidden;
+  box-shadow:var(--sh);transition:transform .18s ease, box-shadow .18s ease;
+  display:flex;min-height:130px;
+}
+#ve .cl-card:hover{transform:translateY(-3px);box-shadow:var(--sh-hover);}
+
+/* градиентная боковая полоса — цвет по статусу, направление сверху вниз */
+#ve .cl-card.c-green .cl-stripe{background:linear-gradient(180deg,#1f3d18,#3a6e2a);}
+#ve .cl-card.c-amber .cl-stripe{background:linear-gradient(180deg,#3d2600,#7a4a00);}
+#ve .cl-card.c-blue  .cl-stripe{background:linear-gradient(180deg,#0a2040,#1a4a80);}
+#ve .cl-card.c-gray  .cl-stripe{background:linear-gradient(180deg,#2a3040,#3a4050);}
+
+#ve .cl-stripe{
+  width:52px;flex:none;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:8px;padding:12px 0;
+}
+#ve .cl-stripe-icon{
+  width:30px;height:30px;border-radius:8px;
+  background:rgba(255,255,255,.12);
+  display:flex;align-items:center;justify-content:center;
+}
+#ve .cl-stripe-lbl{
+  font-size:9px;font-weight:700;color:rgba(255,255,255,.45);
+  text-transform:uppercase;letter-spacing:.1em;
+  writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);
+}
+
+/* охранная зона: одинаковый паддинг 14px со всех сторон.
+   min-width:0 — без него flex-child не может сжаться ниже своего содержимого
+   и распирает карточку, выталкивая всё за правый край */
+#ve .cl-content{flex:1;min-width:0;padding:14px;display:flex;flex-direction:column;gap:0;}
+
+/* заголовок карточки */
+#ve .cl-hd{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:8px;margin-bottom:6px;
+}
+/* левый блок ДОЛЖЕН уметь сжиматься — без этого flex не обрезает содержимое */
+#ve .cl-hd-left{
+  min-width:0;  /* ключевое: позволяет flex-item сжаться ниже content-size */
+  flex:1;
+  overflow:hidden;
+}
+#ve .cl-name{
+  font-size:13.5px;font-weight:700;color:var(--dark);line-height:1.3;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+#ve .cl-sub{font-size:12px;color:var(--mid);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* бейдж статуса: не сжимается, не переносит текст, прижат к правому краю */
+#ve .cl-badge{
+  flex-shrink:0;
+  white-space:nowrap;
+  align-self:flex-start;
+}
+
+#ve .cl-body{font-size:13px;color:var(--slate);line-height:1.65;margin-bottom:0;flex:1;}
+
+/* футер */
+#ve .cl-ft{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  margin-top:10px;padding-top:10px;
+  border-top:1px solid var(--bg);
+}
+#ve .cl-meta{font-size:11.5px;color:var(--mid);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+/* контейнер кнопок не сжимается — охранная зона справа гарантирована padding контента */
+#ve .cl-ft-btns{display:flex;gap:6px;flex-shrink:0;}
+
+/* --- Карточки-сводки (Б-style: gradient header + white body) --- */
+#ve .sw-card{
+  background:var(--white);border:none;border-radius:var(--r);overflow:hidden;
+  box-shadow:var(--sh);transition:transform .18s ease, box-shadow .18s ease;
+}
+#ve .sw-card:hover{transform:translateY(-3px);box-shadow:var(--sh-hover);}
+#ve .sw-card.c-green .sw-head{background:linear-gradient(120deg,#1f3d18,#3a6e2a);}
+#ve .sw-card.c-amber .sw-head{background:linear-gradient(120deg,#3d2600,#7a4a00);}
+#ve .sw-card.c-blue  .sw-head{background:linear-gradient(120deg,#0a2040,#1a4a80);}
+#ve .sw-card.c-gray  .sw-head{background:linear-gradient(120deg,#2a3040,#3a4050);}
+#ve .sw-head{
+  padding:11px 15px;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+}
+#ve .sw-head-name{font-size:13.5px;font-weight:700;color:#fff;}
+#ve .sw-head-sub{font-size:11.5px;color:rgba(255,255,255,.55);margin-top:2px;}
+#ve .sw-body{padding:14px 15px;}
+#ve .sw-body-text{font-size:13px;color:var(--mid);line-height:1.7;}
+#ve .sw-body-text b{color:var(--dark);}
+
+/* --- Метрические карточки (Б-style: бренд-градиент) --- */
+#ve .m-card{
+  background:var(--white);border:none;border-radius:var(--r);overflow:hidden;
+  box-shadow:var(--sh);transition:transform .18s ease, box-shadow .18s ease;
+}
+#ve .m-card:hover{transform:translateY(-3px);box-shadow:var(--sh-hover);}
+#ve .m-head{
+  background:linear-gradient(120deg,#459BFF,#5FAF2D);
+  padding:9px 16px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+#ve .m-head-lbl{font-size:11px;font-weight:600;color:rgba(255,255,255,.9);text-transform:uppercase;letter-spacing:.06em;}
+#ve .m-head-badge{background:rgba(255,255,255,.2);color:#fff;font-size:10.5px;height:18px;padding:0 7px;border-radius:9px;display:inline-flex;align-items:center;font-weight:700;}
+#ve .m-body{padding:13px 16px;}
+#ve .m-val{font-size:26px;font-weight:700;color:var(--dark);}
+#ve .m-lbl{font-size:12px;color:var(--mid);margin-top:2px;}
+#ve .m-dl{font-size:12px;font-weight:600;margin-top:5px;}
+#ve .up{color:#5a8028;} #ve .dn{color:#991b1b;}
+</style>
+</head>
+<body>
+
+<div class="switcher">
+  <span class="sw-label">Стиль карточек:</span>
+  <button class="sw-btn" onclick="go('e')">★ Итог</button>
+  <button class="sw-btn" onclick="go('d')">Г — Тёмная шапка</button>
+  <button class="sw-btn" onclick="go('a')">А — Светлая шапка</button>
+  <button class="sw-btn" onclick="go('b')">Б — Градиент</button>
+  <button class="sw-btn" onclick="go('c')">В — Боковая полоса</button>
+</div>
+
+<svg style="display:none">
+  <symbol id="ic-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></symbol>
+  <symbol id="ic-doc"   viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></symbol>
+  <symbol id="ic-rotate" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></symbol>
+</svg>
+
+<div class="page">
+
+<!-- ═══ VARIANT Г (base — user liked this) ═══ -->
+<div class="variant" id="vd">
+  <div class="v-header">
+    <div class="v-badge">✦ Твой выбор за основу</div>
+    <div class="v-title">Г — Тёмная шапка (исправлено)</div>
+    <div class="v-desc">Тёмный фон шапки с белым текстом — контраст исправлен. Акцентная линия бренда под шапкой. Тень под карточкой. При наведении карточка поднимается.</div>
+  </div>
+
+  <div class="section">
+    <div class="sec-label">Клиентские карточки</div>
+    <div class="grid3">
+      <div class="card c-green">
+        <div class="card-head">
+          <span class="card-name">World Class</span>
+          <span class="badge bg-w"><span class="sdot" style="background:rgba(255,255,255,.7);"></span>Активный</span>
+        </div>
+        <div class="card-body-wrap">
+          <div class="card-sub">ИНН 7701234567 · Москва</div>
+          <div class="card-body">Менеджер: <b>Петров А.</b><br>Сегмент: Крупный</div>
+          <div class="card-ft">
+            <span class="card-meta">Вчера</span>
+            <div style="display:flex;gap:6px;">
+              <button class="btn b-o">Карточка</button>
+              <button class="btn b-p">Передать</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card c-amber">
+        <div class="card-head">
+          <span class="card-name">Газпром ВНИИГАЗ</span>
+          <span class="badge ba-w"><span class="sdot" style="background:rgba(255,255,255,.7);"></span>Передача</span>
+        </div>
+        <div class="card-body-wrap">
+          <div class="card-sub">ИНН 5003012345 · Москва</div>
+          <div class="card-body">Менеджер: <b>Иванов С.</b><br>Принимает: Петрова М.</div>
+          <div class="card-ft">
+            <span class="card-meta">15 июня</span>
+            <button class="btn b-o">Карточка</button>
+          </div>
+        </div>
+      </div>
+      <div class="card c-blue">
+        <div class="card-head">
+          <span class="card-name">ТК Центр</span>
+          <span class="badge bb-w"><span class="sdot" style="background:rgba(255,255,255,.7);"></span>В проработке</span>
+        </div>
+        <div class="card-body-wrap">
+          <div class="card-sub">ИНН 7714567890 · Москва</div>
+          <div class="card-body">Менеджер: <b>не назначен</b><br>Сегмент: Средний</div>
+          <div class="card-ft">
+            <span class="card-meta">3 дня назад</span>
+            <button class="btn b-p">Назначить</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-label">Метрические карточки</div>
+    <div class="grid3">
+      <div class="m-card">
+        <div class="m-head"><span class="m-head-lbl">Клиентов в базе</span><span class="badge" style="background:rgba(129,180,70,.3);color:#b8e07a;font-size:10.5px;">▲ 24</span></div>
+        <div class="m-body"><div class="m-val">1 235</div><div class="m-lbl">за всё время</div><div class="m-dl up">+24 за месяц</div></div>
+      </div>
+      <div class="m-card">
+        <div class="m-head"><span class="m-head-lbl">Активных менеджеров</span></div>
+        <div class="m-body"><div class="m-val">8</div><div class="m-lbl">в работе</div><div class="m-dl up">▲ 2 новых</div></div>
+      </div>
+      <div class="m-card">
+        <div class="m-head"><span class="m-head-lbl">На передаче</span><span class="badge" style="background:rgba(245,158,11,.3);color:#fde68a;font-size:10.5px;">▼ 15</span></div>
+        <div class="m-body"><div class="m-val">312</div><div class="m-lbl">клиентов</div><div class="m-dl dn">−15 завершено</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-label">Карточки-сводки</div>
+    <div class="grid2">
+      <div class="card c-green">
+        <div class="card-head"><span class="card-name">Ротация клиентов</span><span class="badge bgr-w">Активна</span></div>
+        <div class="card-body-wrap">
+          <div class="card-sub">Домен: Продажи</div>
+          <div style="font-size:13px;color:var(--mid);line-height:1.7;">Статус: <span style="color:var(--dark);font-weight:500;">312 на передаче</span><br>Последнее изменение: <span style="color:var(--dark);">26 июня 2026</span></div>
+        </div>
+      </div>
+      <div class="card c-blue">
+        <div class="card-head"><span class="card-name">Datasheet Partners</span><span class="badge bgr-w">Актуален</span></div>
+        <div class="card-body-wrap">
+          <div class="card-sub">Домен: Presale</div>
+          <div style="font-size:13px;color:var(--mid);line-height:1.7;">Вендоров: <span style="color:var(--dark);font-weight:500;">47</span><br>Обновлён: <span style="color:var(--dark);">24 июня 2026</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ VARIANT А (new: light header) ═══ -->
+<div class="variant" id="va">
+  <div class="v-header">
+    <div class="v-title">А — Светлая шапка</div>
+    <div class="v-desc">Та же структура «шапка + тело», но шапка — светло-серая (#F5FAFA). Статус кодируется цветной полоской под шапкой. Менее тёмная, более нейтральная.</div>
+  </div>
+
+  <div class="section">
+    <div class="sec-label">Клиентские карточки</div>
+    <div class="grid3">
+      <div class="card c-green">
+        <div class="card-head">
+          <span class="card-name">World Class</span>
+          <span class="badge bg">Активный</span>
+        </div>
+        <div class="card-body-wrap">
+          <div class="card-sub">ИНН 7701234567 · Москва</div>
+          <div class="card-body">Менеджер: <b>Петров А.</b><br>Сегмент: Крупный</div>
+          <div class="card-ft">
+            <span class="card-meta">Вчера</span>
+            <div style="display:flex;gap:6px;">
+              <button class="btn b-o">Карточка</button>
+              <button class="btn b-p">Передать</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card c-amber">
+        <div class="card-head">
+          <span class="card-name">Газпром ВНИИГАЗ</span>
+          <span class="badge ba">Передача</span>
+        </div>
+        <div class="card-body-wrap">
+          <div class="card-sub">ИНН 5003012345 · Москва</div>
+          <div class="card-body">Менеджер: <b>Иванов С.</b><br>Принимает: Петрова М.</div>
+          <div class="card-ft">
+            <span class="card-meta">15 июня</span>
+            <button class="btn b-o">Карточка</button>
+          </div>
+        </div>
+      </div>
+      <div class="card c-blue">
+        <div class="card-head">
+          <span class="card-name">ТК Центр</span>
+          <span class="badge bb">В проработке</span>
+        </div>
+        <div class="card-body-wrap">
+          <div class="card-sub">ИНН 7714567890 · Москва</div>
+          <div class="card-body">Менеджер: <b>не назначен</b><br>Сегмент: Средний</div>
+          <div class="card-ft">
+            <span class="card-meta">3 дня назад</span>
+            <button class="btn b-p">Назначить</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-label">Метрические карточки</div>
+    <div class="grid3">
+      <div class="m-card">
+        <div class="m-head"><span class="m-head-lbl">Клиентов в базе</span><span class="badge bg" style="font-size:10.5px;">▲ 24</span></div>
+        <div class="m-body"><div class="m-val">1 235</div><div class="m-lbl">за всё время</div><div class="m-dl up">+24 за месяц</div></div>
+      </div>
+      <div class="m-card">
+        <div class="m-head"><span class="m-head-lbl">Активных менеджеров</span></div>
+        <div class="m-body"><div class="m-val">8</div><div class="m-lbl">в работе</div><div class="m-dl up">▲ 2 новых</div></div>
+      </div>
+      <div class="m-card">
+        <div class="m-head"><span class="m-head-lbl">На передаче</span><span class="badge ba" style="font-size:10.5px;">▼ 15</span></div>
+        <div class="m-body"><div class="m-val">312</div><div class="m-lbl">клиентов</div><div class="m-dl dn">−15 завершено</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-label">Карточки-сводки</div>
+    <div class="grid2">
+      <div class="card c-green">
+        <div class="card-head"><span class="card-name">Ротация клиентов</span><span class="badge bgr">Активна</span></div>
+        <div class="card-body-wrap">
+          <div class="card-sub">Домен: Продажи</div>
+          <div style="font-size:13px;color:var(--mid);line-height:1.7;">Статус: <span style="color:var(--dark);font-weight:500;">312 на передаче</span><br>Последнее изменение: <span style="color:var(--dark);">26 июня 2026</span></div>
+        </div>
+      </div>
+      <div class="card c-blue">
+        <div class="card-head"><span class="card-name">Datasheet Partners</span><span class="badge bgr">Актуален</span></div>
+        <div class="card-body-wrap">
+          <div class="card-sub">Домен: Presale</div>
+          <div style="font-size:13px;color:var(--mid);line-height:1.7;">Вендоров: <span style="color:var(--dark);font-weight:500;">47</span><br>Обновлён: <span style="color:var(--dark);">24 июня 2026</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ VARIANT Б (new: gradient header) ═══ -->
+<div class="variant" id="vb">
+  <div class="v-header">
+    <div class="v-title">Б — Градиентная шапка</div>
+    <div class="v-desc">Шапка с тёмным градиентом — цвет зависит от статуса клиента. Белый текст. Более «премиальный» вид. Тень + подъём те же.</div>
+  </div>
+
+  <div class="section">
+    <div class="sec-label">Клиентские карточки</div>
+    <div class="grid3">
+      <div class="card c-green">
+        <div class="card-head">
+          <span class="card-name">World Class</span>
+          <span class="badge bg-w">Активный</span>
+        </div>
+        <div class="card-body-wrap">
+          <div class="card-sub">ИНН 7701234567 · Москва</div>
+          <div class="card-body">Менеджер: <b>Петров А.</b><br>Сегмент: Крупный</div>
+          <div class="card-ft">
+            <span class="card-meta">Вчера</span>
+            <div style="display:flex;gap:6px;">
+              <button class="btn b-o">Карточка</button>
+              <button class="btn b-p">Передать</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card c-amber">
+        <div class="card-head">
+          <span class="card-name">Газпром ВНИИГАЗ</span>
+          <span class="badge ba-w">Передача</span>
+        </div>
+        <div class="card-body-wrap">
+          <div class="card-sub">ИНН 5003012345 · Москва</div>
+          <div class="card-body">Менеджер: <b>Иванов С.</b><br>Принимает: Петрова М.</div>
+          <div class="card-ft">
+            <span class="card-meta">15 июня</span>
+            <button class="btn b-o">Карточка</button>
+          </div>
+        </div>
+      </div>
+      <div class="card c-blue">
+        <div class="card-head">
+          <span class="card-name">ТК Центр</span>
+          <span class="badge bb-w">В проработке</span>
+        </div>
+        <div class="card-body-wrap">
+          <div class="card-sub">ИНН 7714567890 · Москва</div>
+          <div class="card-body">Менеджер: <b>не назначен</b><br>Сегмент: Средний</div>
+          <div class="card-ft">
+            <span class="card-meta">3 дня назад</span>
+            <button class="btn b-p">Назначить</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-label">Метрические карточки (брендовый градиент)</div>
+    <div class="grid3">
+      <div class="m-card">
+        <div class="m-head"><span class="m-head-lbl">Клиентов в базе</span><span class="badge" style="background:rgba(255,255,255,.18);color:#fff;font-size:10.5px;">▲ 24</span></div>
+        <div class="m-body"><div class="m-val">1 235</div><div class="m-lbl">за всё время</div><div class="m-dl up">+24 за месяц</div></div>
+      </div>
+      <div class="m-card">
+        <div class="m-head"><span class="m-head-lbl">Менеджеров</span></div>
+        <div class="m-body"><div class="m-val">8</div><div class="m-lbl">активных</div><div class="m-dl up">▲ 2 новых</div></div>
+      </div>
+      <div class="m-card">
+        <div class="m-head"><span class="m-head-lbl">На передаче</span><span class="badge" style="background:rgba(255,255,255,.18);color:#fff;font-size:10.5px;">▼ 15</span></div>
+        <div class="m-body"><div class="m-val">312</div><div class="m-lbl">клиентов</div><div class="m-dl dn">−15 завершено</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-label">Карточки-сводки</div>
+    <div class="grid2">
+      <div class="card c-green">
+        <div class="card-head"><span class="card-name">Ротация клиентов</span><span class="badge bgr-w">Активна</span></div>
+        <div class="card-body-wrap">
+          <div class="card-sub">Домен: Продажи</div>
+          <div style="font-size:13px;color:var(--mid);line-height:1.7;">Статус: <span style="color:var(--dark);font-weight:500;">312 на передаче</span><br>Последнее изменение: <span style="color:var(--dark);">26 июня 2026</span></div>
+        </div>
+      </div>
+      <div class="card c-blue">
+        <div class="card-head"><span class="card-name">Datasheet Partners</span><span class="badge bgr-w">Актуален</span></div>
+        <div class="card-body-wrap">
+          <div class="card-sub">Домен: Presale</div>
+          <div style="font-size:13px;color:var(--mid);line-height:1.7;">Вендоров: <span style="color:var(--dark);font-weight:500;">47</span><br>Обновлён: <span style="color:var(--dark);">24 июня 2026</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ VARIANT В (new: colored stripe left column) ═══ -->
+<div class="variant" id="vc">
+  <div class="v-header">
+    <div class="v-title">В — Цветная боковая колонка</div>
+    <div class="v-desc">Левая цветная колонка (52px, тёмный тон статуса) с вертикальным лейблом. Правая — белый контент. Статус моментально считывается по цвету. Тень + подъём те же.</div>
+  </div>
+
+  <div class="section">
+    <div class="sec-label">Клиентские карточки</div>
+    <div class="grid3">
+      <div class="card c-green">
+        <div class="card-stripe">
+          <div class="stripe-icon"><svg width="14" height="14" style="color:rgba(255,255,255,.7);"><use href="#ic-users"/></svg></div>
+          <span class="stripe-label">Активный</span>
+        </div>
+        <div class="card-content">
+          <div class="card-hd">
+            <div><div class="card-name">World Class</div><div class="card-sub">ИНН 7701234567 · Москва</div></div>
+            <span class="badge bg">✓</span>
+          </div>
+          <div class="card-body">Менеджер: <b>Петров А.</b><br>Сегмент: Крупный</div>
+          <div class="card-ft">
+            <span class="card-meta">Вчера</span>
+            <div style="display:flex;gap:5px;">
+              <button class="btn b-o">Карточка</button>
+              <button class="btn b-p">Передать</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card c-amber">
+        <div class="card-stripe">
+          <div class="stripe-icon"><svg width="14" height="14" style="color:rgba(255,255,255,.7);"><use href="#ic-rotate"/></svg></div>
+          <span class="stripe-label">Передача</span>
+        </div>
+        <div class="card-content">
+          <div class="card-hd">
+            <div><div class="card-name">Газпром ВНИИГАЗ</div><div class="card-sub">ИНН 5003012345 · МСК</div></div>
+          </div>
+          <div class="card-body">Менеджер: <b>Иванов С.</b><br>Принимает: Петрова М.</div>
+          <div class="card-ft">
+            <span class="card-meta">15 июня</span>
+            <button class="btn b-o">Карточка</button>
+          </div>
+        </div>
+      </div>
+      <div class="card c-blue">
+        <div class="card-stripe">
+          <div class="stripe-icon"><svg width="14" height="14" style="color:rgba(255,255,255,.7);"><use href="#ic-doc"/></svg></div>
+          <span class="stripe-label">Проработка</span>
+        </div>
+        <div class="card-content">
+          <div class="card-hd">
+            <div><div class="card-name">ТК Центр</div><div class="card-sub">ИНН 7714567890 · Москва</div></div>
+          </div>
+          <div class="card-body">Менеджер: <b>не назначен</b><br>Сегмент: Средний</div>
+          <div class="card-ft">
+            <span class="card-meta">3 дня назад</span>
+            <button class="btn b-p">Назначить</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-label">Метрические карточки (тонкая полоса)</div>
+    <div class="grid3">
+      <div class="m-card"><div class="m-stripe green"></div><div class="m-body"><div class="m-val">1 235</div><div class="m-lbl">Клиентов в базе</div><div class="m-dl up">▲ 24 за месяц</div></div></div>
+      <div class="m-card"><div class="m-stripe blue"></div><div class="m-body"><div class="m-val">8</div><div class="m-lbl">Активных менеджеров</div><div class="m-dl up">▲ 2 новых</div></div></div>
+      <div class="m-card"><div class="m-stripe amber"></div><div class="m-body"><div class="m-val">312</div><div class="m-lbl">На передаче</div><div class="m-dl dn">▼ 15 завершено</div></div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-label">Карточки-сводки</div>
+    <div class="grid2">
+      <div class="card c-green" style="min-height:80px;">
+        <div class="card-stripe"><div class="stripe-icon"><svg width="14" height="14" style="color:rgba(255,255,255,.7);"><use href="#ic-rotate"/></svg></div></div>
+        <div class="card-content">
+          <div class="card-hd"><div class="card-name">Ротация клиентов</div><span class="badge bgr">Активна</span></div>
+          <div class="card-body" style="font-size:12.5px;color:var(--mid);">Статус: <span style="color:var(--dark);font-weight:500;">312 на передаче</span> · 26 июня 2026</div>
+        </div>
+      </div>
+      <div class="card c-blue" style="min-height:80px;">
+        <div class="card-stripe"><div class="stripe-icon"><svg width="14" height="14" style="color:rgba(255,255,255,.7);"><use href="#ic-doc"/></svg></div></div>
+        <div class="card-content">
+          <div class="card-hd"><div class="card-name">Datasheet Partners</div><span class="badge bgr">Актуален</span></div>
+          <div class="card-body" style="font-size:12.5px;color:var(--mid);">Вендоров: <span style="color:var(--dark);font-weight:500;">47</span> · Обновлён 24 июня 2026</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ VARIANT Е — ИТОГОВЫЙ ГИБРИД ═══ -->
+<div class="variant" id="ve">
+  <div class="v-header">
+    <div class="v-badge">★ Итоговый вариант</div>
+    <div class="v-title">Гибрид: клиенты В+Б · сводки Б · метрики Б</div>
+    <div class="v-desc">Клиентские карточки — боковая колонка (В) с градиентом по статусу (Б). Карточки-сводки и метрические — градиентная шапка (Б). Тень и подъём при наведении на всех типах.</div>
+  </div>
+
+  <!-- Клиентские карточки: боковая колонка + градиент -->
+  <div class="section">
+    <div class="sec-label">Клиентские карточки</div>
+    <div class="grid3">
+
+      <div class="cl-card c-green">
+        <div class="cl-stripe">
+          <div class="cl-stripe-icon">
+            <svg width="15" height="15" style="color:rgba(255,255,255,.75);" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          </div>
+          <span class="cl-stripe-lbl">Активный</span>
+        </div>
+        <div class="cl-content">
+          <div class="cl-hd">
+            <div class="cl-hd-left">
+              <div class="cl-name">World Class</div>
+              <div class="cl-sub">ИНН 7701234567 · Москва</div>
+            </div>
+            <span class="badge bg cl-badge">Активный</span>
+          </div>
+          <div class="cl-body">Менеджер: <b>Петров А.</b><br>Сегмент: Крупный</div>
+          <div class="cl-ft">
+            <span class="cl-meta">Вчера</span>
+            <div class="cl-ft-btns">
+              <button class="btn b-o">Карточка</button>
+              <button class="btn b-p">Передать</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cl-card c-amber">
+        <div class="cl-stripe">
+          <div class="cl-stripe-icon">
+            <svg width="15" height="15" style="color:rgba(255,255,255,.75);" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          </div>
+          <span class="cl-stripe-lbl">Передача</span>
+        </div>
+        <div class="cl-content">
+          <div class="cl-hd">
+            <div class="cl-hd-left">
+              <div class="cl-name">Газпром ВНИИГАЗ</div>
+              <div class="cl-sub">ИНН 5003012345 · Москва</div>
+            </div>
+            <span class="badge ba cl-badge">Передача</span>
+          </div>
+          <div class="cl-body">Менеджер: <b>Иванов С.</b><br>Принимает: Петрова М.</div>
+          <div class="cl-ft">
+            <span class="cl-meta">15 июня</span>
+            <div class="cl-ft-btns">
+              <button class="btn b-o">Карточка</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cl-card c-blue">
+        <div class="cl-stripe">
+          <div class="cl-stripe-icon">
+            <svg width="15" height="15" style="color:rgba(255,255,255,.75);" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <span class="cl-stripe-lbl">Проработка</span>
+        </div>
+        <div class="cl-content">
+          <div class="cl-hd">
+            <div class="cl-hd-left">
+              <div class="cl-name">ТК Центр</div>
+              <div class="cl-sub">ИНН 7714567890 · Москва</div>
+            </div>
+            <span class="badge bb cl-badge">В проработке</span>
+          </div>
+          <div class="cl-body">Менеджер: <b>не назначен</b><br>Сегмент: Средний</div>
+          <div class="cl-ft">
+            <span class="cl-meta">3 дня назад</span>
+            <div class="cl-ft-btns">
+              <button class="btn b-p">Назначить</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Метрические карточки: градиент Б (бренд) -->
+  <div class="section">
+    <div class="sec-label">Метрические карточки</div>
+    <div class="grid3">
+      <div class="m-card">
+        <div class="m-head">
+          <span class="m-head-lbl">Клиентов в базе</span>
+          <span class="m-head-badge">▲ 24</span>
+        </div>
+        <div class="m-body">
+          <div class="m-val">1 235</div>
+          <div class="m-lbl">за всё время</div>
+          <div class="m-dl up">+24 за месяц</div>
+        </div>
+      </div>
+      <div class="m-card">
+        <div class="m-head">
+          <span class="m-head-lbl">Активных менеджеров</span>
+        </div>
+        <div class="m-body">
+          <div class="m-val">8</div>
+          <div class="m-lbl">в работе сейчас</div>
+          <div class="m-dl up">▲ 2 новых</div>
+        </div>
+      </div>
+      <div class="m-card">
+        <div class="m-head">
+          <span class="m-head-lbl">На передаче</span>
+          <span class="m-head-badge">▼ 15</span>
+        </div>
+        <div class="m-body">
+          <div class="m-val">312</div>
+          <div class="m-lbl">клиентов</div>
+          <div class="m-dl dn">−15 завершено</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Карточки-сводки: градиентная шапка Б -->
+  <div class="section">
+    <div class="sec-label">Карточки-сводки</div>
+    <div class="grid2">
+      <div class="sw-card c-green">
+        <div class="sw-head">
+          <div>
+            <div class="sw-head-name">Ротация клиентов</div>
+            <div class="sw-head-sub">Домен: Продажи</div>
+          </div>
+          <span class="badge bgr-w">Активна</span>
+        </div>
+        <div class="sw-body">
+          <div class="sw-body-text">
+            Статус: <b>312 на передаче</b><br>
+            Последнее изменение: <b>26 июня 2026</b>
+          </div>
+        </div>
+      </div>
+      <div class="sw-card c-blue">
+        <div class="sw-head">
+          <div>
+            <div class="sw-head-name">Datasheet Partners</div>
+            <div class="sw-head-sub">Домен: Presale</div>
+          </div>
+          <span class="badge bgr-w">Актуален</span>
+        </div>
+        <div class="sw-body">
+          <div class="sw-body-text">
+            Вендоров: <b>47</b><br>
+            Последнее обновление: <b>24 июня 2026</b>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /ve -->
+
+</div>
+
+<script>
+function go(v){
+  ['a','b','c','d','e'].forEach(x=>{
+    document.getElementById('v'+x).classList.toggle('visible',x===v);
+  });
+  document.querySelectorAll('.sw-btn').forEach((b,i)=>{
+    b.classList.toggle('active',['e','d','a','b','c'][i]===v);
+  });
+}
+go('e');
+</script>
+</body>
+</html>

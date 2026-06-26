@@ -1,12 +1,18 @@
-"""Точка входа FastAPI. Фаза 0.4 - hello-эндпоинт для проверки деплой-конвейера.
+"""Точка входа FastAPI.
 
-Фаза 1: подключить auth, RBAC, реестр модулей, маршруты доменов.
+Фаза 0.4 - hello-эндпоинт и проверка деплой-конвейера.
+Фаза 1.1 - подключена аутентификация (/login, /logout, /me).
+Дальше: RBAC, реестр модулей, маршруты доменов.
 """
 import os
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
-app = FastAPI(title="IT-innovation", version="0.0.1")
+from core.auth.routes import router as auth_router
+
+app = FastAPI(title="IT-innovation", version="0.1.0")
+
+app.include_router(auth_router)
 
 
 @app.get("/health")
