@@ -1,0 +1,14 @@
+# Пример systemd-юнита (подфаза 0.4). Скопировать в /etc/systemd/system/, заполнить пути.
+[Unit]
+Description=IT-innovation platform (uvicorn)
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/it-innovation
+EnvironmentFile=/opt/it-innovation/.env
+ExecStart=/opt/it-innovation/.venv/bin/uvicorn core.app:app --host 127.0.0.1 --port 8000
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
