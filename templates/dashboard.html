@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IT-innovation</title>
+<style>
+:root{
+  --brand:#81B446;--brand-d:#6a9338;--dark:#1E2832;--slate:#323C50;
+  --mid:#8296AA;--light:#D7DCE6;--bg:#F5FAFA;
+  --nav-bg:#1E2832;--nav-hover:#323C50;
+  --sidebar-w:232px;--topbar-h:56px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,sans-serif;color:var(--dark);-webkit-font-smoothing:antialiased;}
+
+/* Layout */
+.layout{display:flex;height:100vh;overflow:hidden;}
+
+/* Sidebar */
+.sidebar{
+  width:var(--sidebar-w);flex:none;background:var(--nav-bg);
+  display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,.05);
+}
+.s-logo{
+  height:var(--topbar-h);display:flex;align-items:center;padding:0 16px;gap:10px;
+  border-bottom:1px solid rgba(255,255,255,.07);flex:none;
+}
+.logo-mark{
+  width:30px;height:30px;border-radius:8px;flex:none;
+  background:var(--brand);display:flex;align-items:center;justify-content:center;
+}
+.logo-mark svg{width:16px;height:16px;fill:#fff;}
+.logo-text{font-size:14px;font-weight:700;color:#fff;letter-spacing:-.01em;}
+
+.nav-body{flex:1;overflow-y:auto;padding:10px 8px;}
+.nav-group-label{
+  font-size:10.5px;font-weight:600;color:rgba(130,150,170,.7);
+  text-transform:uppercase;letter-spacing:.08em;padding:10px 10px 4px;
+}
+.nav-item{
+  display:flex;align-items:center;gap:9px;height:38px;padding:0 10px;
+  border-radius:7px;font-size:13px;font-weight:500;color:rgba(255,255,255,.6);
+  cursor:pointer;margin-bottom:1px;border-left:2px solid transparent;
+  transition:background .12s,color .12s;
+}
+.nav-item:hover{background:var(--nav-hover);color:#fff;}
+.nav-item.act{background:rgba(129,180,70,.14);color:#fff;border-left-color:var(--brand);}
+.nav-item svg{width:16px;height:16px;flex:none;opacity:.7;}
+.nav-item.act svg{opacity:1;}
+.nav-empty{padding:16px 10px;font-size:12.5px;color:rgba(255,255,255,.25);line-height:1.5;}
+
+.s-footer{padding:10px 8px;border-top:1px solid rgba(255,255,255,.06);flex:none;}
+.user-row{
+  display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;cursor:pointer;
+}
+.user-row:hover{background:var(--nav-hover);}
+.avatar{
+  width:30px;height:30px;border-radius:8px;flex:none;
+  background:var(--slate);display:flex;align-items:center;justify-content:center;
+  font-size:11.5px;font-weight:700;color:#fff;
+}
+.u-info{flex:1;min-width:0;}
+.u-name{font-size:12.5px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.u-role{font-size:11px;color:var(--mid);}
+.logout-btn{
+  width:24px;height:24px;display:flex;align-items:center;justify-content:center;
+  border:none;background:transparent;cursor:pointer;border-radius:5px;
+  color:rgba(255,255,255,.3);transition:color .15s,background .15s;flex:none;
+  font-size:16px;line-height:1;
+}
+.logout-btn:hover{color:#fff;background:rgba(255,255,255,.08);}
+
+/* Main */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{
+  height:var(--topbar-h);flex:none;display:flex;align-items:center;
+  padding:0 24px;background:#fff;border-bottom:1px solid var(--light);gap:12px;
+}
+.page-h{font-size:15px;font-weight:700;color:var(--dark);}
+.content{flex:1;overflow-y:auto;padding:32px 24px;}
+
+/* Welcome */
+.welcome{max-width:480px;}
+.welcome h2{font-size:20px;font-weight:700;color:var(--dark);margin-bottom:8px;}
+.welcome p{font-size:14px;color:var(--mid);line-height:1.6;}
+.modules-grid{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px;}
+.mod-card{
+  background:#fff;border:1px solid var(--light);border-radius:10px;
+  padding:16px 20px;min-width:160px;cursor:pointer;
+  transition:border-color .15s,box-shadow .15s;
+}
+.mod-card:hover{border-color:var(--brand);box-shadow:0 2px 12px rgba(129,180,70,.12);}
+.mod-card-name{font-size:13.5px;font-weight:600;color:var(--dark);}
+.mod-card-scope{font-size:11.5px;color:var(--mid);margin-top:3px;}
+</style>
+</head>
+<body>
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="s-logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 18 18"><path d="M9 2L2 6v6l7 4 7-4V6z" opacity=".3"/><path d="M9 2l7 4-7 4L2 6z"/></svg>
+      </div>
+      <span class="logo-text">IT-innovation</span>
+    </div>
+
+    <div class="nav-body" id="navBody">
+      <div class="nav-group-label">Загрузка...</div>
+    </div>
+
+    <div class="s-footer">
+      <div class="user-row">
+        <div class="avatar" id="userAvatar">?</div>
+        <div class="u-info">
+          <div class="u-name" id="userName">...</div>
+          <div class="u-role" id="userRole">...</div>
+        </div>
+        <button class="logout-btn" title="Выйти" id="logoutBtn">⏻</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <span class="page-h" id="pageTitle">Главная</span>
+    </div>
+    <div class="content">
+      <div class="welcome">
+        <h2>Добро пожаловать</h2>
+        <p>Выберите модуль в боковом меню или нажмите на карточку ниже.</p>
+        <div class="modules-grid" id="modulesGrid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SCOPE_LABEL = {own: 'Свои данные', team: 'Команда', domain: 'Домен', all: 'Все данные'};
+
+const NAV_ICONS = {
+  sales:    `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 10l4-4 3 3 5-5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>`,
+  presale:  `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2a6 6 0 100 12A6 6 0 008 2zm0 1.5a4.5 4.5 0 110 9 4.5 4.5 0 010-9zM7 5v4l3 1.5.5-1L8 8V5H7z"/></svg>`,
+  marketing:`<svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 8a5 5 0 0110 0H3zm5-6a1 1 0 110 2 1 1 0 010-2zM2 9h12v1H2z"/></svg>`,
+  bidding:  `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1l2 4h4l-3 3 1 4-4-2-4 2 1-4-3-3h4z"/></svg>`,
+  logistics:`<svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 4h9v6H1zM10 6h3l2 2v2h-5V6zM3 10a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm8 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"/></svg>`,
+  docs:     `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h7l3 3v9H3V2zm7 0v3h3M6 7h5M6 9h5M6 11h3"/></svg>`,
+};
+
+function defaultIcon() {
+  return `<svg viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="12" height="12" rx="2" opacity=".3"/><rect x="5" y="5" width="6" height="1.5" rx=".75"/><rect x="5" y="8" width="6" height="1.5" rx=".75"/></svg>`;
+}
+
+async function init() {
+  // Проверяем сессию
+  const meRes = await fetch('/me');
+  if (!meRes.ok) { window.location.href = '/login'; return; }
+  const me = await meRes.json();
+
+  // Заполняем пользователя
+  document.getElementById('userName').textContent = me.login;
+  document.getElementById('userAvatar').textContent = me.login.slice(0, 2).toUpperCase();
+
+  // Загружаем навигацию
+  const navRes = await fetch('/nav');
+  const nav = await navRes.json();
+
+  // Роли
+  document.getElementById('userRole').textContent = nav.roles.join(', ') || 'нет роли';
+
+  // Sidebar nav
+  const navBody = document.getElementById('navBody');
+  navBody.innerHTML = '';
+  if (nav.modules.length === 0) {
+    navBody.innerHTML = '<div class="nav-empty">Модули не назначены.<br>Обратитесь к администратору.</div>';
+  } else {
+    const label = document.createElement('div');
+    label.className = 'nav-group-label';
+    label.textContent = 'Модули';
+    navBody.appendChild(label);
+    nav.modules.forEach((m, i) => {
+      const item = document.createElement('div');
+      item.className = 'nav-item' + (i === 0 ? ' act' : '');
+      item.innerHTML = (NAV_ICONS[m.code] || defaultIcon()) + `<span>${m.name}</span>`;
+      item.onclick = () => {
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('act'));
+        item.classList.add('act');
+        document.getElementById('pageTitle').textContent = m.name;
+      };
+      navBody.appendChild(item);
+    });
+    if (nav.modules[0]) {
+      document.getElementById('pageTitle').textContent = nav.modules[0].name;
+    }
+  }
+
+  // Карточки модулей на главной
+  const grid = document.getElementById('modulesGrid');
+  nav.modules.forEach(m => {
+    const card = document.createElement('div');
+    card.className = 'mod-card';
+    card.innerHTML = `<div class="mod-card-name">${m.name}</div><div class="mod-card-scope">${SCOPE_LABEL[m.scope] || m.scope}</div>`;
+    grid.appendChild(card);
+  });
+}
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await fetch('/logout', {method: 'POST'});
+  window.location.href = '/login';
+});
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Вход — IT-innovation</title>
+<style>
+:root{
+  --brand:#81B446;--brand-d:#6a9338;--dark:#1E2832;--slate:#323C50;
+  --mid:#8296AA;--light:#D7DCE6;--bg:#F5FAFA;--red:#DC2626;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:'Vela Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+
+.split{display:flex;height:100vh;}
+
+/* Левая панель */
+.split-left{
+  width:360px;flex:none;background:var(--dark);
+  display:flex;flex-direction:column;justify-content:center;padding:48px 40px;
+}
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:40px;}
+.logo-mark{
+  width:34px;height:34px;border-radius:9px;background:var(--brand);
+  display:flex;align-items:center;justify-content:center;flex:none;
+}
+.logo-mark svg{width:18px;height:18px;fill:#fff;}
+.logo-name{font-size:15px;font-weight:800;color:#fff;letter-spacing:-.01em;}
+.tagline{font-size:22px;font-weight:800;color:#fff;line-height:1.35;margin-bottom:14px;}
+.tagline-sub{font-size:13px;color:rgba(255,255,255,.45);line-height:1.65;margin-bottom:28px;}
+.bullets{display:flex;flex-direction:column;gap:11px;}
+.bullet{display:flex;align-items:center;gap:10px;font-size:12.5px;color:rgba(255,255,255,.5);}
+.bullet-dot{width:6px;height:6px;border-radius:50%;background:var(--brand);flex:none;}
+
+/* Правая панель */
+.split-right{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  background:#fff;padding:40px;
+}
+.form-box{width:100%;max-width:320px;}
+.form-title{font-size:18px;font-weight:700;color:var(--dark);margin-bottom:6px;}
+.form-sub{font-size:13px;color:var(--mid);margin-bottom:28px;}
+
+.fgrp{display:flex;flex-direction:column;margin-bottom:16px;}
+.flbl{font-size:12px;font-weight:600;color:var(--slate);display:block;margin-bottom:5px;}
+.fc{
+  width:100%;height:40px;padding:0 14px;border:1.5px solid transparent;
+  border-radius:6px;font-size:13.5px;color:var(--dark);
+  background:rgba(30,40,50,.06);outline:none;
+  transition:background .15s,border-color .15s;font-family:inherit;
+}
+.fc:focus{background:rgba(129,180,70,.07);border-color:rgba(129,180,70,.35);}
+.fc::placeholder{color:var(--mid);}
+
+.btn-submit{
+  width:100%;height:40px;border:none;border-radius:6px;
+  background:var(--brand);color:#fff;font-size:13.5px;font-weight:600;
+  cursor:pointer;transition:background .15s;font-family:inherit;margin-top:4px;
+}
+.btn-submit:hover{background:var(--brand-d);}
+.btn-submit:disabled{opacity:.6;cursor:default;}
+
+.err{
+  display:none;margin-top:14px;padding:10px 13px;border-radius:6px;
+  background:rgba(220,38,38,.07);border:1px solid rgba(220,38,38,.18);
+  font-size:13px;color:var(--red);
+}
+.err.show{display:block;}
+</style>
+</head>
+<body>
+<div class="split">
+  <div class="split-left">
+    <div class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 18 18"><path d="M9 2L2 6v6l7 4 7-4V6z" opacity=".3"/><path d="M9 2l7 4-7 4L2 6z"/></svg>
+      </div>
+      <span class="logo-name">IT-innovation</span>
+    </div>
+    <p class="tagline">Единая платформа для команды</p>
+    <p class="tagline-sub">Управляйте продажами, presale и маркетингом в одном окне с ролевым доступом.</p>
+    <div class="bullets">
+      <div class="bullet"><div class="bullet-dot"></div>Ролевой доступ к данным</div>
+      <div class="bullet"><div class="bullet-dot"></div>Реестр клиентов по ИНН</div>
+      <div class="bullet"><div class="bullet-dot"></div>Аудит действий команды</div>
+    </div>
+  </div>
+
+  <div class="split-right">
+    <div class="form-box">
+      <h1 class="form-title">Вход в платформу</h1>
+      <p class="form-sub">Введите логин и пароль</p>
+
+      <form id="loginForm" autocomplete="on">
+        <div class="fgrp">
+          <label class="flbl" for="login">Логин</label>
+          <input class="fc" id="login" name="login" type="text" autocomplete="username" placeholder="ваш логин" required>
+        </div>
+        <div class="fgrp">
+          <label class="flbl" for="password">Пароль</label>
+          <input class="fc" id="password" name="password" type="password" autocomplete="current-password" placeholder="••••••••" required>
+        </div>
+        <button class="btn-submit" type="submit" id="submitBtn">Войти</button>
+        <div class="err" id="errMsg"></div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('submitBtn');
+  const err = document.getElementById('errMsg');
+
+  btn.disabled = true;
+  btn.textContent = 'Вхожу...';
+  err.classList.remove('show');
+
+  try {
+    const res = await fetch('/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        login: document.getElementById('login').value,
+        password: document.getElementById('password').value,
+      }),
+    });
+
+    if (res.ok) {
+      window.location.href = '/';
+    } else {
+      const data = await res.json().catch(() => ({}));
+      err.textContent = data.detail || 'Неверный логин или пароль';
+      err.classList.add('show');
+    }
+  } catch {
+    err.textContent = 'Нет связи с сервером';
+    err.classList.add('show');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Войти';
+  }
+});
+</script>
+</body>
+</html>
