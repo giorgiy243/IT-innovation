@@ -2,8 +2,8 @@
 
 Здесь живёт `Base.metadata` - единый источник схемы для Alembic
 (см. migrations/env.py). Фаза 1.1 заводит минимум для входа:
-tenants, users, sessions. Таблицы RBAC и мастер-данных добавляются
-в 1.3-1.4 в этот же `Base`.
+tenants, users, sessions. Таблицы RBAC добавлены в 1.3.
+Мастер-данные (employees, companies) добавлены в 1.4.
 
 Инварианты (см. AI/platform/модель_данных.md, роли_и_доступ.md):
 - tenant_id присутствует во всех бизнес-таблицах с первого дня;
@@ -79,7 +79,12 @@ class User(Base):
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
 
+    employee_id: Mapped[int | None] = mapped_column(
+        ForeignKey("employees.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+
     tenant: Mapped[Tenant] = relationship(back_populates="users")
+    employee: Mapped[Employee | None] = relationship(back_populates="users")
     sessions: Mapped[list[Session]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
@@ -119,6 +124,63 @@ class Session(Base):
     )
 
     user: Mapped[User] = relationship(back_populates="sessions")
+
+
+# --- Мастер-данные (Фаза 1.4): сотрудники и компании-клиенты ---
+#
+# Эти таблицы - ядро, на которое ссылаются модули (Продажи и т.д.).
+# Данные описываются один раз; модуль ссылается по FK, не копирует.
+# inn уникален в рамках tenant (ключ клиента, как в client-rotate).
+
+
+class Employee(Base):
+    """Сотрудник компании-арендатора (мастер-данные).
+
+    full_name - единый формат «Иванов А.А.» (выученное правило: разнобой
+    форматов ломал агрегаты в реестре передачи). crm_name - псевдоним
+    в CRM-выгрузках для маппинга. Уволенных деактивируем, не удаляем.
+    """
+
+    __tablename__ = "employees"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "full_name", name="uq_employees_tenant_name"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(
+        ForeignKey("tenants.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
+    full_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    crm_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+    users: Mapped[list[User]] = relationship(back_populates="employee")
+
+
+class Company(Base):
+    """Компания-клиент (мастер-данные). ИНН - ключ клиента.
+
+    holding_id - текстовая метка холдинга для группировки (не FK,
+    холдинг не самостоятельная сущность). is_holding_head отмечает
+    головную компанию холдинга. ИНН - PII; доступ по роли (см. RBAC).
+    """
+
+    __tablename__ = "companies"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "inn", name="uq_companies_tenant_inn"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(
+        ForeignKey("tenants.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
+    inn: Mapped[str] = mapped_column(String(12), nullable=False)
+    name: Mapped[str] = mapped_column(String(500), nullable=False)
+    city: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    segment: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    holding_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    is_holding_head: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
 
 # --- RBAC (Фаза 1.3): доступ = (модули роли) × (область данных роли) ---
