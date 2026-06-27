@@ -19,6 +19,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Index,
+    Integer,
     String,
     Text,
     UniqueConstraint,
@@ -82,6 +83,9 @@ class User(Base):
     sessions: Mapped[list[Session]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
+    user_roles: Mapped[list[UserRole]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
 
 
 class Session(Base):
@@ -115,3 +119,115 @@ class Session(Base):
     )
 
     user: Mapped[User] = relationship(back_populates="sessions")
+
+
+# --- RBAC (Фаза 1.3): доступ = (модули роли) × (область данных роли) ---
+#
+# Заметка о tenant_id: он несётся в `roles` (политика доступа у каждого
+# арендатора своя). `modules` - платформенный КАТАЛОГ кода (какие модули
+# вообще существуют), он один на всю установку, поэтому без tenant_id.
+# Связки `user_roles`/`role_modules` tenant_id не дублируют - он однозначно
+# выводится через user/role (не вводим избыточный ключ, способный рассинхрониться).
+# См. AI/platform/модель_данных.md, роли_и_доступ.md.
+
+# Допустимые области данных (scope) в порядке расширения прав.
+# Совпадает с SCOPE_RANK в core/rbac/service.py - там единый источник ранга.
+SCOPE_VALUES = ("own", "team", "domain", "all")
+
+
+class Role(Base):
+    """Роль внутри арендатора (mop, rop, analyst, security, domain_head).
+
+    code уникален в рамках tenant. Сама роль не несёт scope - область данных
+    задаётся при НАЗНАЧЕНИИ роли пользователю (user_roles.scope), потому что
+    один и тот же `rop` для разных людей может означать разные команды.
+    """
+
+    __tablename__ = "roles"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "code", name="uq_roles_tenant_code"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(
+        ForeignKey("tenants.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
+    code: Mapped[str] = mapped_column(String(50), nullable=False)
+    name: Mapped[str] = mapped_column(String(150), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    user_roles: Mapped[list[UserRole]] = relationship(
+        back_populates="role", cascade="all, delete-orphan"
+    )
+    role_modules: Mapped[list[RoleModule]] = relationship(
+        back_populates="role", cascade="all, delete-orphan"
+    )
+
+
+class Module(Base):
+    """Реестр модулей платформы (каталог кода). Глобальный, без tenant_id.
+
+    is_enabled - подключён ли модуль на этой установке (выключенный не попадает
+    в навигацию даже если роль его перечисляет). sort_order - порядок в меню.
+    """
+
+    __tablename__ = "modules"
+
+    code: Mapped[str] = mapped_column(String(50), primary_key=True)
+    name: Mapped[str] = mapped_column(String(150), nullable=False)
+    is_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=100)
+
+    role_modules: Mapped[list[RoleModule]] = relationship(
+        back_populates="module", cascade="all, delete-orphan"
+    )
+
+
+class UserRole(Base):
+    """Назначение роли пользователю с областью данных (scope).
+
+    Один пользователь может иметь несколько ролей (кейс Первухина: rop+mop).
+    Итоговый доступ - объединение прав ролей, по модулю берётся самый широкий
+    scope (см. core/rbac/service.py). scope_ref уточняет границу team/domain.
+    """
+
+    __tablename__ = "user_roles"
+    __table_args__ = (
+        UniqueConstraint("user_id", "role_id", name="uq_user_roles_user_role"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    role_id: Mapped[int] = mapped_column(
+        ForeignKey("roles.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    # Область данных: own/team/domain/all (SCOPE_VALUES). Хранится строкой -
+    # дополняемо без миграции; валидность проверяет сервис/сид при записи.
+    scope: Mapped[str] = mapped_column(String(20), nullable=False, default="own")
+    scope_ref: Mapped[str | None] = mapped_column(String(150), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    user: Mapped[User] = relationship(back_populates="user_roles")
+    role: Mapped[Role] = relationship(back_populates="user_roles")
+
+
+class RoleModule(Base):
+    """Доступ роли к модулю (роль видит модуль в навигации и его API)."""
+
+    __tablename__ = "role_modules"
+
+    role_id: Mapped[int] = mapped_column(
+        ForeignKey("roles.id", ondelete="CASCADE"), primary_key=True
+    )
+    module_code: Mapped[str] = mapped_column(
+        ForeignKey("modules.code", ondelete="CASCADE"), primary_key=True
+    )
+
+    role: Mapped[Role] = relationship(back_populates="role_modules")
+    module: Mapped[Module] = relationship(back_populates="role_modules")
