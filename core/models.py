@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy import (
     Boolean,
+    Date,
     DateTime,
     ForeignKey,
     Index,
@@ -26,6 +27,7 @@ from sqlalchemy import (
     func,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from datetime import date
 
 
 def utcnow() -> datetime:
@@ -181,6 +183,86 @@ class Company(Base):
     segment: Mapped[str | None] = mapped_column(String(100), nullable=True)
     holding_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     is_holding_head: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+
+# --- Вендоры (Фаза 1.6): справочник партнёров/вендоров ---
+#
+# portal_password_enc — зашифрованный Fernet-токен (core/vendors/crypto.py).
+# В БД хранится только зашифрованный blob, открытый пароль никогда не пишется.
+# Дистрибьюторы — отдельная таблица (в CSV было 5×5 колонок — нормализовано).
+
+# Допустимые типы партнёрского статуса. Хранятся строкой — дополняемо без миграции.
+VENDOR_STATUS_VALUES = ("active", "suspended", "revoked", "deauth", "closed", "none")
+
+
+class Vendor(Base):
+    """Вендор/партнёр. Один вендор — одна строка в рамках tenant.
+
+    categories — через запятую («ИБ, Сетевое»). status_type — тип статуса
+    из каталога; status_text — человекочитаемый текст от вендора
+    («Silver partner / Dealer»). portal_password_enc — Fernet-шифр.
+    """
+
+    __tablename__ = "vendors"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "name", name="uq_vendors_tenant_name"),
+        Index("ix_vendors_status_type", "status_type"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(
+        ForeignKey("tenants.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    categories: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    status_type: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    status_text: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    valid_until: Mapped[date | None] = mapped_column(Date, nullable=True)
+    partner_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    legal_entity: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    directions: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    discount: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    purchase_method: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    portal_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    portal_login: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    portal_password_enc: Mapped[str | None] = mapped_column(Text, nullable=True)
+    vendor_contact: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    deal_registration: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    mop_comments: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=utcnow, onupdate=utcnow
+    )
+
+    distributors: Mapped[list[VendorDistributor]] = relationship(
+        back_populates="vendor",
+        cascade="all, delete-orphan",
+        order_by="VendorDistributor.sort_order",
+    )
+
+
+class VendorDistributor(Base):
+    """Дистрибьютор вендора (у одного вендора может быть до 5).
+
+    sort_order 1-5 отражает порядок из исходного CSV (Дистрибьютор 1..5).
+    """
+
+    __tablename__ = "vendor_distributors"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    vendor_id: Mapped[int] = mapped_column(
+        ForeignKey("vendors.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    contact: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    phone: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    vendor: Mapped[Vendor] = relationship(back_populates="distributors")
 
 
 # --- RBAC (Фаза 1.3): доступ = (модули роли) × (область данных роли) ---
