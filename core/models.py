@@ -221,7 +221,7 @@ class Vendor(Base):
     partner_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
     legal_entity: Mapped[str | None] = mapped_column(String(255), nullable=True)
     directions: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    discount: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    discount: Mapped[str | None] = mapped_column(Text, nullable=True)
     purchase_method: Mapped[str | None] = mapped_column(String(100), nullable=True)
     portal_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     portal_login: Mapped[str | None] = mapped_column(String(255), nullable=True)
