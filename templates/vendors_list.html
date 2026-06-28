@@ -119,6 +119,68 @@ html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,san
 .scroll-top.visible{opacity:1;pointer-events:auto;}
 .scroll-top:hover{background:var(--dark);transform:translateY(-2px);box-shadow:0 6px 20px rgba(30,40,50,.4);}
 .scroll-top svg{width:18px;height:18px;stroke:#fff;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+/* Chip типа компании */
+.type-chip{display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:5px;vertical-align:middle;}
+.t-vendor{background:rgba(129,180,70,.14);color:#3a6320;}
+.t-distributor{background:rgba(30,74,168,.1);color:#1e3fa8;}
+.t-partner{background:rgba(120,85,0,.1);color:#7a5500;}
+/* Кнопка добавления */
+.btn-add{height:34px;padding:0 16px;border-radius:7px;font-size:13px;font-family:inherit;font-weight:600;color:#fff;background:var(--brand);border:none;cursor:pointer;margin-left:auto;display:none;align-items:center;gap:6px;transition:background .12s;}
+.btn-add:hover{background:var(--brand-d);}
+/* Модальное окно */
+.modal-overlay{position:fixed;inset:0;background:rgba(30,40,50,.55);display:none;align-items:center;justify-content:center;z-index:1000;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:#fff;border-radius:12px;width:580px;max-width:96vw;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(30,40,50,.28);}
+.modal-head{padding:16px 20px;border-bottom:1px solid var(--light);display:flex;align-items:center;flex:none;}
+.modal-title{font-size:15px;font-weight:700;color:var(--dark);flex:1;}
+.modal-close{width:30px;height:30px;border:none;background:transparent;cursor:pointer;border-radius:6px;font-size:18px;color:var(--mid);display:flex;align-items:center;justify-content:center;transition:background .12s,color .12s;line-height:1;}
+.modal-close:hover{background:var(--bg);color:var(--dark);}
+.modal-body{flex:1;overflow-y:auto;padding:20px;}
+.modal-foot{padding:14px 20px;border-top:1px solid var(--light);display:flex;align-items:center;justify-content:flex-end;gap:10px;flex:none;}
+.form-section{margin-bottom:18px;}
+.form-section-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mid);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--bg);}
+.form-group{margin-bottom:12px;}
+.form-row{display:flex;gap:12px;}
+.form-row .form-group{flex:1;margin-bottom:0;}
+.form-label{display:block;font-size:12px;font-weight:600;color:var(--slate);margin-bottom:4px;}
+.req{color:var(--brand);font-weight:700;}
+.form-inp{width:100%;background:rgba(50,60,80,.06);border:1.5px solid transparent;border-radius:7px;padding:8px 12px;font-size:13px;font-family:inherit;color:var(--dark);outline:none;transition:border-color .15s,background .15s;}
+.form-inp:focus{border-color:var(--brand);background:#fff;}
+.form-inp.invalid{border-color:#D97706!important;background:#fffbf0;}
+.form-textarea{resize:vertical;min-height:60px;}
+.type-seg{display:flex;gap:4px;background:rgba(50,60,80,.07);padding:4px;border-radius:8px;margin-top:2px;}
+.type-btn{border:none;background:transparent;border-radius:5px;padding:5px 14px;font-size:12.5px;font-weight:600;color:var(--mid);cursor:pointer;transition:background .12s,color .12s;white-space:nowrap;}
+.type-btn.sel{background:#fff;color:var(--dark);box-shadow:0 1px 4px rgba(30,40,50,.12);}
+/* Multi-select категорий */
+.ms-wrap{position:relative;}
+.ms-trigger{width:100%;text-align:left;background:rgba(50,60,80,.06);border:1.5px solid transparent;border-radius:7px;padding:8px 12px;font-size:13px;font-family:inherit;color:var(--dark);cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:6px;outline:none;transition:border-color .15s,background .15s;}
+.ms-trigger:focus,.ms-trigger.open{border-color:var(--brand);background:#fff;}
+.ms-trigger-text{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--mid);}
+.ms-trigger-text.has-val{color:var(--dark);}
+.ms-caret{width:14px;height:14px;flex:none;transition:transform .15s;}
+.ms-trigger.open .ms-caret{transform:rotate(180deg);}
+.ms-menu{position:absolute;top:calc(100% + 3px);left:0;right:0;background:#fff;border:1px solid var(--light);border-radius:8px;box-shadow:var(--sh-hover);z-index:200;display:none;overflow:hidden;}
+.ms-menu.open{display:block;}
+.ms-list{max-height:180px;overflow-y:auto;}
+.ms-item{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;font-size:13px;color:var(--dark);user-select:none;}
+.ms-item:hover{background:rgba(129,180,70,.07);}
+.ms-item input[type=checkbox]{width:15px;height:15px;accent-color:var(--brand);cursor:pointer;flex:none;}
+.ms-empty{padding:10px 12px;font-size:13px;color:var(--mid);}
+.ms-add-row{padding:8px;border-top:1px solid var(--bg);display:flex;gap:6px;}
+.ms-add-inp{flex:1;border:1px solid var(--light);border-radius:5px;padding:5px 9px;font-size:12.5px;font-family:inherit;color:var(--dark);outline:none;}
+.ms-add-inp:focus{border-color:var(--brand);}
+.ms-add-btn{padding:4px 10px;border-radius:5px;border:1.5px solid var(--brand);background:transparent;color:var(--brand);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .12s;}
+.ms-add-btn:hover{background:rgba(129,180,70,.07);}
+/* Кнопки подвала модала */
+.btn-cancel{height:36px;padding:0 18px;border-radius:7px;font-size:13px;font-family:inherit;font-weight:600;color:var(--mid);background:transparent;border:1.5px solid var(--light);cursor:pointer;transition:border-color .12s,color .12s;}
+.btn-cancel:hover{border-color:var(--mid);color:var(--dark);}
+.btn-save{height:36px;padding:0 20px;border-radius:7px;font-size:13px;font-family:inherit;font-weight:600;color:#fff;background:var(--brand);border:none;cursor:pointer;transition:background .12s;}
+.btn-save:hover{background:var(--brand-d);}
+.btn-save:disabled{background:var(--mid);cursor:not-allowed;}
+/* Toast-уведомление */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--dark);color:#fff;font-size:13px;font-weight:500;padding:10px 20px;border-radius:8px;box-shadow:0 4px 16px rgba(30,40,50,.3);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:2000;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.err{background:#991b1b;}
 </style>
 </head>
 <body>
@@ -169,6 +231,7 @@ html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,san
           <option value="none">Без статуса</option>
         </select>
         <button class="btn-reset" id="resetBtn">Сбросить</button>
+        <button class="btn-add" id="btnAdd">+ Добавить</button>
       </div>
 
       <!-- Cards -->
@@ -192,6 +255,9 @@ const MODULE_URLS = {sales: '/vendors'};
 function defaultIcon() {
   return `<svg viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="12" height="12" rx="2" opacity=".3"/><rect x="5" y="5" width="6" height="1.5" rx=".75"/><rect x="5" y="8" width="6" height="1.5" rx=".75"/></svg>`;
 }
+
+const TYPE_LABEL = {vendor: 'Вендор', distributor: 'Дистрибьютор', partner: 'Партнёр'};
+const TYPE_CLASS = {vendor: 't-vendor', distributor: 't-distributor', partner: 't-partner'};
 
 const STATUS_LABEL = {
   active: 'Активный', suspended: 'Приостановлен', revoked: 'Отозван',
@@ -227,6 +293,10 @@ function esc(s) {
 }
 
 let currentFilters = {q: '', category: '', status_type: ''};
+let _catOptions = [];   // все категории для мультиселекта
+let _catSelected = new Set();
+let _modalCtype = 'vendor';
+let _navRoles = [];     // role_codes текущего пользователя
 
 function buildUrl(f) {
   const p = new URLSearchParams();
@@ -271,6 +341,10 @@ function renderCards(vendors, total) {
     const stripeLbl = STRIPE_LABEL[st] || st;
     const badgeCls = STATUS_CLASS[st] || 'badge-unknown';
     const badgeLbl = STATUS_LABEL[st] || st;
+    const ctype = v.company_type || 'vendor';
+    const typeChip = (ctype !== 'vendor')
+      ? `<span class="type-chip ${TYPE_CLASS[ctype] || ''}">${TYPE_LABEL[ctype] || ctype}</span>`
+      : '';
     const metaLeft = dateStr !== '-'
       ? `<span class="cl-meta${expired ? ' expired' : ''}">${expired ? '&#x26A0;&nbsp;' : ''}до ${dateStr}</span>`
       : '<span class="cl-meta"></span>';
@@ -285,7 +359,7 @@ function renderCards(vendors, total) {
       <div class="cl-content">
         <div class="cl-hd">
           <div class="cl-hd-left">
-            <div class="cl-name">${esc(v.name)}</div>
+            <div class="cl-name">${esc(v.name)}${typeChip}</div>
             <div class="cl-sub">${v.categories ? esc(v.categories) : ''}</div>
           </div>
           <span class="badge ${badgeCls} cl-badge">${badgeLbl}</span>
@@ -300,6 +374,7 @@ function renderCards(vendors, total) {
 }
 
 function fillCategorySelect(cats) {
+  _catOptions = cats;  // сохраняем для мультиселекта в модале
   const sel = document.getElementById('catSelect');
   const cur = sel.value;
   while (sel.options.length > 1) sel.remove(1);
@@ -353,7 +428,11 @@ async function buildSidebar() {
 
   const navRes = await fetch('/nav');
   const nav = await navRes.json();
-  document.getElementById('userRole').textContent = nav.roles.join(', ') || 'нет роли';
+  _navRoles = nav.roles || [];
+  document.getElementById('userRole').textContent = _navRoles.join(', ') || 'нет роли';
+  if (_navRoles.some(r => r === 'marketer' || r === 'analyst')) {
+    document.getElementById('btnAdd').style.display = 'flex';
+  }
 
   const body = document.getElementById('navBody');
   body.innerHTML = '';
@@ -377,11 +456,325 @@ async function buildSidebar() {
 
 async function init() {
   await buildSidebar();
+  setupModalListeners();
   await loadVendors(currentFilters);
 }
 
 init();
+
+// ─── Модал создания ────────────────────────────────────────────────────────
+
+function openCreateModal() {
+  _modalCtype = 'vendor';
+  _catSelected = new Set();
+  document.querySelectorAll('.type-btn').forEach(b => {
+    b.classList.toggle('sel', b.dataset.ctype === 'vendor');
+  });
+  // сбросить форму
+  ['fName','fStatusText','fValidUntil','fPartnerId','fLegalEntity','fDirections',
+   'fPurchaseMethod','fDiscount','fPortalUrl','fPortalLogin','fPortalPassword',
+   'fVendorContact','fDealReg','fMopComments'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.value = ''; el.classList.remove('invalid'); }
+  });
+  document.getElementById('fStatusType').value = '';
+  renderCatList();
+  updateCatTrigger();
+  document.getElementById('createModal').classList.add('open');
+  setTimeout(() => document.getElementById('fName').focus(), 50);
+}
+
+function closeCreateModal() {
+  document.getElementById('createModal').classList.remove('open');
+}
+
+// ─── Multi-select категорий (вызываются из openCreateModal, нужны на верхнем уровне) ─────
+
+function renderCatList() {
+  const list = document.getElementById('catMsList');
+  if (!_catOptions.length) {
+    list.innerHTML = '<div class="ms-empty">Нет категорий - добавьте ниже</div>';
+    return;
+  }
+  list.innerHTML = _catOptions.map(c =>
+    `<label class="ms-item">
+       <input type="checkbox" value="${esc(c)}"${_catSelected.has(c) ? ' checked' : ''}>
+       ${esc(c)}
+     </label>`
+  ).join('');
+  list.querySelectorAll('input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      if (cb.checked) _catSelected.add(cb.value);
+      else _catSelected.delete(cb.value);
+      updateCatTrigger();
+    });
+  });
+}
+
+function updateCatTrigger() {
+  const txt = document.getElementById('catMsText');
+  if (_catSelected.size) {
+    txt.textContent = [..._catSelected].join(', ');
+    txt.classList.add('has-val');
+  } else {
+    txt.textContent = 'Выберите категории...';
+    txt.classList.remove('has-val');
+  }
+}
+
+// Вызывается из init() после первого await — к этому моменту DOM уже разобран.
+function setupModalListeners() {
+  // Оверлей закрывает модал кликом по фону
+  document.getElementById('createModal').addEventListener('click', function(e) {
+    if (e.target === this) closeCreateModal();
+  });
+  document.getElementById('modalCloseBtn').addEventListener('click', closeCreateModal);
+  document.getElementById('modalCancelBtn').addEventListener('click', closeCreateModal);
+  document.getElementById('btnAdd').addEventListener('click', openCreateModal);
+
+  // Тип компании
+  document.querySelectorAll('.type-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      _modalCtype = btn.dataset.ctype;
+      document.querySelectorAll('.type-btn').forEach(b => b.classList.toggle('sel', b === btn));
+    });
+  });
+
+  // Категорий multi-select: trigger и menu
+  const catTrigger = document.getElementById('catMsTrigger');
+  const catMenu = document.getElementById('catMsMenu');
+
+  catTrigger.addEventListener('click', e => {
+    e.stopPropagation();
+    const open = catMenu.classList.toggle('open');
+    catTrigger.classList.toggle('open', open);
+  });
+  document.addEventListener('click', () => {
+    catMenu.classList.remove('open');
+    catTrigger.classList.remove('open');
+  });
+  catMenu.addEventListener('click', e => e.stopPropagation());
+
+  document.getElementById('catMsAddBtn').addEventListener('click', () => {
+    const inp = document.getElementById('catMsAddInp');
+    const val = inp.value.trim();
+    if (!val) return;
+    if (!_catOptions.includes(val)) _catOptions.push(val);
+    _catSelected.add(val);
+    inp.value = '';
+    renderCatList();
+    updateCatTrigger();
+  });
+  document.getElementById('catMsAddInp').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('catMsAddBtn').click(); }
+  });
+
+  // Сохранение
+  document.getElementById('modalSaveBtn').addEventListener('click', async () => {
+    const nameEl = document.getElementById('fName');
+    const name = nameEl.value.trim();
+    if (!name) {
+      nameEl.classList.add('invalid');
+      nameEl.focus();
+      return;
+    }
+    nameEl.classList.remove('invalid');
+
+    const body = {
+      company_type: _modalCtype,
+      name,
+      categories: _catSelected.size ? [..._catSelected].join(', ') : null,
+      status_type: document.getElementById('fStatusType').value || null,
+      status_text: document.getElementById('fStatusText').value.trim() || null,
+      valid_until: document.getElementById('fValidUntil').value || null,
+      partner_id: document.getElementById('fPartnerId').value.trim() || null,
+      legal_entity: document.getElementById('fLegalEntity').value.trim() || null,
+      directions: document.getElementById('fDirections').value.trim() || null,
+      purchase_method: document.getElementById('fPurchaseMethod').value.trim() || null,
+      discount: document.getElementById('fDiscount').value.trim() || null,
+      portal_url: document.getElementById('fPortalUrl').value.trim() || null,
+      portal_login: document.getElementById('fPortalLogin').value.trim() || null,
+      portal_password: document.getElementById('fPortalPassword').value || null,
+      vendor_contact: document.getElementById('fVendorContact').value.trim() || null,
+      deal_registration: document.getElementById('fDealReg').value.trim() || null,
+      mop_comments: document.getElementById('fMopComments').value.trim() || null,
+    };
+
+    const saveBtn = document.getElementById('modalSaveBtn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Сохраняю...';
+
+    try {
+      const r = await fetch('/api/vendors', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(body),
+      });
+      if (r.status === 201) {
+        const vendor = await r.json();
+        closeCreateModal();
+        window.location.href = `/vendors/${vendor.id}`;
+      } else if (r.status === 409) {
+        showToast('Запись с таким именем уже существует', true);
+      } else {
+        const err = await r.json().catch(() => ({}));
+        showToast(err.detail || 'Ошибка сервера', true);
+      }
+    } catch {
+      showToast('Ошибка сети', true);
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Сохранить';
+    }
+  });
+}
+
+// ─── Toast ───────────────────────────────────────────────────────────────────
+
+function showToast(msg, isErr = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isErr ? ' err' : '');
+  void t.offsetWidth;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
 </script>
+<!-- Модал: создание вендора/дистрибьютора/партнёра -->
+<div class="modal-overlay" id="createModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <span class="modal-title">Новая запись</span>
+      <button class="modal-close" id="modalCloseBtn" aria-label="Закрыть">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <!-- Тип -->
+      <div class="form-group">
+        <div class="form-label">Тип <span class="req">*</span></div>
+        <div class="type-seg">
+          <button type="button" class="type-btn sel" data-ctype="vendor">Вендор</button>
+          <button type="button" class="type-btn" data-ctype="distributor">Дистрибьютор</button>
+          <button type="button" class="type-btn" data-ctype="partner">Партнёр</button>
+        </div>
+      </div>
+      <!-- Название -->
+      <div class="form-group">
+        <label class="form-label" for="fName">Название <span class="req">*</span></label>
+        <input class="form-inp" id="fName" type="text" placeholder="Название компании" autocomplete="off">
+      </div>
+      <!-- Категории -->
+      <div class="form-group">
+        <div class="form-label">Категории</div>
+        <div class="ms-wrap" id="catMsWrap">
+          <button type="button" class="ms-trigger" id="catMsTrigger">
+            <span class="ms-trigger-text" id="catMsText">Выберите категории...</span>
+            <svg class="ms-caret" viewBox="0 0 16 16" fill="none" stroke="#8296AA" stroke-width="2"><polyline points="4 6 8 10 12 6"/></svg>
+          </button>
+          <div class="ms-menu" id="catMsMenu">
+            <div class="ms-list" id="catMsList"></div>
+            <div class="ms-add-row">
+              <input class="ms-add-inp" id="catMsAddInp" type="text" placeholder="Новая категория...">
+              <button type="button" class="ms-add-btn" id="catMsAddBtn">Добавить</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Статус -->
+      <div class="form-section">
+        <div class="form-section-head">Статус</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="fStatusType">Тип статуса</label>
+            <select class="form-inp" id="fStatusType">
+              <option value="">—</option>
+              <option value="active">Активный</option>
+              <option value="suspended">Приостановлен</option>
+              <option value="revoked">Отозван</option>
+              <option value="deauth">Деавторизован</option>
+              <option value="closed">Закрыт</option>
+              <option value="none">Без статуса</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex:2">
+            <label class="form-label" for="fStatusText">Статус (текст)</label>
+            <input class="form-inp" id="fStatusText" type="text" placeholder="Silver partner / Dealer">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="fValidUntil">Действует до</label>
+          <input class="form-inp" id="fValidUntil" type="date">
+        </div>
+      </div>
+      <!-- Реквизиты -->
+      <div class="form-section">
+        <div class="form-section-head">Реквизиты</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="fPartnerId">Partner ID</label>
+            <input class="form-inp" id="fPartnerId" type="text" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="fLegalEntity">Юрлицо</label>
+            <input class="form-inp" id="fLegalEntity" type="text">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="fDirections">Направления</label>
+            <input class="form-inp" id="fDirections" type="text">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="fPurchaseMethod">Схема закупки</label>
+            <input class="form-inp" id="fPurchaseMethod" type="text">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="fDiscount">Скидка</label>
+          <textarea class="form-inp form-textarea" id="fDiscount" rows="2"></textarea>
+        </div>
+      </div>
+      <!-- Партнёрский портал -->
+      <div class="form-section">
+        <div class="form-section-head">Партнёрский портал</div>
+        <div class="form-group">
+          <label class="form-label" for="fPortalUrl">URL</label>
+          <input class="form-inp" id="fPortalUrl" type="url" placeholder="https://...">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="fPortalLogin">Логин</label>
+            <input class="form-inp" id="fPortalLogin" type="text" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="fPortalPassword">Пароль</label>
+            <input class="form-inp" id="fPortalPassword" type="password" autocomplete="new-password">
+          </div>
+        </div>
+      </div>
+      <!-- Работа с нами -->
+      <div class="form-section">
+        <div class="form-section-head">Работа с нами</div>
+        <div class="form-group">
+          <label class="form-label" for="fVendorContact">Контакт вендора</label>
+          <input class="form-inp" id="fVendorContact" type="text">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="fDealReg">Deal registration</label>
+          <input class="form-inp" id="fDealReg" type="text">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="fMopComments">Заметки МОП</label>
+          <textarea class="form-inp form-textarea" id="fMopComments" rows="3"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn-cancel" id="modalCancelBtn">Отмена</button>
+      <button type="button" class="btn-save" id="modalSaveBtn">Сохранить</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
 <button class="scroll-top" id="scrollTop" title="Наверх" aria-label="Прокрутить вверх">
   <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
 </button>
