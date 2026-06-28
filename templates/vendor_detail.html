@@ -216,6 +216,9 @@ function esc(s) {
   if (s == null) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
+function escAttr(s) {
+  return esc(s).replace(/"/g,'&quot;');
+}
 function fv(s) {
   if (s == null || s === '') return '<span class="field-value empty">-</span>';
   return `<span class="field-value">${esc(s)}</span>`;
@@ -434,14 +437,13 @@ function enterEditMode() {
 
   // Поле: для полного доступа - input, для ROP - read-only
   const inp = (id, val, type='text') =>
-    full ? `<input class="edit-inp" id="${id}" type="${type}" value="${esc(val || '')}">`
+    full ? `<input class="edit-inp" id="${id}" type="${type}" value="${escAttr(val || '')}">`
          : `<span class="edit-readonly">${esc(val) || '-'}</span>`;
   const area = (id, val) =>
     full ? `<textarea class="edit-inp edit-textarea" id="${id}">${esc(val || '')}</textarea>`
          : `<span class="edit-readonly" style="white-space:pre-wrap">${esc(val) || '-'}</span>`;
-  // Поле доступное и для ROP
   const inpRop = (id, val) =>
-    `<input class="edit-inp" id="${id}" type="text" value="${esc(val || '')}">`;
+    `<input class="edit-inp" id="${id}" type="text" value="${escAttr(val || '')}">`;
 
   // Сегмент типа
   const typeOpts = ['vendor','distributor','partner'];
@@ -457,7 +459,7 @@ function enterEditMode() {
       <div class="fields-grid">
         <div class="field"><div class="field-label">Тип</div>${typeSeg}</div>
         <div class="field"><div class="field-label">Название *</div>
-          ${full ? `<input class="edit-inp" id="eName" type="text" value="${esc(v.name)}">`
+          ${full ? `<input class="edit-inp" id="eName" type="text" value="${escAttr(v.name)}">`
                  : `<span class="edit-readonly">${esc(v.name)}</span>`}
         </div>
         <div class="field"><div class="field-label">Категории</div>${inp('eCategories', v.categories)}</div>
@@ -514,53 +516,50 @@ function cancelEdit() {
 }
 
 async function saveEdit() {
-  const full = hasFullWrite();
-
-  // Имя обязательно, только для full
-  if (full) {
-    const nameEl = document.getElementById('eName');
-    if (!nameEl.value.trim()) {
-      nameEl.classList.add('invalid');
-      nameEl.focus();
-      return;
-    }
-    nameEl.classList.remove('invalid');
-  }
-
-  const g = id => { const el = document.getElementById(id); return el ? el.value : null; };
-  const gs = id => { const v = g(id); return v ? v.trim() || null : null; };
-
-  let body = {};
-  if (full) {
-    const selType = document.querySelector('#editTypeSeg .type-btn.sel');
-    body = {
-      company_type: selType ? selType.dataset.ctype : _vendorData.company_type,
-      name: g('eName').trim(),
-      categories: gs('eCategories'),
-      status_type: g('eStatusType') || null,
-      status_text: gs('eStatusText'),
-      valid_until: g('eValidUntil') || null,
-      partner_id: gs('ePartnerId'),
-      legal_entity: gs('eLegalEntity'),
-      directions: gs('eDirections'),
-      purchase_method: gs('ePurchaseMethod'),
-      discount: gs('eDiscount'),
-      portal_url: gs('ePortalUrl'),
-      portal_login: gs('ePortalLogin'),
-      mop_comments: gs('eMopComments'),
-    };
-    const pwd = g('ePortalPassword');
-    if (pwd) body.portal_password = pwd;
-  }
-  // Поля доступные всем с правом записи
-  body.vendor_contact  = gs('eVendorContact');
-  body.deal_registration = gs('eDealReg');
-
   const saveBtn = document.getElementById('btnSaveEdit');
-  saveBtn.disabled = true;
-  saveBtn.textContent = 'Сохраняю...';
-
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Сохраняю...'; }
   try {
+    const full = hasFullWrite();
+    const g = id => { const el = document.getElementById(id); return el ? el.value : null; };
+    const gs = id => { const raw = g(id); return raw !== null ? raw.trim() || null : null; };
+
+    if (full) {
+      const nameEl = document.getElementById('eName');
+      if (!nameEl) throw new Error('Поле "Название" не найдено — попробуйте перезагрузить страницу');
+      if (!nameEl.value.trim()) {
+        nameEl.classList.add('invalid');
+        nameEl.focus();
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Сохранить'; }
+        return;
+      }
+      nameEl.classList.remove('invalid');
+    }
+
+    let body = {};
+    if (full) {
+      const selType = document.querySelector('#editTypeSeg .type-btn.sel');
+      body = {
+        company_type: selType ? selType.dataset.ctype : _vendorData.company_type,
+        name: (g('eName') || '').trim(),
+        categories: gs('eCategories'),
+        status_type: g('eStatusType') || null,
+        status_text: gs('eStatusText'),
+        valid_until: g('eValidUntil') || null,
+        partner_id: gs('ePartnerId'),
+        legal_entity: gs('eLegalEntity'),
+        directions: gs('eDirections'),
+        purchase_method: gs('ePurchaseMethod'),
+        discount: gs('eDiscount'),
+        portal_url: gs('ePortalUrl'),
+        portal_login: gs('ePortalLogin'),
+        mop_comments: gs('eMopComments'),
+      };
+      const pwd = g('ePortalPassword');
+      if (pwd) body.portal_password = pwd;
+    }
+    body.vendor_contact = gs('eVendorContact');
+    body.deal_registration = gs('eDealReg');
+
     const r = await fetch(`/api/vendors/${VENDOR_ID}`, {
       method: 'PATCH',
       headers: {'Content-Type': 'application/json'},
@@ -576,13 +575,12 @@ async function saveEdit() {
       const err = await r.json().catch(() => ({}));
       showToast(err.detail || 'Ошибка сервера', true);
     }
-  } catch {
-    showToast('Ошибка сети', true);
+  } catch (err) {
+    console.error('saveEdit:', err);
+    showToast(err.message || 'Ошибка при сохранении', true);
   } finally {
-    if (document.getElementById('btnSaveEdit')) {
-      document.getElementById('btnSaveEdit').disabled = false;
-      document.getElementById('btnSaveEdit').textContent = 'Сохранить';
-    }
+    const btn = document.getElementById('btnSaveEdit');
+    if (btn) { btn.disabled = false; btn.textContent = 'Сохранить'; }
   }
 }
 
