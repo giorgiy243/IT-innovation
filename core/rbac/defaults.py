@@ -10,7 +10,7 @@ from __future__ import annotations
 # Включаем только то, под что есть реальный модуль-страница. Остальные домены
 # заведены в каталоге, но выключены - появятся в меню, когда будет их код.
 DEFAULT_MODULES: list[tuple[str, str, bool, int]] = [
-    ("sales", "Продажи", True, 10),
+    ("sales", "Вендоры", True, 10),
     ("presale", "Presale", False, 20),
     ("marketing", "Маркетинг", False, 30),
     ("bidding", "Торги на ЭП", False, 40),
