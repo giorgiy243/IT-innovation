@@ -109,6 +109,8 @@ html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,san
 .card-actions{display:flex;align-items:center;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid var(--light);}
 .btn-card-edit{height:34px;padding:0 16px;border-radius:7px;font-size:13px;font-family:inherit;font-weight:600;color:var(--slate);background:transparent;border:1.5px solid var(--light);cursor:pointer;transition:border-color .12s,color .12s;}
 .btn-card-edit:hover{border-color:var(--brand);color:var(--brand);}
+.btn-card-delete{height:34px;padding:0 16px;border-radius:7px;font-size:13px;font-family:inherit;font-weight:600;color:#991b1b;background:transparent;border:1.5px solid #fca5a5;cursor:pointer;transition:border-color .12s,background .12s,color .12s;}
+.btn-card-delete:hover{border-color:#991b1b;background:#fde8e8;}
 .btn-card-audit{height:34px;padding:0 12px;border-radius:7px;font-size:13px;font-family:inherit;font-weight:500;color:var(--mid);background:transparent;border:none;cursor:pointer;transition:color .12s;margin-left:auto;}
 .btn-card-audit:hover{color:var(--dark);}
 /* Режим редактирования */
@@ -338,6 +340,7 @@ function renderVendor(v) {
     ${hasAnyWrite() || hasAuditAccess() ? `
     <div class="card-actions">
       ${hasAnyWrite() ? `<button class="btn-card-edit" id="btnEdit" onclick="enterEditMode()">Редактировать</button>` : ''}
+      ${hasFullWrite() ? `<button class="btn-card-delete" onclick="deleteVendor()">Удалить</button>` : ''}
       ${hasAuditAccess() ? `<button class="btn-card-audit" id="btnAudit" onclick="toggleAudit()">Посмотреть историю</button>` : ''}
     </div>` : ''}
   `;
@@ -580,6 +583,24 @@ async function saveEdit() {
       document.getElementById('btnSaveEdit').disabled = false;
       document.getElementById('btnSaveEdit').textContent = 'Сохранить';
     }
+  }
+}
+
+// ─── Удаление ───────────────────────────────────────────────────────────────
+
+async function deleteVendor() {
+  const name = _vendorData ? _vendorData.name : 'эту запись';
+  if (!confirm(`Удалить "${name}"? Это действие нельзя отменить.`)) return;
+  try {
+    const r = await fetch(`/api/vendors/${VENDOR_ID}`, {method: 'DELETE'});
+    if (r.status === 204) {
+      window.location.href = '/vendors';
+    } else {
+      const err = await r.json().catch(() => ({}));
+      showToast(err.detail || 'Ошибка удаления', true);
+    }
+  } catch {
+    showToast('Ошибка сети', true);
   }
 }
 
