@@ -55,19 +55,27 @@ html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,san
 .btn-reset{height:34px;padding:0 14px;border:1px solid var(--light);border-radius:7px;font-size:13px;font-family:inherit;color:var(--mid);background:#fff;cursor:pointer;transition:border-color .12s,color .12s;}
 .btn-reset:hover{border-color:var(--mid);color:var(--dark);}
 
-/* Table */
-.table-wrap{background:#fff;border:1px solid var(--light);border-radius:10px;overflow:hidden;}
-table{width:100%;border-collapse:collapse;}
-thead th{padding:10px 14px;font-size:11.5px;font-weight:600;color:var(--mid);text-transform:uppercase;letter-spacing:.06em;text-align:left;border-bottom:1px solid var(--light);background:#fff;white-space:nowrap;}
-tbody tr{cursor:pointer;transition:background .1s;}
-tbody tr:hover{background:#f0f7e8;}
-tbody tr:nth-child(even){background:var(--bg);}
-tbody tr:nth-child(even):hover{background:#f0f7e8;}
-tbody td{padding:10px 14px;font-size:13px;color:var(--dark);border-bottom:1px solid var(--light);vertical-align:middle;}
-tbody tr:last-child td{border-bottom:none;}
-.td-name{font-weight:600;}
-.td-dir{color:var(--mid);font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.td-cat{font-size:12px;color:var(--slate);}
+/* Cards grid */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;}
+.vendor-card{
+  background:#fff;border:1px solid var(--light);border-radius:10px;
+  cursor:pointer;overflow:hidden;
+  transition:border-color .15s,box-shadow .15s;
+  display:flex;flex-direction:column;
+}
+.vendor-card:hover{border-color:var(--brand);box-shadow:0 2px 14px rgba(129,180,70,.13);}
+.card-bar{height:4px;flex:none;}
+.card-bar-active{background:var(--brand);}
+.card-bar-suspended{background:#eab308;}
+.card-bar-revoked,.card-bar-deauth,.card-bar-closed{background:#ef4444;}
+.card-bar-none,.card-bar-unknown{background:var(--light);}
+.card-body{padding:14px 16px;flex:1;display:flex;flex-direction:column;gap:6px;}
+.card-name{font-size:13.5px;font-weight:700;color:var(--dark);line-height:1.3;}
+.card-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:2px;}
+.card-cat{font-size:11.5px;color:var(--mid);}
+.card-footer{padding:10px 16px;border-top:1px solid var(--bg);display:flex;align-items:center;justify-content:space-between;}
+.card-date{font-size:11px;color:var(--mid);}
+.card-date.expired{color:#991b1b;font-weight:600;}
 
 /* Status badges */
 .badge{display:inline-block;font-size:11px;font-weight:600;border-radius:5px;padding:2px 8px;white-space:nowrap;}
@@ -130,22 +138,9 @@ tbody tr:last-child td{border-bottom:none;}
         <button class="btn-reset" id="resetBtn">Сбросить</button>
       </div>
 
-      <!-- Table -->
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Название</th>
-              <th>Категории</th>
-              <th>Статус</th>
-              <th>Действует до</th>
-              <th>Направления</th>
-            </tr>
-          </thead>
-          <tbody id="tableBody">
-            <tr><td colspan="5" class="empty-state">Загрузка...</td></tr>
-          </tbody>
-        </table>
+      <!-- Cards -->
+      <div class="cards-grid" id="cardsGrid">
+        <div class="empty-state" style="grid-column:1/-1">Загрузка...</div>
       </div>
     </div>
   </div>
@@ -207,38 +202,56 @@ function buildUrl(f) {
 async function loadVendors(filters) {
   const res = await fetch(buildUrl(filters));
   if (res.status === 401) { window.location.href = '/login'; return; }
+  const grid = document.getElementById('cardsGrid');
   if (res.status === 403) {
-    document.getElementById('tableBody').innerHTML =
-      '<tr><td colspan="5" class="empty-state">Нет доступа к модулю.</td></tr>';
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1">Нет доступа к модулю.</div>';
     return;
   }
   if (!res.ok) {
-    document.getElementById('tableBody').innerHTML =
-      '<tr><td colspan="5" class="empty-state">Ошибка загрузки данных.</td></tr>';
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1">Ошибка загрузки данных.</div>';
     return;
   }
   const data = await res.json();
-  renderTable(data.vendors, data.total);
+  renderCards(data.vendors, data.total);
   if (filters === currentFilters) fillCategorySelect(data.categories);
 }
 
-function renderTable(vendors, total) {
+function barClass(st) {
+  if (!st) return 'card-bar-unknown';
+  return 'card-bar-' + (st in STATUS_CLASS ? st : 'unknown');
+}
+
+function renderCards(vendors, total) {
   document.getElementById('countBadge').textContent =
     total === vendors.length ? `${total}` : `${vendors.length} из ${total}`;
 
-  const tbody = document.getElementById('tableBody');
+  const grid = document.getElementById('cardsGrid');
   if (!vendors.length) {
-    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Нет вендоров по заданным фильтрам.</td></tr>';
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1">Нет вендоров по заданным фильтрам.</div>';
     return;
   }
-  tbody.innerHTML = vendors.map(v => `
-    <tr onclick="window.location='/vendors/${v.id}'">
-      <td class="td-name">${esc(v.name)}</td>
-      <td class="td-cat">${esc(v.categories) || '-'}</td>
-      <td>${statusBadge(v.status_type)}</td>
-      <td>${fmtDate(v.valid_until)}</td>
-      <td class="td-dir">${esc(v.directions) || '-'}</td>
-    </tr>`).join('');
+
+  grid.innerHTML = vendors.map(v => {
+    const dateStr = fmtDate(v.valid_until);
+    const expired = v.valid_until && new Date(v.valid_until) < new Date();
+    const dateHtml = dateStr !== '-'
+      ? `<span class="card-date${expired ? ' expired' : ''}">${expired ? '&#x26A0; ' : ''}до ${dateStr}</span>`
+      : '';
+    return `<div class="vendor-card" onclick="window.location='/vendors/${v.id}'">
+      <div class="card-bar ${barClass(v.status_type)}"></div>
+      <div class="card-body">
+        <div class="card-name">${esc(v.name)}</div>
+        <div class="card-meta">
+          ${statusBadge(v.status_type)}
+          ${v.categories ? `<span class="card-cat">${esc(v.categories)}</span>` : ''}
+        </div>
+      </div>
+      <div class="card-footer">
+        ${dateHtml}
+        ${v.partner_id ? `<span class="card-date" style="color:var(--slate)">${esc(v.partner_id)}</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function fillCategorySelect(cats) {
