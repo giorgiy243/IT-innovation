@@ -18,7 +18,7 @@ ROP_ALLOWED_FIELDS: frozenset[str] = frozenset({"vendor_contact", "deal_registra
 
 # Все редактируемые поля (без id, tenant_id, created_at, updated_at)
 ALL_EDITABLE_FIELDS: frozenset[str] = frozenset({
-    "name", "categories", "status_type", "status_text", "valid_until",
+    "company_type", "name", "categories", "status_type", "status_text", "valid_until",
     "partner_id", "legal_entity", "directions", "discount", "purchase_method",
     "portal_url", "portal_login", "portal_password",
     "vendor_contact", "deal_registration", "mop_comments",
@@ -80,6 +80,7 @@ def vendor_to_list_item(v: Vendor) -> dict:
     return {
         "id": v.id,
         "name": v.name,
+        "company_type": v.company_type,
         "categories": v.categories,
         "status_type": v.status_type,
         "status_text": v.status_text,
@@ -131,6 +132,7 @@ def vendor_to_detail(v: Vendor) -> dict:
     return {
         "id": v.id,
         "name": v.name,
+        "company_type": v.company_type,
         "categories": v.categories,
         "status_type": v.status_type,
         "status_text": v.status_text,

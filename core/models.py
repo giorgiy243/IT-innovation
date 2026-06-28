@@ -195,9 +195,13 @@ class Company(Base):
 VENDOR_STATUS_VALUES = ("active", "suspended", "revoked", "deauth", "closed", "none")
 
 
-class Vendor(Base):
-    """Вендор/партнёр. Один вендор — одна строка в рамках tenant.
+COMPANY_TYPE_VALUES = ("vendor", "distributor", "partner")
 
+
+class Vendor(Base):
+    """Вендор/дистрибьютор/партнёр. Один контрагент — одна строка в рамках tenant.
+
+    company_type: vendor=производитель, distributor=дистрибьютор, partner=партнёр.
     categories — через запятую («ИБ, Сетевое»). status_type — тип статуса
     из каталога; status_text — человекочитаемый текст от вендора
     («Silver partner / Dealer»). portal_password_enc — Fernet-шифр.
@@ -214,6 +218,9 @@ class Vendor(Base):
         ForeignKey("tenants.id", ondelete="RESTRICT"), nullable=False, index=True
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
+    company_type: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="vendor", server_default="vendor"
+    )
     categories: Mapped[str | None] = mapped_column(String(500), nullable=True)
     status_type: Mapped[str | None] = mapped_column(String(20), nullable=True)
     status_text: Mapped[str | None] = mapped_column(String(500), nullable=True)
@@ -263,6 +270,32 @@ class VendorDistributor(Base):
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     vendor: Mapped[Vendor] = relationship(back_populates="distributors")
+
+
+class VendorAuditLog(Base):
+    """Аудит-лог операций над вендорами (append-only, без FK-каскадов).
+
+    vendor_name и user_login — снимки имён на момент события: даже если вендор
+    или пользователь удалены, история остаётся читаемой.
+    action: create | update | delete
+    field_name: название поля (только для action=update).
+    """
+
+    __tablename__ = "vendor_audit_log"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    vendor_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
+    vendor_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    user_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    user_login: Mapped[str] = mapped_column(String(150), nullable=False)
+    action: Mapped[str] = mapped_column(String(20), nullable=False)
+    field_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    old_value: Mapped[str | None] = mapped_column(Text, nullable=True)
+    new_value: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=utcnow, server_default=func.now()
+    )
 
 
 # --- RBAC (Фаза 1.3): доступ = (модули роли) × (область данных роли) ---

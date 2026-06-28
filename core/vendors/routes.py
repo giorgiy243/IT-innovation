@@ -21,6 +21,13 @@ from core.auth.service import AuthContext
 from core.db import get_db
 from core.rbac.deps import get_access, require_module
 from core.rbac.service import AccessProfile, ModuleAccess
+from core.vendors.audit import (
+    capture_state,
+    get_audit,
+    log_create,
+    log_delete,
+    log_update,
+)
 from core.vendors.service import (
     ALL_EDITABLE_FIELDS,
     ROP_ALLOWED_FIELDS,
@@ -106,6 +113,8 @@ def api_create(
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="name обязателен")
     try:
         vendor = create_vendor(db, auth.tenant_id, {**body, "name": name})
+        db.flush()
+        log_create(db, tenant_id=auth.tenant_id, vendor=vendor, user_id=auth.user_id, user_login=auth.login)
         db.commit()
     except IntegrityError:
         db.rollback()
@@ -128,8 +137,19 @@ def api_update(
     vendor = get_vendor(db, auth.tenant_id, vendor_id)
     if vendor is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Вендор не найден")
+    old_state = capture_state(vendor)
     try:
         update_vendor(db, vendor, body, allowed=allowed)
+        log_update(
+            db,
+            tenant_id=auth.tenant_id,
+            vendor=vendor,
+            user_id=auth.user_id,
+            user_login=auth.login,
+            old_state=old_state,
+            body=body,
+            allowed=allowed,
+        )
         db.commit()
     except IntegrityError:
         db.rollback()
@@ -151,5 +171,32 @@ def api_delete(
     vendor = get_vendor(db, auth.tenant_id, vendor_id)
     if vendor is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Вендор не найден")
+    log_delete(db, tenant_id=auth.tenant_id, vendor=vendor, user_id=auth.user_id, user_login=auth.login)
     delete_vendor(db, vendor)
     db.commit()
+
+
+# Роли с доступом к аудит-логу
+_AUDIT_ALL = frozenset({"analyst"})        # все правки всех
+_AUDIT_OWN = frozenset({"marketer"})       # только свои
+
+
+@router.get("/{vendor_id}/audit")
+def api_audit(
+    vendor_id: int,
+    _access: ModuleAccess = Depends(require_module("sales")),
+    profile: AccessProfile = Depends(get_access),
+    auth: AuthContext = Depends(get_current_auth),
+    db: DBSession = Depends(get_db),
+) -> list[dict]:
+    """История правок вендора. Маркетолог видит только свои, аналитик — все."""
+    if _AUDIT_ALL.intersection(profile.role_codes):
+        user_filter = None
+    elif _AUDIT_OWN.intersection(profile.role_codes):
+        user_filter = auth.user_id
+    else:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Недостаточно прав")
+    vendor = get_vendor(db, auth.tenant_id, vendor_id)
+    if vendor is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Вендор не найден")
+    return get_audit(db, tenant_id=auth.tenant_id, vendor_id=vendor_id, user_id=user_filter)
