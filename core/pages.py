@@ -1,7 +1,9 @@
 """HTML-страницы платформы (Jinja2).
 
-/login  — страница входа (всегда доступна)
-/       — дашборд (редирект на /login если нет сессии делает JS)
+/login          — страница входа (всегда доступна)
+/               — дашборд (редирект на /login если нет сессии делает JS)
+/vendors        — список вендоров (JS проверяет сессию + права)
+/vendors/{id}   — карточка вендора
 """
 from __future__ import annotations
 
@@ -21,3 +23,13 @@ def login_page(request: Request) -> HTMLResponse:
 @router.get("/", response_class=HTMLResponse)
 def dashboard_page(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(request, "dashboard.html")
+
+
+@router.get("/vendors", response_class=HTMLResponse)
+def vendors_list_page(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse(request, "vendors_list.html")
+
+
+@router.get("/vendors/{vendor_id}", response_class=HTMLResponse)
+def vendor_detail_page(request: Request, vendor_id: int) -> HTMLResponse:
+    return templates.TemplateResponse(request, "vendor_detail.html")

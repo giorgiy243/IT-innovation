@@ -12,12 +12,14 @@ from fastapi.responses import JSONResponse
 from core.auth.routes import router as auth_router
 from core.pages import router as pages_router
 from core.rbac.routes import router as rbac_router
+from core.vendors.routes import router as vendors_router
 
 app = FastAPI(title="IT-innovation", version="0.1.0")
 
 app.include_router(pages_router)
 app.include_router(auth_router)
 app.include_router(rbac_router)
+app.include_router(vendors_router)
 
 
 @app.get("/health")

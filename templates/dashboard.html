@@ -139,6 +139,7 @@ html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,san
 
 <script>
 const SCOPE_LABEL = {own: 'Свои данные', team: 'Команда', domain: 'Домен', all: 'Все данные'};
+const MODULE_URLS = {sales: '/vendors'};
 
 const NAV_ICONS = {
   sales:    `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 10l4-4 3 3 5-5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>`,
@@ -181,14 +182,20 @@ async function init() {
     label.textContent = 'Модули';
     navBody.appendChild(label);
     nav.modules.forEach((m, i) => {
-      const item = document.createElement('div');
+      const url = MODULE_URLS[m.code];
+      const item = document.createElement(url ? 'a' : 'div');
       item.className = 'nav-item' + (i === 0 ? ' act' : '');
+      if (url) {
+        item.href = url;
+        item.style.textDecoration = 'none';
+      } else {
+        item.onclick = () => {
+          document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('act'));
+          item.classList.add('act');
+          document.getElementById('pageTitle').textContent = m.name;
+        };
+      }
       item.innerHTML = (NAV_ICONS[m.code] || defaultIcon()) + `<span>${m.name}</span>`;
-      item.onclick = () => {
-        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('act'));
-        item.classList.add('act');
-        document.getElementById('pageTitle').textContent = m.name;
-      };
       navBody.appendChild(item);
     });
     if (nav.modules[0]) {
@@ -199,8 +206,10 @@ async function init() {
   // Карточки модулей на главной
   const grid = document.getElementById('modulesGrid');
   nav.modules.forEach(m => {
-    const card = document.createElement('div');
+    const url = MODULE_URLS[m.code];
+    const card = document.createElement(url ? 'a' : 'div');
     card.className = 'mod-card';
+    if (url) { card.href = url; card.style.textDecoration = 'none'; }
     card.innerHTML = `<div class="mod-card-name">${m.name}</div><div class="mod-card-scope">${SCOPE_LABEL[m.scope] || m.scope}</div>`;
     grid.appendChild(card);
   });

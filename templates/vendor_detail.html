@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Вендор - IT-innovation</title>
+<style>
+:root{
+  --brand:#81B446;--brand-d:#6a9338;--dark:#1E2832;--slate:#323C50;
+  --mid:#8296AA;--light:#D7DCE6;--bg:#F5FAFA;
+  --nav-bg:#1E2832;--nav-hover:#323C50;
+  --sidebar-w:232px;--topbar-h:56px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,sans-serif;color:var(--dark);-webkit-font-smoothing:antialiased;}
+.layout{display:flex;height:100vh;overflow:hidden;}
+
+/* Sidebar */
+.sidebar{width:var(--sidebar-w);flex:none;background:var(--nav-bg);display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,.05);}
+.s-logo{height:var(--topbar-h);display:flex;align-items:center;padding:0 16px;gap:10px;border-bottom:1px solid rgba(255,255,255,.07);flex:none;}
+.logo-mark{width:30px;height:30px;border-radius:8px;flex:none;background:var(--brand);display:flex;align-items:center;justify-content:center;}
+.logo-mark svg{width:16px;height:16px;fill:#fff;}
+.logo-text{font-size:14px;font-weight:700;color:#fff;letter-spacing:-.01em;}
+.nav-body{flex:1;overflow-y:auto;padding:10px 8px;}
+.nav-group-label{font-size:10.5px;font-weight:600;color:rgba(130,150,170,.7);text-transform:uppercase;letter-spacing:.08em;padding:10px 10px 4px;}
+.nav-item{display:flex;align-items:center;gap:9px;height:38px;padding:0 10px;border-radius:7px;font-size:13px;font-weight:500;color:rgba(255,255,255,.6);cursor:pointer;margin-bottom:1px;border-left:2px solid transparent;transition:background .12s,color .12s;text-decoration:none;}
+.nav-item:hover{background:var(--nav-hover);color:#fff;}
+.nav-item.act{background:rgba(129,180,70,.14);color:#fff;border-left-color:var(--brand);}
+.nav-item svg{width:16px;height:16px;flex:none;opacity:.7;}
+.nav-item.act svg{opacity:1;}
+.s-footer{padding:10px 8px;border-top:1px solid rgba(255,255,255,.06);flex:none;}
+.user-row{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;cursor:pointer;}
+.user-row:hover{background:var(--nav-hover);}
+.avatar{width:30px;height:30px;border-radius:8px;flex:none;background:var(--slate);display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:#fff;}
+.u-info{flex:1;min-width:0;}
+.u-name{font-size:12.5px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.u-role{font-size:11px;color:var(--mid);}
+.logout-btn{width:24px;height:24px;display:flex;align-items:center;justify-content:center;border:none;background:transparent;cursor:pointer;border-radius:5px;color:rgba(255,255,255,.3);transition:color .15s,background .15s;flex:none;font-size:16px;line-height:1;}
+.logout-btn:hover{color:#fff;background:rgba(255,255,255,.08);}
+
+/* Main */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{height:var(--topbar-h);flex:none;display:flex;align-items:center;padding:0 24px;background:#fff;border-bottom:1px solid var(--light);gap:8px;}
+.breadcrumb{font-size:13px;color:var(--mid);}
+.breadcrumb a{color:var(--mid);text-decoration:none;}
+.breadcrumb a:hover{color:var(--dark);}
+.breadcrumb-sep{margin:0 5px;color:var(--light);}
+.breadcrumb-cur{color:var(--dark);font-weight:600;}
+.content{flex:1;overflow-y:auto;padding:24px;}
+
+/* Card layout */
+.vendor-header{background:#fff;border:1px solid var(--light);border-radius:10px;padding:20px 24px;margin-bottom:16px;}
+.vh-top{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;}
+.vh-name{font-size:20px;font-weight:700;color:var(--dark);flex:1;min-width:200px;}
+.vh-meta{display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap;}
+.vh-pid{font-size:12px;color:var(--mid);}
+.vh-until{font-size:12px;color:var(--mid);}
+.vh-until.expired{color:#991b1b;}
+
+/* Sections */
+.section{background:#fff;border:1px solid var(--light);border-radius:10px;padding:20px 24px;margin-bottom:16px;}
+.section-title{font-size:12px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;}
+.fields-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px 24px;}
+.field{display:flex;flex-direction:column;gap:3px;}
+.field-label{font-size:11px;font-weight:600;color:var(--mid);text-transform:uppercase;letter-spacing:.06em;}
+.field-value{font-size:13px;color:var(--dark);word-break:break-word;}
+.field-value.empty{color:var(--light);font-style:italic;}
+.field-value a{color:var(--brand-d);text-decoration:none;}
+.field-value a:hover{text-decoration:underline;}
+.field-wide{grid-column:1/-1;}
+
+/* Password field */
+.pwd-row{display:flex;align-items:center;gap:8px;}
+.pwd-text{font-size:13px;color:var(--dark);font-family:monospace;word-break:break-all;}
+.btn-show{height:28px;padding:0 10px;border:1px solid var(--light);border-radius:6px;font-size:12px;font-family:inherit;color:var(--mid);background:#fff;cursor:pointer;flex:none;transition:border-color .12s,color .12s;}
+.btn-show:hover{border-color:var(--mid);color:var(--dark);}
+
+/* Distributors table */
+.dist-table{width:100%;border-collapse:collapse;margin-top:4px;}
+.dist-table th{font-size:11px;font-weight:600;color:var(--mid);text-align:left;padding:6px 10px;border-bottom:1px solid var(--light);}
+.dist-table td{font-size:13px;padding:8px 10px;border-bottom:1px solid var(--bg);vertical-align:top;}
+.dist-table tr:last-child td{border-bottom:none;}
+
+/* Status badges */
+.badge{display:inline-block;font-size:11px;font-weight:600;border-radius:5px;padding:3px 10px;}
+.badge-active{background:#e8f5d9;color:#4a7a1e;}
+.badge-suspended{background:#fef9c3;color:#854d0e;}
+.badge-revoked,.badge-deauth,.badge-closed{background:#fde8e8;color:#991b1b;}
+.badge-none{background:#eef2f7;color:#64748b;}
+.badge-unknown{background:#f1f5f9;color:#94a3b8;}
+
+.footer-meta{font-size:11.5px;color:var(--mid);margin-top:4px;}
+.loading{padding:48px;text-align:center;color:var(--mid);}
+</style>
+</head>
+<body>
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="s-logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 18 18"><path d="M9 2L2 6v6l7 4 7-4V6z" opacity=".3"/><path d="M9 2l7 4-7 4L2 6z"/></svg>
+      </div>
+      <span class="logo-text">IT-innovation</span>
+    </div>
+    <div class="nav-body" id="navBody">
+      <div class="nav-group-label">Загрузка...</div>
+    </div>
+    <div class="s-footer">
+      <div class="user-row">
+        <div class="avatar" id="userAvatar">?</div>
+        <div class="u-info">
+          <div class="u-name" id="userName">...</div>
+          <div class="u-role" id="userRole">...</div>
+        </div>
+        <button class="logout-btn" title="Выйти" id="logoutBtn">&#x23FB;</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <nav class="breadcrumb">
+        <a href="/vendors">Вендоры</a>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-cur" id="bcName">...</span>
+      </nav>
+    </div>
+    <div class="content" id="mainContent">
+      <div class="loading">Загрузка...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const NAV_ICONS = {
+  sales:    `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 10l4-4 3 3 5-5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>`,
+  presale:  `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2a6 6 0 100 12A6 6 0 008 2zm0 1.5a4.5 4.5 0 110 9 4.5 4.5 0 010-9zM7 5v4l3 1.5.5-1L8 8V5H7z"/></svg>`,
+  marketing:`<svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 8a5 5 0 0110 0H3zm5-6a1 1 0 110 2 1 1 0 010-2zM2 9h12v1H2z"/></svg>`,
+  bidding:  `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1l2 4h4l-3 3 1 4-4-2-4 2 1-4-3-3h4z"/></svg>`,
+  logistics:`<svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 4h9v6H1zM10 6h3l2 2v2h-5V6zM3 10a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm8 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"/></svg>`,
+  docs:     `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h7l3 3v9H3V2zm7 0v3h3M6 7h5M6 9h5M6 11h3"/></svg>`,
+};
+const MODULE_URLS = {sales: '/vendors'};
+function defaultIcon() {
+  return `<svg viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="12" height="12" rx="2" opacity=".3"/><rect x="5" y="5" width="6" height="1.5" rx=".75"/><rect x="5" y="8" width="6" height="1.5" rx=".75"/></svg>`;
+}
+
+const STATUS_LABEL = {
+  active: 'Активный', suspended: 'Приостановлен', revoked: 'Отозван',
+  deauth: 'Деавторизован', closed: 'Закрыт', none: 'Без статуса'
+};
+const STATUS_CLASS = {
+  active: 'badge-active', suspended: 'badge-suspended',
+  revoked: 'badge-revoked', deauth: 'badge-deauth', closed: 'badge-closed',
+  none: 'badge-none'
+};
+
+function esc(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function fv(s) {
+  if (s == null || s === '') return '<span class="field-value empty">-</span>';
+  return `<span class="field-value">${esc(s)}</span>`;
+}
+function fvLink(s) {
+  if (!s) return '<span class="field-value empty">-</span>';
+  return `<span class="field-value"><a href="${esc(s)}" target="_blank" rel="noopener">${esc(s)}</a></span>`;
+}
+function fmtDate(iso) {
+  if (!iso) return null;
+  const [y, m, d] = iso.split('-');
+  return `${d}.${m}.${y}`;
+}
+function isExpired(iso) {
+  if (!iso) return false;
+  return new Date(iso) < new Date();
+}
+
+function renderVendor(v) {
+  const statusCls = STATUS_CLASS[v.status_type] || 'badge-unknown';
+  const statusLbl = STATUS_LABEL[v.status_type] || (v.status_type || '-');
+  const dateStr = fmtDate(v.valid_until);
+  const expired = isExpired(v.valid_until);
+
+  // Distributors table
+  const distHtml = v.distributors.length ? `
+    <table class="dist-table">
+      <thead><tr>
+        <th>#</th><th>Название</th><th>Контакт</th><th>Email</th><th>Телефон</th><th>Примечание</th>
+      </tr></thead>
+      <tbody>${v.distributors.map(d => `
+        <tr>
+          <td style="color:var(--mid)">${d.sort_order}</td>
+          <td><strong>${esc(d.name)}</strong></td>
+          <td>${esc(d.contact) || '-'}</td>
+          <td>${esc(d.email) || '-'}</td>
+          <td>${esc(d.phone) || '-'}</td>
+          <td style="color:var(--mid);font-size:12px">${esc(d.note) || '-'}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>` : '<p style="font-size:13px;color:var(--mid)">Дистрибьюторы не указаны.</p>';
+
+  document.getElementById('bcName').textContent = v.name;
+  document.title = `${v.name} - IT-innovation`;
+
+  // Password: start hidden
+  const hasPwd = !!v.portal_password;
+
+  document.getElementById('mainContent').innerHTML = `
+    <!-- Header -->
+    <div class="vendor-header">
+      <div class="vh-top">
+        <div class="vh-name">${esc(v.name)}</div>
+        <span class="badge ${statusCls}">${esc(statusLbl)}</span>
+      </div>
+      <div class="vh-meta">
+        ${v.partner_id ? `<span class="vh-pid">ID партнёра: ${esc(v.partner_id)}</span>` : ''}
+        ${dateStr ? `<span class="vh-until${expired ? ' expired' : ''}">
+          ${expired ? '&#x26A0; ' : ''}Действует до: ${dateStr}
+        </span>` : ''}
+        ${v.status_text ? `<span style="font-size:12px;color:var(--slate)">${esc(v.status_text)}</span>` : ''}
+      </div>
+    </div>
+
+    <!-- Partnership -->
+    <div class="section">
+      <div class="section-title">Партнёрство</div>
+      <div class="fields-grid">
+        <div class="field"><div class="field-label">Категории</div>${fv(v.categories)}</div>
+        <div class="field"><div class="field-label">Направления</div>${fv(v.directions)}</div>
+        <div class="field"><div class="field-label">Юридическое лицо</div>${fv(v.legal_entity)}</div>
+        <div class="field"><div class="field-label">Способ закупки</div>${fv(v.purchase_method)}</div>
+        <div class="field field-wide"><div class="field-label">Скидка / условия</div>${fv(v.discount)}</div>
+      </div>
+    </div>
+
+    <!-- Portal -->
+    <div class="section">
+      <div class="section-title">Портал вендора</div>
+      <div class="fields-grid">
+        <div class="field field-wide"><div class="field-label">Ссылка</div>${fvLink(v.portal_url)}</div>
+        <div class="field"><div class="field-label">Логин</div>${fv(v.portal_login)}</div>
+        <div class="field">
+          <div class="field-label">Пароль</div>
+          ${hasPwd ? `<div class="pwd-row">
+            <span class="pwd-text" id="pwdText">••••••••</span>
+            <button class="btn-show" id="pwdToggle" onclick="togglePwd(${JSON.stringify(v.portal_password)})">Показать</button>
+          </div>` : '<span class="field-value empty">-</span>'}
+        </div>
+      </div>
+    </div>
+
+    <!-- Contacts -->
+    <div class="section">
+      <div class="section-title">Контакты и сделки</div>
+      <div class="fields-grid">
+        <div class="field"><div class="field-label">Контакт вендора</div>${fv(v.vendor_contact)}</div>
+        <div class="field"><div class="field-label">Регистрация сделки</div>${fv(v.deal_registration)}</div>
+      </div>
+    </div>
+
+    ${v.mop_comments ? `
+    <div class="section">
+      <div class="section-title">Заметки МОПа</div>
+      <p style="font-size:13px;color:var(--dark);line-height:1.6;white-space:pre-wrap">${esc(v.mop_comments)}</p>
+    </div>` : ''}
+
+    <!-- Distributors -->
+    <div class="section">
+      <div class="section-title">Дистрибьюторы</div>
+      ${distHtml}
+    </div>
+
+    <p class="footer-meta">Обновлено: ${v.updated_at ? v.updated_at.replace('T',' ').slice(0,16) : '-'}</p>
+  `;
+}
+
+let pwdVisible = false;
+function togglePwd(pwd) {
+  pwdVisible = !pwdVisible;
+  document.getElementById('pwdText').textContent = pwdVisible ? pwd : '••••••••';
+  document.getElementById('pwdToggle').textContent = pwdVisible ? 'Скрыть' : 'Показать';
+}
+
+async function buildSidebar() {
+  const meRes = await fetch('/me');
+  if (!meRes.ok) { window.location.href = '/login'; return; }
+  const me = await meRes.json();
+  document.getElementById('userName').textContent = me.login;
+  document.getElementById('userAvatar').textContent = me.login.slice(0,2).toUpperCase();
+
+  const navRes = await fetch('/nav');
+  const nav = await navRes.json();
+  document.getElementById('userRole').textContent = nav.roles.join(', ') || 'нет роли';
+
+  const body = document.getElementById('navBody');
+  body.innerHTML = '';
+  const label = document.createElement('div');
+  label.className = 'nav-group-label';
+  label.textContent = 'Модули';
+  body.appendChild(label);
+  nav.modules.forEach(m => {
+    const url = MODULE_URLS[m.code];
+    const item = document.createElement(url ? 'a' : 'div');
+    item.className = 'nav-item' + (m.code === 'sales' ? ' act' : '');
+    if (url) item.href = url;
+    item.innerHTML = (NAV_ICONS[m.code] || defaultIcon()) + `<span>${m.name}</span>`;
+    body.appendChild(item);
+  });
+}
+
+async function loadVendor() {
+  const id = window.location.pathname.split('/').pop();
+  const res = await fetch(`/api/vendors/${id}`);
+  if (res.status === 401) { window.location.href = '/login'; return; }
+  if (res.status === 403) {
+    document.getElementById('mainContent').innerHTML = '<div class="loading">Нет доступа к модулю.</div>';
+    return;
+  }
+  if (res.status === 404) {
+    document.getElementById('mainContent').innerHTML = '<div class="loading">Вендор не найден.</div>';
+    return;
+  }
+  if (!res.ok) {
+    document.getElementById('mainContent').innerHTML = '<div class="loading">Ошибка загрузки.</div>';
+    return;
+  }
+  renderVendor(await res.json());
+}
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await fetch('/logout', {method: 'POST'});
+  window.location.href = '/login';
+});
+
+async function init() {
+  await buildSidebar();
+  await loadVendor();
+}
+
+init();
+</script>
+</body>
+</html>
