@@ -72,14 +72,18 @@ html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,san
 /* Password field */
 .pwd-row{display:flex;align-items:center;gap:8px;}
 .pwd-text{font-size:13px;color:var(--dark);font-family:monospace;word-break:break-all;}
-.btn-show{height:28px;padding:0 10px;border:1px solid var(--light);border-radius:6px;font-size:12px;font-family:inherit;color:var(--mid);background:#fff;cursor:pointer;flex:none;transition:border-color .12s,color .12s;}
-.btn-show:hover{border-color:var(--mid);color:var(--dark);}
+.btn-show{height:28px;padding:0 10px;border:1px solid var(--light);border-radius:6px;font-size:12px;font-family:inherit;color:var(--slate);background:#fff;cursor:pointer;flex:none;transition:border-color .12s,color .12s;}
+.btn-show:hover{border-color:var(--brand);color:var(--brand);}
 
-/* Distributors table */
-.dist-table{width:100%;border-collapse:collapse;margin-top:4px;}
-.dist-table th{font-size:11px;font-weight:600;color:var(--mid);text-align:left;padding:6px 10px;border-bottom:1px solid var(--light);}
-.dist-table td{font-size:13px;padding:8px 10px;border-bottom:1px solid var(--bg);vertical-align:top;}
-.dist-table tr:last-child td{border-bottom:none;}
+/* Distributors table — стиль Зебра */
+.dist-wrap{background:#fff;border:1px solid var(--light);border-radius:10px;overflow:hidden;margin-top:4px;}
+.dist-table{width:100%;border-collapse:collapse;}
+.dist-table thead{background:var(--dark);}
+.dist-table th{font-size:11.5px;font-weight:600;color:rgba(255,255,255,.6);text-align:left;padding:10px 14px;}
+.dist-table tbody tr:nth-child(odd) td{background:#fff;}
+.dist-table tbody tr:nth-child(even) td{background:rgba(245,250,250,.9);}
+.dist-table tbody tr:hover td{background:rgba(129,180,70,.06)!important;}
+.dist-table td{font-size:13px;padding:11px 14px;vertical-align:top;}
 
 /* Status badges */
 .badge{display:inline-block;font-size:11px;font-weight:600;border-radius:5px;padding:3px 10px;}
@@ -187,21 +191,23 @@ function renderVendor(v) {
 
   // Distributors table
   const distHtml = v.distributors.length ? `
-    <table class="dist-table">
-      <thead><tr>
-        <th>#</th><th>Название</th><th>Контакт</th><th>Email</th><th>Телефон</th><th>Примечание</th>
-      </tr></thead>
-      <tbody>${v.distributors.map(d => `
-        <tr>
-          <td style="color:var(--mid)">${d.sort_order}</td>
-          <td><strong>${esc(d.name)}</strong></td>
-          <td>${esc(d.contact) || '-'}</td>
-          <td>${esc(d.email) || '-'}</td>
-          <td>${esc(d.phone) || '-'}</td>
-          <td style="color:var(--mid);font-size:12px">${esc(d.note) || '-'}</td>
-        </tr>`).join('')}
-      </tbody>
-    </table>` : '<p style="font-size:13px;color:var(--mid)">Дистрибьюторы не указаны.</p>';
+    <div class="dist-wrap">
+      <table class="dist-table">
+        <thead><tr>
+          <th>#</th><th>Название</th><th>Контакт</th><th>Email</th><th>Телефон</th><th>Примечание</th>
+        </tr></thead>
+        <tbody>${v.distributors.map(d => `
+          <tr>
+            <td style="color:var(--mid)">${d.sort_order}</td>
+            <td><strong>${esc(d.name)}</strong></td>
+            <td>${esc(d.contact) || '-'}</td>
+            <td>${esc(d.email) || '-'}</td>
+            <td>${esc(d.phone) || '-'}</td>
+            <td style="color:var(--mid);font-size:12px">${esc(d.note) || '-'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>` : '<p style="font-size:13px;color:var(--mid)">Дистрибьюторы не указаны.</p>';
 
   document.getElementById('bcName').textContent = v.name;
   document.title = `${v.name} - IT-innovation`;

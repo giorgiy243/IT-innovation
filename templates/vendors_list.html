@@ -10,6 +10,8 @@
   --mid:#8296AA;--light:#D7DCE6;--bg:#F5FAFA;
   --nav-bg:#1E2832;--nav-hover:#323C50;
   --sidebar-w:232px;--topbar-h:56px;
+  --sh:0 2px 10px rgba(30,40,50,.08),0 1px 3px rgba(30,40,50,.05);
+  --sh-hover:0 8px 28px rgba(30,40,50,.13),0 2px 6px rgba(30,40,50,.07);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,sans-serif;color:var(--dark);-webkit-font-smoothing:antialiased;}
@@ -56,26 +58,52 @@ html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,san
 .btn-reset:hover{border-color:var(--mid);color:var(--dark);}
 
 /* Cards grid */
-.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;}
-.vendor-card{
-  background:#fff;border:1px solid var(--light);border-radius:10px;
-  cursor:pointer;overflow:hidden;
-  transition:border-color .15s,box-shadow .15s;
-  display:flex;flex-direction:column;
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;}
+
+/* Vendor card — гибрид В+Б: левая градиентная полоса + контент */
+.cl-card{
+  background:#fff;border:none;border-radius:10px;overflow:hidden;
+  box-shadow:var(--sh);transition:transform .18s ease,box-shadow .18s ease;
+  display:flex;min-height:110px;cursor:pointer;
 }
-.vendor-card:hover{border-color:var(--brand);box-shadow:0 2px 14px rgba(129,180,70,.13);}
-.card-bar{height:4px;flex:none;}
-.card-bar-active{background:var(--brand);}
-.card-bar-suspended{background:#eab308;}
-.card-bar-revoked,.card-bar-deauth,.card-bar-closed{background:#ef4444;}
-.card-bar-none,.card-bar-unknown{background:var(--light);}
-.card-body{padding:14px 16px;flex:1;display:flex;flex-direction:column;gap:6px;}
-.card-name{font-size:13.5px;font-weight:700;color:var(--dark);line-height:1.3;}
-.card-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:2px;}
-.card-cat{font-size:11.5px;color:var(--mid);}
-.card-footer{padding:10px 16px;border-top:1px solid var(--bg);display:flex;align-items:center;justify-content:space-between;}
-.card-date{font-size:11px;color:var(--mid);}
-.card-date.expired{color:#991b1b;font-weight:600;}
+.cl-card:hover{transform:translateY(-3px);box-shadow:var(--sh-hover);}
+
+/* Градиент полосы по статусу */
+.cl-card.s-active .cl-stripe{background:linear-gradient(180deg,#1f3d18,#3a6e2a);}
+.cl-card.s-suspended .cl-stripe{background:linear-gradient(180deg,#3d2600,#7a4a00);}
+.cl-card.s-revoked .cl-stripe,
+.cl-card.s-deauth .cl-stripe,
+.cl-card.s-closed .cl-stripe{background:linear-gradient(180deg,#3d1010,#7a2020);}
+.cl-card.s-none .cl-stripe,
+.cl-card.s-unknown .cl-stripe{background:linear-gradient(180deg,#2a3040,#3a4050);}
+
+.cl-stripe{
+  width:52px;flex:none;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:8px;padding:12px 0;
+  background:linear-gradient(180deg,#2a3040,#3a4050);
+}
+.cl-stripe-icon{
+  width:30px;height:30px;border-radius:8px;
+  background:rgba(255,255,255,.12);
+  display:flex;align-items:center;justify-content:center;
+}
+.cl-stripe-lbl{
+  font-size:9px;font-weight:700;color:rgba(255,255,255,.45);
+  text-transform:uppercase;letter-spacing:.1em;
+  writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);
+}
+
+/* Контентный блок карточки */
+.cl-content{flex:1;min-width:0;padding:14px;display:flex;flex-direction:column;}
+.cl-hd{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px;}
+.cl-hd-left{min-width:0;flex:1;overflow:hidden;}
+.cl-name{font-size:13.5px;font-weight:700;color:var(--dark);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cl-sub{font-size:12px;color:var(--mid);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cl-badge{flex-shrink:0;white-space:nowrap;align-self:flex-start;}
+.cl-ft{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;padding-top:8px;border-top:1px solid var(--bg);}
+.cl-meta{font-size:11.5px;color:var(--mid);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cl-meta.expired{color:#991b1b;font-weight:600;}
 
 /* Status badges */
 .badge{display:inline-block;font-size:11px;font-weight:600;border-radius:5px;padding:2px 8px;white-space:nowrap;}
@@ -169,6 +197,11 @@ const STATUS_CLASS = {
   revoked: 'badge-revoked', deauth: 'badge-deauth', closed: 'badge-closed',
   none: 'badge-none'
 };
+const STRIPE_LABEL = {
+  active: 'Активный', suspended: 'Приост.', revoked: 'Отозван',
+  deauth: 'Деавт.', closed: 'Закрыт', none: 'Нет'
+};
+const VENDOR_ICON = `<svg width="14" height="14" style="color:rgba(255,255,255,.75);" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>`;
 
 function statusBadge(st) {
   if (!st) return '<span class="badge badge-unknown">-</span>';
@@ -216,11 +249,6 @@ async function loadVendors(filters) {
   if (filters === currentFilters) fillCategorySelect(data.categories);
 }
 
-function barClass(st) {
-  if (!st) return 'card-bar-unknown';
-  return 'card-bar-' + (st in STATUS_CLASS ? st : 'unknown');
-}
-
 function renderCards(vendors, total) {
   document.getElementById('countBadge').textContent =
     total === vendors.length ? `${total}` : `${vendors.length} из ${total}`;
@@ -232,23 +260,35 @@ function renderCards(vendors, total) {
   }
 
   grid.innerHTML = vendors.map(v => {
+    const st = v.status_type || 'unknown';
     const dateStr = fmtDate(v.valid_until);
     const expired = v.valid_until && new Date(v.valid_until) < new Date();
-    const dateHtml = dateStr !== '-'
-      ? `<span class="card-date${expired ? ' expired' : ''}">${expired ? '&#x26A0; ' : ''}до ${dateStr}</span>`
+    const stripeLbl = STRIPE_LABEL[st] || st;
+    const badgeCls = STATUS_CLASS[st] || 'badge-unknown';
+    const badgeLbl = STATUS_LABEL[st] || st;
+    const metaLeft = dateStr !== '-'
+      ? `<span class="cl-meta${expired ? ' expired' : ''}">${expired ? '&#x26A0;&nbsp;' : ''}до ${dateStr}</span>`
+      : '<span class="cl-meta"></span>';
+    const metaRight = v.partner_id
+      ? `<span class="cl-meta" style="color:var(--slate)">${esc(v.partner_id)}</span>`
       : '';
-    return `<div class="vendor-card" onclick="window.location='/vendors/${v.id}'">
-      <div class="card-bar ${barClass(v.status_type)}"></div>
-      <div class="card-body">
-        <div class="card-name">${esc(v.name)}</div>
-        <div class="card-meta">
-          ${statusBadge(v.status_type)}
-          ${v.categories ? `<span class="card-cat">${esc(v.categories)}</span>` : ''}
-        </div>
+    return `<div class="cl-card s-${st}" onclick="window.location='/vendors/${v.id}'">
+      <div class="cl-stripe">
+        <div class="cl-stripe-icon">${VENDOR_ICON}</div>
+        <span class="cl-stripe-lbl">${stripeLbl}</span>
       </div>
-      <div class="card-footer">
-        ${dateHtml}
-        ${v.partner_id ? `<span class="card-date" style="color:var(--slate)">${esc(v.partner_id)}</span>` : ''}
+      <div class="cl-content">
+        <div class="cl-hd">
+          <div class="cl-hd-left">
+            <div class="cl-name">${esc(v.name)}</div>
+            <div class="cl-sub">${v.categories ? esc(v.categories) : ''}</div>
+          </div>
+          <span class="badge ${badgeCls} cl-badge">${badgeLbl}</span>
+        </div>
+        <div class="cl-ft">
+          ${metaLeft}
+          ${metaRight}
+        </div>
       </div>
     </div>`;
   }).join('');
