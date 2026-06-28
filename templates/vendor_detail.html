@@ -100,6 +100,50 @@ html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,san
 .scroll-top.visible{opacity:1;pointer-events:auto;}
 .scroll-top:hover{background:var(--dark);transform:translateY(-2px);box-shadow:0 6px 20px rgba(30,40,50,.4);}
 .scroll-top svg{width:18px;height:18px;stroke:#fff;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+/* Тип компании */
+.type-chip{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:4px;margin-left:8px;vertical-align:middle;}
+.t-vendor{background:rgba(129,180,70,.14);color:#3a6320;}
+.t-distributor{background:rgba(30,74,168,.1);color:#1e3fa8;}
+.t-partner{background:rgba(120,85,0,.1);color:#7a5500;}
+/* Кнопки действий карточки */
+.card-actions{display:flex;align-items:center;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid var(--light);}
+.btn-card-edit{height:34px;padding:0 16px;border-radius:7px;font-size:13px;font-family:inherit;font-weight:600;color:var(--slate);background:transparent;border:1.5px solid var(--light);cursor:pointer;transition:border-color .12s,color .12s;}
+.btn-card-edit:hover{border-color:var(--brand);color:var(--brand);}
+.btn-card-audit{height:34px;padding:0 12px;border-radius:7px;font-size:13px;font-family:inherit;font-weight:500;color:var(--mid);background:transparent;border:none;cursor:pointer;transition:color .12s;margin-left:auto;}
+.btn-card-audit:hover{color:var(--dark);}
+/* Режим редактирования */
+.edit-inp{width:100%;background:rgba(50,60,80,.06);border:1.5px solid transparent;border-radius:7px;padding:7px 11px;font-size:13px;font-family:inherit;color:var(--dark);outline:none;transition:border-color .15s,background .15s;}
+.edit-inp:focus{border-color:var(--brand);background:#fff;}
+.edit-inp.invalid{border-color:#D97706!important;background:#fffbf0;}
+.edit-textarea{resize:vertical;min-height:60px;}
+.edit-readonly{font-size:13px;color:var(--mid);padding:6px 0;}
+.type-seg{display:flex;gap:4px;background:rgba(50,60,80,.07);padding:4px;border-radius:8px;margin-top:2px;width:fit-content;}
+.type-btn{border:none;background:transparent;border-radius:5px;padding:5px 14px;font-size:12.5px;font-weight:600;color:var(--mid);cursor:pointer;transition:background .12s,color .12s;white-space:nowrap;}
+.type-btn.sel{background:#fff;color:var(--dark);box-shadow:0 1px 4px rgba(30,40,50,.12);}
+.edit-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:14px;border-top:1px solid var(--light);}
+.btn-save-edit{height:36px;padding:0 20px;border-radius:7px;font-size:13px;font-family:inherit;font-weight:600;color:#fff;background:var(--brand);border:none;cursor:pointer;transition:background .12s;}
+.btn-save-edit:hover{background:var(--brand-d);}
+.btn-save-edit:disabled{background:var(--mid);cursor:not-allowed;}
+.btn-cancel-edit{height:36px;padding:0 18px;border-radius:7px;font-size:13px;font-family:inherit;font-weight:600;color:var(--mid);background:transparent;border:1.5px solid var(--light);cursor:pointer;transition:border-color .12s,color .12s;}
+.btn-cancel-edit:hover{border-color:var(--mid);color:var(--dark);}
+/* Аудит-лог панель */
+.audit-panel{background:#fff;border:1px solid var(--light);border-radius:10px;padding:20px 24px;margin-top:16px;}
+.audit-panel-title{font-size:12px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;}
+.audit-table{width:100%;border-collapse:collapse;}
+.audit-table th{font-size:11px;font-weight:600;color:var(--mid);text-align:left;padding:8px 12px;border-bottom:2px solid var(--light);}
+.audit-table td{font-size:12.5px;padding:9px 12px;border-bottom:1px solid var(--bg);vertical-align:top;}
+.audit-table tbody tr:last-child td{border-bottom:none;}
+.audit-table tbody tr:hover td{background:rgba(129,180,70,.04);}
+.a-chip{font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;white-space:nowrap;}
+.a-create{background:#e8f5d9;color:#3a6320;}
+.a-update{background:rgba(30,74,168,.1);color:#1e3fa8;}
+.a-delete{background:#fde8e8;color:#991b1b;}
+.audit-arrow{color:var(--mid);margin:0 4px;}
+.audit-empty{font-size:13px;color:var(--mid);padding:12px 0;}
+/* Toast */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--dark);color:#fff;font-size:13px;font-weight:500;padding:10px 20px;border-radius:8px;box-shadow:0 4px 16px rgba(30,40,50,.3);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:2000;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.err{background:#991b1b;}
 </style>
 </head>
 <body>
@@ -189,10 +233,13 @@ function isExpired(iso) {
 }
 
 function renderVendor(v) {
+  _vendorData = v;
   const statusCls = STATUS_CLASS[v.status_type] || 'badge-unknown';
   const statusLbl = STATUS_LABEL[v.status_type] || (v.status_type || '-');
   const dateStr = fmtDate(v.valid_until);
   const expired = isExpired(v.valid_until);
+  const ctype = v.company_type || 'vendor';
+  const typeChip = `<span class="type-chip ${TYPE_CLASS[ctype] || ''}">${TYPE_LABEL[ctype] || ctype}</span>`;
 
   // Distributors table
   const distHtml = v.distributors.length ? `
@@ -226,7 +273,7 @@ function renderVendor(v) {
     <!-- Header -->
     <div class="vendor-header">
       <div class="vh-top">
-        <div class="vh-name">${esc(v.name)}</div>
+        <div class="vh-name">${esc(v.name)}${typeChip}</div>
         <span class="badge ${statusCls}">${esc(statusLbl)}</span>
       </div>
       <div class="vh-meta">
@@ -288,11 +335,29 @@ function renderVendor(v) {
     </div>
 
     <p class="footer-meta">Обновлено: ${v.updated_at ? v.updated_at.replace('T',' ').slice(0,16) : '-'}</p>
+    ${hasAnyWrite() || hasAuditAccess() ? `
+    <div class="card-actions">
+      ${hasAnyWrite() ? `<button class="btn-card-edit" id="btnEdit" onclick="enterEditMode()">Редактировать</button>` : ''}
+      ${hasAuditAccess() ? `<button class="btn-card-audit" id="btnAudit" onclick="toggleAudit()">Посмотреть историю</button>` : ''}
+    </div>` : ''}
   `;
 }
 
 let pwdVisible = false;
 let _currentPwd = null;
+let _navRoles = [];
+let _vendorData = null;
+const VENDOR_ID = window.location.pathname.split('/').pop();
+
+const TYPE_LABEL = {vendor: 'Вендор', distributor: 'Дистрибьютор', partner: 'Партнёр'};
+const TYPE_CLASS = {vendor: 't-vendor', distributor: 't-distributor', partner: 't-partner'};
+const _FULL_WRITE_ROLES = new Set(['marketer', 'analyst']);
+const _ROP_WRITE_ROLES  = new Set(['rop']);
+const _AUDIT_ROLES      = new Set(['marketer', 'analyst']);
+
+function hasFullWrite()  { return _navRoles.some(r => _FULL_WRITE_ROLES.has(r)); }
+function hasAnyWrite()   { return _navRoles.some(r => _FULL_WRITE_ROLES.has(r) || _ROP_WRITE_ROLES.has(r)); }
+function hasAuditAccess(){ return _navRoles.some(r => _AUDIT_ROLES.has(r)); }
 function togglePwd() {
   pwdVisible = !pwdVisible;
   document.getElementById('pwdText').textContent = pwdVisible ? _currentPwd : '••••••••';
@@ -308,7 +373,8 @@ async function buildSidebar() {
 
   const navRes = await fetch('/nav');
   const nav = await navRes.json();
-  document.getElementById('userRole').textContent = nav.roles.join(', ') || 'нет роли';
+  _navRoles = nav.roles || [];
+  document.getElementById('userRole').textContent = _navRoles.join(', ') || 'нет роли';
 
   const body = document.getElementById('navBody');
   body.innerHTML = '';
@@ -356,7 +422,244 @@ async function init() {
 }
 
 init();
+
+// ─── Редактирование ──────────────────────────────────────────────────────────
+
+function enterEditMode() {
+  const v = _vendorData;
+  const full = hasFullWrite();
+
+  // Поле: для полного доступа - input, для ROP - read-only
+  const inp = (id, val, type='text') =>
+    full ? `<input class="edit-inp" id="${id}" type="${type}" value="${esc(val || '')}">`
+         : `<span class="edit-readonly">${esc(val) || '-'}</span>`;
+  const area = (id, val) =>
+    full ? `<textarea class="edit-inp edit-textarea" id="${id}">${esc(val || '')}</textarea>`
+         : `<span class="edit-readonly" style="white-space:pre-wrap">${esc(val) || '-'}</span>`;
+  // Поле доступное и для ROP
+  const inpRop = (id, val) =>
+    `<input class="edit-inp" id="${id}" type="text" value="${esc(val || '')}">`;
+
+  // Сегмент типа
+  const typeOpts = ['vendor','distributor','partner'];
+  const typeSeg = full
+    ? `<div class="type-seg" id="editTypeSeg">${typeOpts.map(t =>
+        `<button type="button" class="type-btn${v.company_type === t ? ' sel' : ''}" data-ctype="${t}">${TYPE_LABEL[t]}</button>`
+       ).join('')}</div>`
+    : `<span class="edit-readonly">${TYPE_LABEL[v.company_type] || v.company_type}</span>`;
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="vendor-header">
+      <div class="section-title" style="margin-bottom:16px">Редактирование${!full ? ' (ограниченный доступ)' : ''}</div>
+      <div class="fields-grid">
+        <div class="field"><div class="field-label">Тип</div>${typeSeg}</div>
+        <div class="field"><div class="field-label">Название *</div>
+          ${full ? `<input class="edit-inp" id="eName" type="text" value="${esc(v.name)}">`
+                 : `<span class="edit-readonly">${esc(v.name)}</span>`}
+        </div>
+        <div class="field"><div class="field-label">Категории</div>${inp('eCategories', v.categories)}</div>
+        <div class="field"><div class="field-label">Статус (тип)</div>
+          ${full ? `<select class="edit-inp" id="eStatusType">
+            <option value="">—</option>
+            ${['active','suspended','revoked','deauth','closed','none'].map(s =>
+              `<option value="${s}"${v.status_type === s ? ' selected' : ''}>${STATUS_LABEL[s]||s}</option>`
+            ).join('')}
+          </select>` : `<span class="edit-readonly">${STATUS_LABEL[v.status_type] || '-'}</span>`}
+        </div>
+        <div class="field" style="flex:2"><div class="field-label">Статус (текст)</div>${inp('eStatusText', v.status_text)}</div>
+        <div class="field"><div class="field-label">Действует до</div>
+          ${full ? `<input class="edit-inp" id="eValidUntil" type="date" value="${esc(v.valid_until || '')}">`
+                 : `<span class="edit-readonly">${fmtDate(v.valid_until) || '-'}</span>`}
+        </div>
+        <div class="field"><div class="field-label">Partner ID</div>${inp('ePartnerId', v.partner_id)}</div>
+        <div class="field"><div class="field-label">Юрлицо</div>${inp('eLegalEntity', v.legal_entity)}</div>
+        <div class="field"><div class="field-label">Направления</div>${inp('eDirections', v.directions)}</div>
+        <div class="field"><div class="field-label">Схема закупки</div>${inp('ePurchaseMethod', v.purchase_method)}</div>
+        <div class="field field-wide"><div class="field-label">Скидка / условия</div>${area('eDiscount', v.discount)}</div>
+        <div class="field field-wide"><div class="field-label">URL портала</div>
+          ${full ? `<input class="edit-inp" id="ePortalUrl" type="url" value="${esc(v.portal_url || '')}" placeholder="https://...">`
+                 : `<span class="edit-readonly">${esc(v.portal_url) || '-'}</span>`}
+        </div>
+        <div class="field"><div class="field-label">Логин портала</div>${inp('ePortalLogin', v.portal_login)}</div>
+        <div class="field"><div class="field-label">Пароль портала</div>
+          ${full ? `<input class="edit-inp" id="ePortalPassword" type="password" autocomplete="new-password" placeholder="Оставьте пустым, чтобы не менять">`
+                 : '<span class="edit-readonly">-</span>'}
+        </div>
+        <div class="field"><div class="field-label">Контакт вендора</div>${inpRop('eVendorContact', v.vendor_contact)}</div>
+        <div class="field"><div class="field-label">Deal registration</div>${inpRop('eDealReg', v.deal_registration)}</div>
+        ${full ? `<div class="field field-wide"><div class="field-label">Заметки МОП</div>${area('eMopComments', v.mop_comments)}</div>` : ''}
+      </div>
+      <div class="edit-actions">
+        <button class="btn-cancel-edit" onclick="cancelEdit()">Отмена</button>
+        <button class="btn-save-edit" id="btnSaveEdit" onclick="saveEdit()">Сохранить</button>
+      </div>
+    </div>
+  `;
+
+  // Тип-сегмент (только full)
+  if (full) {
+    document.querySelectorAll('#editTypeSeg .type-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#editTypeSeg .type-btn').forEach(b => b.classList.toggle('sel', b === btn));
+      });
+    });
+  }
+}
+
+function cancelEdit() {
+  renderVendor(_vendorData);
+}
+
+async function saveEdit() {
+  const full = hasFullWrite();
+
+  // Имя обязательно, только для full
+  if (full) {
+    const nameEl = document.getElementById('eName');
+    if (!nameEl.value.trim()) {
+      nameEl.classList.add('invalid');
+      nameEl.focus();
+      return;
+    }
+    nameEl.classList.remove('invalid');
+  }
+
+  const g = id => { const el = document.getElementById(id); return el ? el.value : null; };
+  const gs = id => { const v = g(id); return v ? v.trim() || null : null; };
+
+  let body = {};
+  if (full) {
+    const selType = document.querySelector('#editTypeSeg .type-btn.sel');
+    body = {
+      company_type: selType ? selType.dataset.ctype : _vendorData.company_type,
+      name: g('eName').trim(),
+      categories: gs('eCategories'),
+      status_type: g('eStatusType') || null,
+      status_text: gs('eStatusText'),
+      valid_until: g('eValidUntil') || null,
+      partner_id: gs('ePartnerId'),
+      legal_entity: gs('eLegalEntity'),
+      directions: gs('eDirections'),
+      purchase_method: gs('ePurchaseMethod'),
+      discount: gs('eDiscount'),
+      portal_url: gs('ePortalUrl'),
+      portal_login: gs('ePortalLogin'),
+      mop_comments: gs('eMopComments'),
+    };
+    const pwd = g('ePortalPassword');
+    if (pwd) body.portal_password = pwd;
+  }
+  // Поля доступные всем с правом записи
+  body.vendor_contact  = gs('eVendorContact');
+  body.deal_registration = gs('eDealReg');
+
+  const saveBtn = document.getElementById('btnSaveEdit');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Сохраняю...';
+
+  try {
+    const r = await fetch(`/api/vendors/${VENDOR_ID}`, {
+      method: 'PATCH',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body),
+    });
+    if (r.ok) {
+      _vendorData = await r.json();
+      renderVendor(_vendorData);
+      showToast('Изменения сохранены');
+    } else if (r.status === 409) {
+      showToast('Вендор с таким именем уже существует', true);
+    } else {
+      const err = await r.json().catch(() => ({}));
+      showToast(err.detail || 'Ошибка сервера', true);
+    }
+  } catch {
+    showToast('Ошибка сети', true);
+  } finally {
+    if (document.getElementById('btnSaveEdit')) {
+      document.getElementById('btnSaveEdit').disabled = false;
+      document.getElementById('btnSaveEdit').textContent = 'Сохранить';
+    }
+  }
+}
+
+// ─── Аудит ──────────────────────────────────────────────────────────────────
+
+let _auditVisible = false;
+
+async function toggleAudit() {
+  if (_auditVisible) {
+    const panel = document.getElementById('auditPanel');
+    if (panel) panel.remove();
+    _auditVisible = false;
+    document.getElementById('btnAudit').textContent = 'Посмотреть историю';
+    return;
+  }
+  const btn = document.getElementById('btnAudit');
+  btn.textContent = 'Загружаю...';
+  try {
+    const r = await fetch(`/api/vendors/${VENDOR_ID}/audit`);
+    if (!r.ok) { showToast('Ошибка загрузки истории', true); btn.textContent = 'Посмотреть историю'; return; }
+    const rows = await r.json();
+    renderAuditPanel(rows);
+    _auditVisible = true;
+    btn.textContent = 'Скрыть историю';
+  } catch {
+    showToast('Ошибка сети', true);
+    btn.textContent = 'Посмотреть историю';
+  }
+}
+
+function renderAuditPanel(rows) {
+  const ACLS = {create:'a-create',update:'a-update',delete:'a-delete'};
+  const ALBL = {create:'Создание',update:'Изменение',delete:'Удаление'};
+
+  const rowsHtml = rows.length ? rows.map(r => {
+    const datePart = r.created_at ? r.created_at.replace('T',' ').slice(0,16) : '-';
+    let change = '';
+    if (r.action === 'update' && r.field_label) {
+      const old = r.old_value != null ? esc(r.old_value) : '<em style="color:var(--mid)">пусто</em>';
+      const nw  = r.new_value != null ? esc(r.new_value) : '<em style="color:var(--mid)">пусто</em>';
+      change = `<strong>${esc(r.field_label)}</strong><span class="audit-arrow">→</span>${old} <span class="audit-arrow">➝</span> ${nw}`;
+    } else if (r.action === 'create') {
+      change = 'Запись создана';
+    } else if (r.action === 'delete') {
+      change = 'Запись удалена';
+    }
+    return `<tr>
+      <td><span class="a-chip ${ACLS[r.action]||''}">${ALBL[r.action]||r.action}</span></td>
+      <td style="font-size:12px">${change}</td>
+      <td style="color:var(--mid);white-space:nowrap">${esc(r.user_login)}</td>
+      <td style="color:var(--mid);white-space:nowrap;font-size:12px">${datePart}</td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="4" class="audit-empty">История пуста</td></tr>`;
+
+  const panel = document.createElement('div');
+  panel.className = 'audit-panel';
+  panel.id = 'auditPanel';
+  panel.innerHTML = `
+    <div class="audit-panel-title">История изменений</div>
+    <table class="audit-table">
+      <thead><tr>
+        <th>Действие</th><th>Изменение</th><th>Кто</th><th>Когда</th>
+      </tr></thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>`;
+  document.getElementById('mainContent').appendChild(panel);
+}
+
+// ─── Toast ───────────────────────────────────────────────────────────────────
+
+function showToast(msg, isErr = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isErr ? ' err' : '');
+  void t.offsetWidth;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
 </script>
+<div class="toast" id="toast"></div>
 <button class="scroll-top" id="scrollTop" title="Наверх" aria-label="Прокрутить вверх">
   <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
 </button>
