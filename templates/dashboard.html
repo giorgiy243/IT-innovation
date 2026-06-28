@@ -248,7 +248,7 @@ init();
   const btn = document.getElementById('scrollTop');
   const scroller = document.querySelector('.content');
   scroller.addEventListener('scroll', function(){
-    btn.classList.toggle('visible', scroller.scrollTop > window.innerHeight * 1.5);
+    btn.classList.toggle('visible', scroller.scrollTop > window.innerHeight * 0.5);
   }, {passive:true});
   btn.addEventListener('click', function(){
     scroller.scrollTo({top:0, behavior:'smooth'});
