@@ -23,6 +23,7 @@ DEFAULT_ROLES: list[tuple[str, str]] = [
     ("mop", "Менеджер по продажам"),
     ("rop", "Руководитель отдела продаж"),
     ("marketer", "Маркетолог"),
+    ("presale_engineer", "Пресейл-инженер"),
     ("analyst", "Аналитик / админ"),
     ("security", "ИБ / аудит"),
     ("domain_head", "Руководитель домена"),
@@ -36,7 +37,8 @@ DEFAULT_ROLES: list[tuple[str, str]] = [
 ROLE_MODULE_GRANTS: dict[str, list[str]] = {
     "mop": ["sales"],
     "rop": ["sales"],
-    "marketer": ["marketing"],
+    "marketer": ["sales", "marketing"],
+    "presale_engineer": ["sales"],
     "domain_head": [],
     "security": [],
 }

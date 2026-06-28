@@ -5,11 +5,24 @@
 """
 from __future__ import annotations
 
+from datetime import date as date_type
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session as DBSession
 
 from core.models import Vendor
-from core.vendors.crypto import decrypt
+from core.vendors.crypto import decrypt, encrypt
+
+# Поля, которые РОП может редактировать (только контакты и сделки)
+ROP_ALLOWED_FIELDS: frozenset[str] = frozenset({"vendor_contact", "deal_registration"})
+
+# Все редактируемые поля (без id, tenant_id, created_at, updated_at)
+ALL_EDITABLE_FIELDS: frozenset[str] = frozenset({
+    "name", "categories", "status_type", "status_text", "valid_until",
+    "partner_id", "legal_entity", "directions", "discount", "purchase_method",
+    "portal_url", "portal_login", "portal_password",
+    "vendor_contact", "deal_registration", "mop_comments",
+})
 
 
 def list_vendors(
@@ -74,6 +87,43 @@ def vendor_to_list_item(v: Vendor) -> dict:
         "directions": v.directions,
         "partner_id": v.partner_id,
     }
+
+
+def _apply_fields(v: Vendor, data: dict, allowed: frozenset[str]) -> None:
+    """Применить поля из data к объекту вендора, только те что в allowed."""
+    for field, value in data.items():
+        if field not in allowed:
+            continue
+        if field == "portal_password":
+            v.portal_password_enc = encrypt(value) if value else None
+        elif field == "valid_until":
+            v.valid_until = date_type.fromisoformat(value) if value else None
+        else:
+            setattr(v, field, value)
+
+
+def create_vendor(db: DBSession, tenant_id: int, data: dict) -> Vendor:
+    """Создать нового вендора. data должен содержать name."""
+    v = Vendor(tenant_id=tenant_id, name=data["name"])
+    _apply_fields(v, data, ALL_EDITABLE_FIELDS)
+    db.add(v)
+    db.flush()
+    return v
+
+
+def update_vendor(
+    db: DBSession, vendor: Vendor, data: dict, *, allowed: frozenset[str]
+) -> Vendor:
+    """Обновить вендора. allowed ограничивает редактируемые поля."""
+    _apply_fields(vendor, data, allowed)
+    db.flush()
+    return vendor
+
+
+def delete_vendor(db: DBSession, vendor: Vendor) -> None:
+    """Удалить вендора (cascade удалит distributors)."""
+    db.delete(vendor)
+    db.flush()
 
 
 def vendor_to_detail(v: Vendor) -> dict:
