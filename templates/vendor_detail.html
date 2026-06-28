@@ -212,7 +212,9 @@ function renderVendor(v) {
   document.getElementById('bcName').textContent = v.name;
   document.title = `${v.name} - IT-innovation`;
 
-  // Password: start hidden
+  // Пароль хранится в переменной — не инжектируется в HTML-атрибут
+  _currentPwd = v.portal_password || null;
+  pwdVisible = false;
   const hasPwd = !!v.portal_password;
 
   document.getElementById('mainContent').innerHTML = `
@@ -253,7 +255,7 @@ function renderVendor(v) {
           <div class="field-label">Пароль</div>
           ${hasPwd ? `<div class="pwd-row">
             <span class="pwd-text" id="pwdText">••••••••</span>
-            <button class="btn-show" id="pwdToggle" onclick="togglePwd(${JSON.stringify(v.portal_password)})">Показать</button>
+            <button class="btn-show" id="pwdToggle" onclick="togglePwd()">Показать</button>
           </div>` : '<span class="field-value empty">-</span>'}
         </div>
       </div>
@@ -285,9 +287,10 @@ function renderVendor(v) {
 }
 
 let pwdVisible = false;
-function togglePwd(pwd) {
+let _currentPwd = null;
+function togglePwd() {
   pwdVisible = !pwdVisible;
-  document.getElementById('pwdText').textContent = pwdVisible ? pwd : '••••••••';
+  document.getElementById('pwdText').textContent = pwdVisible ? _currentPwd : '••••••••';
   document.getElementById('pwdToggle').textContent = pwdVisible ? 'Скрыть' : 'Показать';
 }
 
