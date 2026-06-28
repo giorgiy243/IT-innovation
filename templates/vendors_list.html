@@ -115,6 +115,10 @@ html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,san
 .badge-unknown{background:#f1f5f9;color:#94a3b8;}
 
 .empty-state{padding:48px;text-align:center;color:var(--mid);font-size:14px;}
+.scroll-top{position:fixed;bottom:24px;right:24px;width:44px;height:44px;border-radius:50%;background:var(--slate);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(30,40,50,.3);opacity:0;pointer-events:none;transition:opacity .2s,transform .18s,background .15s;z-index:999;}
+.scroll-top.visible{opacity:1;pointer-events:auto;}
+.scroll-top:hover{background:var(--dark);transform:translateY(-2px);box-shadow:0 6px 20px rgba(30,40,50,.4);}
+.scroll-top svg{width:18px;height:18px;stroke:#fff;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
 </style>
 </head>
 <body>
@@ -377,6 +381,20 @@ async function init() {
 }
 
 init();
+</script>
+<button class="scroll-top" id="scrollTop" title="Наверх" aria-label="Прокрутить вверх">
+  <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+</button>
+<script>
+(function(){
+  const btn = document.getElementById('scrollTop');
+  window.addEventListener('scroll', function(){
+    btn.classList.toggle('visible', window.scrollY > window.innerHeight * 1.5);
+  }, {passive:true});
+  btn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
 </script>
 </body>
 </html>
