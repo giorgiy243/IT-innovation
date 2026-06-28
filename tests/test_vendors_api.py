@@ -101,24 +101,31 @@ def _seed_tenant(s, name="АйТек") -> Tenant:
     return t
 
 
-def _seed_user_with_sales(s, tenant: Tenant, login: str = "mop") -> User:
-    """Пользователь с ролью mop и доступом к модулю sales."""
+def _seed_user_with_module(
+    s, tenant: Tenant, login: str, role_code: str, role_name: str, module_code: str = "sales"
+) -> User:
+    """Пользователь с заданной ролью и доступом к модулю."""
     u = User(tenant_id=tenant.id, login=login, password_hash=hash_password(PW))
     s.add(u)
     s.flush()
 
-    mod = Module(code="sales", name="Продажи", is_enabled=True, sort_order=10)
+    mod = Module(code=module_code, name=module_code.capitalize(), is_enabled=True, sort_order=10)
     s.merge(mod)
     s.flush()
 
-    role = Role(tenant_id=tenant.id, code="mop", name="МОП")
+    role = Role(tenant_id=tenant.id, code=role_code, name=role_name)
     s.add(role)
     s.flush()
 
-    s.add(RoleModule(role_id=role.id, module_code="sales"))
+    s.add(RoleModule(role_id=role.id, module_code=module_code))
     s.add(UserRole(user_id=u.id, role_id=role.id, scope="own"))
     s.flush()
     return u
+
+
+def _seed_user_with_sales(s, tenant: Tenant, login: str = "mop") -> User:
+    """Пользователь с ролью mop и доступом к модулю sales."""
+    return _seed_user_with_module(s, tenant, login, "mop", "МОП")
 
 
 def _make_vendor(s, tenant_id: int, name: str, **kw) -> Vendor:
@@ -422,3 +429,49 @@ class TestApiDetail:
         assert len(dists) == 1
         assert dists[0]["name"] == "Ланит"
         assert dists[0]["email"] == "lanit@example.com"
+
+    def test_rop_sees_password(self, client, db):
+        from core.vendors.crypto import encrypt
+        t = _seed_tenant(db)
+        _seed_user_with_module(db, t, "rop_user", "rop", "РОП")
+        v = _make_vendor(db, t.id, "Cisco", portal_password_enc=encrypt("secret-rop"))
+        db.commit()
+
+        _login(client, "rop_user")
+        r = client.get(f"/api/vendors/{v.id}")
+        assert r.status_code == 200
+        assert r.json()["portal_password"] == "secret-rop"
+
+    def test_analyst_sees_password(self, client, db):
+        from core.vendors.crypto import encrypt
+        t = _seed_tenant(db)
+        _seed_user_with_module(db, t, "analyst_user", "analyst", "Аналитик")
+        v = _make_vendor(db, t.id, "Cisco", portal_password_enc=encrypt("secret-analyst"))
+        db.commit()
+
+        _login(client, "analyst_user")
+        r = client.get(f"/api/vendors/{v.id}")
+        assert r.status_code == 200
+        assert r.json()["portal_password"] == "secret-analyst"
+
+    def test_no_sales_role_gets_403(self, client, db):
+        from core.models import Module as Mod
+        t = _seed_tenant(db)
+        # marketer: есть роль, но нет доступа к sales
+        u = User(tenant_id=t.id, login="marketer_user", password_hash=hash_password(PW))
+        db.add(u)
+        db.flush()
+        marketing_mod = Mod(code="marketing", name="Маркетинг", is_enabled=True, sort_order=30)
+        db.merge(marketing_mod)
+        db.flush()
+        role = Role(tenant_id=t.id, code="marketer", name="Маркетолог")
+        db.add(role)
+        db.flush()
+        db.add(RoleModule(role_id=role.id, module_code="marketing"))
+        db.add(UserRole(user_id=u.id, role_id=role.id, scope="own"))
+        v = _make_vendor(db, t.id, "Cisco")
+        db.commit()
+
+        _login(client, "marketer_user")
+        r = client.get(f"/api/vendors/{v.id}")
+        assert r.status_code == 403
