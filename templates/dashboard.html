@@ -27,7 +27,9 @@ html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,san
 .s-logo{
   height:var(--topbar-h);display:flex;align-items:center;padding:0 16px;gap:10px;
   border-bottom:1px solid rgba(255,255,255,.07);flex:none;
+  text-decoration:none;transition:background .12s;
 }
+.s-logo:hover{background:rgba(255,255,255,.05);}
 .logo-mark{
   width:30px;height:30px;border-radius:8px;flex:none;
   background:var(--brand);display:flex;align-items:center;justify-content:center;
@@ -110,12 +112,12 @@ html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,san
 <div class="layout">
   <!-- Sidebar -->
   <aside class="sidebar">
-    <div class="s-logo">
+    <a href="/" class="s-logo">
       <div class="logo-mark">
         <svg viewBox="0 0 18 18"><path d="M9 2L2 6v6l7 4 7-4V6z" opacity=".3"/><path d="M9 2l7 4-7 4L2 6z"/></svg>
       </div>
       <span class="logo-text">IT-innovation</span>
-    </div>
+    </a>
 
     <div class="nav-body" id="navBody">
       <div class="nav-group-label">Загрузка...</div>
