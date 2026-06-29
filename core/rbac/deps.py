@@ -22,7 +22,17 @@ def get_access(
     auth: AuthContext = Depends(get_current_auth),
     db: DBSession = Depends(get_db),
 ) -> AccessProfile:
-    """Профиль доступа текущего пользователя. Требует валидной сессии (401)."""
+    """Профиль доступа текущего пользователя. Требует валидной сессии (401).
+
+    Пока пользователь не сменил временный пароль (must_change_password) - доступ
+    к любым модулям закрыт (409). Сама смена пароля идёт через get_current_auth,
+    не через get_access, поэтому остаётся доступной.
+    """
+    if auth.must_change_password:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Требуется смена пароля",
+        )
     return load_access(db, auth.user_id, auth.tenant_id)
 
 

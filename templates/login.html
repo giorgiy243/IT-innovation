@@ -56,6 +56,7 @@ html,body{height:100%;font-family:'Vela Sans',system-ui,sans-serif;-webkit-font-
   width:100%;height:40px;border:none;border-radius:6px;
   background:var(--brand);color:#fff;font-size:13.5px;font-weight:600;
   cursor:pointer;transition:background .15s;font-family:inherit;margin-top:4px;
+  display:flex;align-items:center;justify-content:center;
 }
 .btn-submit:hover{background:var(--brand-d);}
 .btn-submit:disabled{opacity:.6;cursor:default;}
@@ -66,6 +67,25 @@ html,body{height:100%;font-family:'Vela Sans',system-ui,sans-serif;-webkit-font-
   font-size:13px;color:var(--red);
 }
 .err.show{display:block;}
+
+/* Модал смены пароля при первом входе */
+.pw-overlay{position:fixed;inset:0;background:rgba(30,40,50,.55);display:none;align-items:center;justify-content:center;z-index:100;}
+.pw-overlay.open{display:flex;}
+.pw-card{background:#fff;border-radius:12px;width:380px;max-width:calc(100vw - 32px);padding:26px 24px;box-shadow:0 20px 60px rgba(0,0,0,.22);}
+.pw-title{font-size:16px;font-weight:700;color:var(--dark);margin-bottom:6px;}
+.pw-sub{font-size:12.5px;color:var(--mid);margin-bottom:18px;line-height:1.5;}
+.pw-row{display:flex;gap:8px;align-items:stretch;}
+.pw-row .fc{flex:1;}
+.pw-save{height:40px;padding:0 16px;border:none;border-radius:6px;background:var(--brand);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;flex:none;display:flex;align-items:center;justify-content:center;}
+.pw-save:hover{background:var(--brand-d);}
+.pw-save:disabled{opacity:.6;cursor:default;}
+.pw-reqs{list-style:none;margin-top:16px;display:flex;flex-direction:column;gap:7px;}
+.pw-req{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--mid);transition:color .15s;}
+.pw-req .mark{width:15px;height:15px;flex:none;border-radius:50%;border:1.5px solid var(--light);display:flex;align-items:center;justify-content:center;font-size:9px;color:transparent;transition:all .15s;}
+.pw-req.ok{color:var(--brand-d);}
+.pw-req.ok .mark{background:var(--brand);border-color:var(--brand);color:#fff;}
+.pw-err{display:none;margin-top:14px;padding:9px 12px;border-radius:6px;background:rgba(220,38,38,.07);border:1px solid rgba(220,38,38,.18);font-size:12.5px;color:var(--red);}
+.pw-err.show{display:block;}
 </style>
 </head>
 <body>
@@ -107,7 +127,105 @@ html,body{height:100%;font-family:'Vela Sans',system-ui,sans-serif;-webkit-font-
   </div>
 </div>
 
+<!-- Смена временного пароля при первом входе -->
+<div class="pw-overlay" id="pwOverlay">
+  <div class="pw-card">
+    <div class="pw-title">Введите новый пароль</div>
+    <p class="pw-sub">Вы вошли по временному паролю. Для продолжения задайте постоянный пароль.</p>
+    <div class="pw-row">
+      <input class="fc" id="newPw" type="password" placeholder="Новый пароль" autocomplete="new-password">
+      <button class="pw-save" id="pwSaveBtn">Сохранить</button>
+    </div>
+    <ul class="pw-reqs">
+      <li class="pw-req" id="reqLen"><span class="mark">✓</span>Не менее 8 символов</li>
+      <li class="pw-req" id="reqUpper"><span class="mark">✓</span>Минимум одна заглавная буква</li>
+      <li class="pw-req" id="reqLower"><span class="mark">✓</span>Минимум одна строчная буква</li>
+      <li class="pw-req" id="reqSpec"><span class="mark">✓</span>Минимум один специальный символ</li>
+      <li class="pw-req" id="reqDiff"><span class="mark">✓</span>Не совпадает со старым паролем</li>
+    </ul>
+    <div class="pw-err" id="pwErr"></div>
+  </div>
+</div>
+
 <script>
+const RULES = {
+  reqLen:   p => p.length >= 8,
+  reqUpper: p => /[A-ZА-ЯЁ]/.test(p),
+  reqLower: p => /[a-zа-яё]/.test(p),
+  reqSpec:  p => /[^A-Za-zА-Яа-яЁё0-9]/.test(p),
+};
+
+function checkRules() {
+  const p = document.getElementById('newPw').value;
+  let allOk = true;
+  for (const [id, fn] of Object.entries(RULES)) {
+    const ok = fn(p);
+    document.getElementById(id).classList.toggle('ok', ok);
+    if (!ok) allOk = false;
+  }
+  // «Не совпадает со старым» проверяется на сервере; индикатор подсветим при непустом вводе
+  document.getElementById('reqDiff').classList.toggle('ok', p.length > 0);
+  return allOk;
+}
+
+function showPwModal() {
+  document.getElementById('pwOverlay').classList.add('open');
+  document.getElementById('newPw').focus();
+}
+
+document.getElementById('newPw').addEventListener('input', checkRules);
+
+async function submitNewPassword() {
+  const err = document.getElementById('pwErr');
+  const btn = document.getElementById('pwSaveBtn');
+  const pw = document.getElementById('newPw').value;
+  err.classList.remove('show');
+
+  if (!checkRules()) {
+    err.textContent = 'Пароль не соответствует требованиям';
+    err.classList.add('show');
+    return;
+  }
+
+  btn.disabled = true;
+  try {
+    const res = await fetch('/change-password', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({new_password: pw}),
+    });
+    if (res.status === 204) {
+      window.location.href = '/';
+      return;
+    }
+    const data = await res.json().catch(() => ({}));
+    err.textContent = data.detail || 'Не удалось сменить пароль';
+    err.classList.add('show');
+  } catch {
+    err.textContent = 'Нет связи с сервером';
+    err.classList.add('show');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+document.getElementById('pwSaveBtn').addEventListener('click', submitNewPassword);
+document.getElementById('newPw').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); submitNewPassword(); }
+});
+
+// Восстановление после перезагрузки: уже вошёл, но пароль не сменён -> сразу попап
+(async function checkExistingSession() {
+  try {
+    const res = await fetch('/me');
+    if (res.ok) {
+      const me = await res.json();
+      if (me.must_change_password) { showPwModal(); }
+      else { window.location.href = '/'; }
+    }
+  } catch {}
+})();
+
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const btn = document.getElementById('submitBtn');
@@ -128,7 +246,12 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     });
 
     if (res.ok) {
-      window.location.href = '/';
+      const data = await res.json().catch(() => ({}));
+      if (data.must_change_password) {
+        showPwModal();
+      } else {
+        window.location.href = '/';
+      }
     } else {
       const data = await res.json().catch(() => ({}));
       err.textContent = data.detail || 'Неверный логин или пароль';

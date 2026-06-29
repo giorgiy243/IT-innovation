@@ -33,3 +33,13 @@ def vendors_list_page(request: Request) -> HTMLResponse:
 @router.get("/vendors/{vendor_id}", response_class=HTMLResponse)
 def vendor_detail_page(request: Request, vendor_id: int) -> HTMLResponse:
     return templates.TemplateResponse(request, "vendor_detail.html")
+
+
+@router.get("/admin/users", response_class=HTMLResponse)
+def admin_users_page(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse(request, "admin_users.html")
+
+
+@router.get("/employees", response_class=HTMLResponse)
+def employees_page(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse(request, "employees.html")

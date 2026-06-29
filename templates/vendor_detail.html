@@ -73,7 +73,7 @@ html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,san
 /* Password field */
 .pwd-row{display:flex;align-items:center;gap:8px;}
 .pwd-text{font-size:13px;color:var(--dark);font-family:monospace;word-break:break-all;}
-.btn-show{height:28px;padding:0 10px;border:1px solid var(--light);border-radius:6px;font-size:12px;font-family:inherit;color:var(--slate);background:#fff;cursor:pointer;flex:none;transition:border-color .12s,color .12s;}
+.btn-show{height:28px;padding:0 10px;border:1px solid var(--light);border-radius:6px;font-size:12px;font-family:inherit;color:var(--slate);background:#fff;cursor:pointer;flex:none;transition:border-color .12s,color .12s;display:inline-flex;align-items:center;justify-content:center;}
 .btn-show:hover{border-color:var(--brand);color:var(--brand);}
 
 /* Distributors table — стиль Зебра */
@@ -207,6 +207,7 @@ const NAV_ICONS = {
   docs:     `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h7l3 3v9H3V2zm7 0v3h3M6 7h5M6 9h5M6 11h3"/></svg>`,
 };
 const MODULE_URLS = {sales: '/vendors'};
+const STAFF_ICON = `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M5 7a2.5 2.5 0 100-5 2.5 2.5 0 000 5zm-4 7a4 4 0 018 0H1zm9-7a2 2 0 100-4 2 2 0 000 4zm1 1a3 3 0 012.83 2H10a5 5 0 00-.8-2.75A3 3 0 0111 8z"/></svg>`;
 function defaultIcon() {
   return `<svg viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="12" height="12" rx="2" opacity=".3"/><rect x="5" y="5" width="6" height="1.5" rx=".75"/><rect x="5" y="8" width="6" height="1.5" rx=".75"/></svg>`;
 }
@@ -398,6 +399,7 @@ async function buildSidebar() {
   const meRes = await fetch('/me');
   if (!meRes.ok) { window.location.href = '/login'; return; }
   const me = await meRes.json();
+  if (me.must_change_password) { window.location.href = '/login'; return; }
   document.getElementById('userName').textContent = me.login;
   document.getElementById('userAvatar').textContent = me.login.slice(0,2).toUpperCase();
 
@@ -420,6 +422,12 @@ async function buildSidebar() {
     item.innerHTML = (NAV_ICONS[m.code] || defaultIcon()) + `<span>${m.name}</span>`;
     body.appendChild(item);
   });
+  const staffItem = document.createElement('a');
+  staffItem.className = 'nav-item';
+  staffItem.href = '/employees';
+  staffItem.style.textDecoration = 'none';
+  staffItem.innerHTML = STAFF_ICON + '<span>Сотрудники</span>';
+  body.appendChild(staffItem);
 }
 
 async function loadVendor() {

@@ -55,7 +55,7 @@ html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,san
 .filter-input:focus{border-color:var(--brand);}
 .filter-select{height:34px;border:1px solid var(--light);border-radius:7px;padding:0 8px;font-size:13px;font-family:inherit;color:var(--dark);background:#fff;outline:none;cursor:pointer;}
 .filter-select:focus{border-color:var(--brand);}
-.btn-reset{height:34px;padding:0 14px;border:1px solid var(--light);border-radius:7px;font-size:13px;font-family:inherit;color:var(--mid);background:#fff;cursor:pointer;transition:border-color .12s,color .12s;}
+.btn-reset{height:34px;padding:0 14px;border:1px solid var(--light);border-radius:7px;font-size:13px;font-family:inherit;color:var(--mid);background:#fff;cursor:pointer;transition:border-color .12s,color .12s;display:inline-flex;align-items:center;justify-content:center;}
 .btn-reset:hover{border-color:var(--mid);color:var(--dark);}
 
 /* Cards grid */
@@ -127,7 +127,7 @@ html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,san
 .t-distributor{background:rgba(30,74,168,.1);color:#1e3fa8;}
 .t-partner{background:rgba(120,85,0,.1);color:#7a5500;}
 /* Кнопка добавления */
-.btn-add{height:34px;padding:0 16px;border-radius:7px;font-size:13px;font-family:inherit;font-weight:600;color:#fff;background:var(--brand);border:none;cursor:pointer;margin-left:auto;display:none;align-items:center;gap:6px;transition:background .12s;}
+.btn-add{height:34px;padding:0 16px;border-radius:7px;font-size:13px;font-family:inherit;font-weight:600;color:#fff;background:var(--brand);border:none;cursor:pointer;margin-left:auto;display:none;align-items:center;justify-content:center;gap:6px;transition:background .12s;}
 .btn-add:hover{background:var(--brand-d);}
 /* Модальное окно */
 .modal-overlay{position:fixed;inset:0;background:rgba(30,40,50,.55);display:none;align-items:center;justify-content:center;z-index:1000;}
@@ -174,9 +174,9 @@ html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,san
 .ms-add-btn{padding:4px 10px;border-radius:5px;border:1.5px solid var(--brand);background:transparent;color:var(--brand);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .12s;}
 .ms-add-btn:hover{background:rgba(129,180,70,.07);}
 /* Кнопки подвала модала */
-.btn-cancel{height:36px;padding:0 18px;border-radius:7px;font-size:13px;font-family:inherit;font-weight:600;color:var(--mid);background:transparent;border:1.5px solid var(--light);cursor:pointer;transition:border-color .12s,color .12s;}
+.btn-cancel{height:36px;padding:0 18px;border-radius:7px;font-size:13px;font-family:inherit;font-weight:600;color:var(--mid);background:transparent;border:1.5px solid var(--light);cursor:pointer;transition:border-color .12s,color .12s;display:inline-flex;align-items:center;justify-content:center;}
 .btn-cancel:hover{border-color:var(--mid);color:var(--dark);}
-.btn-save{height:36px;padding:0 20px;border-radius:7px;font-size:13px;font-family:inherit;font-weight:600;color:#fff;background:var(--brand);border:none;cursor:pointer;transition:background .12s;}
+.btn-save{height:36px;padding:0 20px;border-radius:7px;font-size:13px;font-family:inherit;font-weight:600;color:#fff;background:var(--brand);border:none;cursor:pointer;transition:background .12s;display:inline-flex;align-items:center;justify-content:center;}
 .btn-save:hover{background:var(--brand-d);}
 .btn-save:disabled{background:var(--mid);cursor:not-allowed;}
 /* Toast-уведомление */
@@ -255,6 +255,7 @@ const NAV_ICONS = {
   docs:     `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h7l3 3v9H3V2zm7 0v3h3M6 7h5M6 9h5M6 11h3"/></svg>`,
 };
 const MODULE_URLS = {sales: '/vendors'};
+const STAFF_ICON = `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M5 7a2.5 2.5 0 100-5 2.5 2.5 0 000 5zm-4 7a4 4 0 018 0H1zm9-7a2 2 0 100-4 2 2 0 000 4zm1 1a3 3 0 012.83 2H10a5 5 0 00-.8-2.75A3 3 0 0111 8z"/></svg>`;
 function defaultIcon() {
   return `<svg viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="12" height="12" rx="2" opacity=".3"/><rect x="5" y="5" width="6" height="1.5" rx=".75"/><rect x="5" y="8" width="6" height="1.5" rx=".75"/></svg>`;
 }
@@ -427,6 +428,7 @@ async function buildSidebar() {
   const meRes = await fetch('/me');
   if (!meRes.ok) { window.location.href = '/login'; return; }
   const me = await meRes.json();
+  if (me.must_change_password) { window.location.href = '/login'; return; }
   document.getElementById('userName').textContent = me.login;
   document.getElementById('userAvatar').textContent = me.login.slice(0,2).toUpperCase();
 
@@ -456,6 +458,12 @@ async function buildSidebar() {
     item.innerHTML = (NAV_ICONS[m.code] || defaultIcon()) + `<span>${m.name}</span>`;
     body.appendChild(item);
   });
+  const staffItem = document.createElement('a');
+  staffItem.className = 'nav-item';
+  staffItem.href = '/employees';
+  staffItem.style.textDecoration = 'none';
+  staffItem.innerHTML = STAFF_ICON + '<span>Сотрудники</span>';
+  body.appendChild(staffItem);
 }
 
 async function init() {

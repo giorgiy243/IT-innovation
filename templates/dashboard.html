@@ -159,6 +159,7 @@ html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,san
 const SCOPE_LABEL = {own: 'Свои данные', team: 'Команда', domain: 'Домен', all: 'Все данные'};
 const MODULE_URLS = {sales: '/vendors'};
 const MODULE_COLORS = {sales:'c-green',presale:'c-blue',marketing:'c-amber',bidding:'c-gray',logistics:'c-blue',docs:'c-gray'};
+const STAFF_ICON = `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M5 7a2.5 2.5 0 100-5 2.5 2.5 0 000 5zm-4 7a4 4 0 018 0H1zm9-7a2 2 0 100-4 2 2 0 000 4zm1 1a3 3 0 012.83 2H10a5 5 0 00-.8-2.75A3 3 0 0111 8z"/></svg>`;
 
 const NAV_ICONS = {
   sales:    `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 10l4-4 3 3 5-5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>`,
@@ -178,6 +179,7 @@ async function init() {
   const meRes = await fetch('/me');
   if (!meRes.ok) { window.location.href = '/login'; return; }
   const me = await meRes.json();
+  if (me.must_change_password) { window.location.href = '/login'; return; }
 
   // Заполняем пользователя
   document.getElementById('userName').textContent = me.login;
@@ -220,6 +222,12 @@ async function init() {
     if (nav.modules[0]) {
       document.getElementById('pageTitle').textContent = nav.modules[0].name;
     }
+    const staffItem = document.createElement('a');
+    staffItem.className = 'nav-item';
+    staffItem.href = '/employees';
+    staffItem.style.textDecoration = 'none';
+    staffItem.innerHTML = STAFF_ICON + '<span>Сотрудники</span>';
+    navBody.appendChild(staffItem);
   }
 
   // Карточки модулей на главной

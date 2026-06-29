@@ -40,6 +40,7 @@ class AuthContext:
     user_id: int
     tenant_id: int
     login: str
+    must_change_password: bool = False
 
 
 class AuthError(Exception):
@@ -134,7 +135,12 @@ def validate_session(db: DBSession, raw_token: str) -> AuthContext | None:
         db.delete(session_row)
         return None
 
-    return AuthContext(user_id=user.id, tenant_id=session_row.tenant_id, login=user.login)
+    return AuthContext(
+        user_id=user.id,
+        tenant_id=session_row.tenant_id,
+        login=user.login,
+        must_change_password=user.must_change_password,
+    )
 
 
 def delete_session(db: DBSession, raw_token: str) -> None:

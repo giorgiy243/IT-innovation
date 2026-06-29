@@ -1,0 +1,795 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Сотрудники — IT-innovation</title>
+<style>
+:root{
+  --brand:#81B446;--brand-d:#6a9338;--dark:#1E2832;--slate:#323C50;
+  --mid:#8296AA;--light:#D7DCE6;--bg:#F5FAFA;
+  --nav-bg:#1E2832;--nav-hover:#323C50;
+  --sidebar-w:232px;--topbar-h:56px;
+  --sh:0 2px 10px rgba(30,40,50,.08),0 1px 3px rgba(30,40,50,.05);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,sans-serif;color:var(--dark);-webkit-font-smoothing:antialiased;}
+.layout{display:flex;height:100vh;overflow:hidden;}
+
+/* Sidebar */
+.sidebar{width:var(--sidebar-w);flex:none;background:var(--nav-bg);display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,.05);}
+.s-logo{height:var(--topbar-h);display:flex;align-items:center;padding:0 16px;gap:10px;border-bottom:1px solid rgba(255,255,255,.07);flex:none;text-decoration:none;transition:background .12s;}
+.s-logo:hover{background:rgba(255,255,255,.05);}
+.logo-mark{width:30px;height:30px;border-radius:8px;flex:none;background:var(--brand);display:flex;align-items:center;justify-content:center;}
+.logo-mark svg{width:16px;height:16px;fill:#fff;}
+.logo-text{font-size:14px;font-weight:700;color:#fff;letter-spacing:-.01em;}
+.nav-body{flex:1;overflow-y:auto;padding:10px 8px;}
+.nav-group-label{font-size:10.5px;font-weight:600;color:rgba(130,150,170,.7);text-transform:uppercase;letter-spacing:.08em;padding:10px 10px 4px;}
+.nav-item{display:flex;align-items:center;gap:9px;height:38px;padding:0 10px;border-radius:7px;font-size:13px;font-weight:500;color:rgba(255,255,255,.6);cursor:pointer;margin-bottom:1px;border-left:2px solid transparent;transition:background .12s,color .12s;text-decoration:none;}
+.nav-item:hover{background:var(--nav-hover);color:#fff;}
+.nav-item.act{background:rgba(129,180,70,.14);color:#fff;border-left-color:var(--brand);}
+.nav-item svg{width:16px;height:16px;flex:none;opacity:.7;}
+.nav-item.act svg{opacity:1;}
+.s-footer{padding:10px 8px;border-top:1px solid rgba(255,255,255,.06);flex:none;}
+.user-row{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;cursor:pointer;}
+.user-row:hover{background:var(--nav-hover);}
+.avatar{width:30px;height:30px;border-radius:8px;flex:none;background:var(--slate);display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:#fff;}
+.u-info{flex:1;min-width:0;}
+.u-name{font-size:12.5px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.u-role{font-size:11px;color:var(--mid);}
+.logout-btn{width:24px;height:24px;display:flex;align-items:center;justify-content:center;border:none;background:transparent;cursor:pointer;border-radius:5px;color:rgba(255,255,255,.3);transition:color .15s,background .15s;flex:none;font-size:16px;line-height:1;}
+.logout-btn:hover{color:#fff;background:rgba(255,255,255,.08);}
+
+/* Main */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{height:var(--topbar-h);flex:none;display:flex;align-items:center;padding:0 24px;background:#fff;border-bottom:1px solid var(--light);gap:12px;}
+.page-h{font-size:15px;font-weight:700;color:var(--dark);}
+.topbar-count{font-size:13px;color:var(--mid);margin-left:4px;}
+.content{flex:1;overflow-y:auto;padding:28px 24px;}
+
+/* Search row */
+.search-row{display:flex;gap:10px;margin-bottom:20px;align-items:center;}
+.search-wrap{position:relative;}
+.search-inp{
+  height:36px;padding:0 12px 0 34px;border:1.5px solid transparent;border-radius:6px;
+  font-size:13px;color:var(--dark);background:rgba(30,40,50,.06);outline:none;
+  transition:background .15s,border-color .15s;font-family:inherit;width:260px;
+}
+.search-inp:focus{background:rgba(129,180,70,.07);border-color:rgba(129,180,70,.35);}
+.search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;stroke:var(--mid);stroke-width:2;fill:none;stroke-linecap:round;pointer-events:none;}
+.btn-new{
+  height:36px;padding:0 20px;border:none;border-radius:6px;
+  background:var(--brand);color:#fff;font-size:13px;font-weight:600;
+  cursor:pointer;font-family:inherit;white-space:nowrap;flex:none;
+  margin-left:auto;display:none;
+  align-items:center;justify-content:center;
+}
+.btn-new:hover{background:var(--brand-d);}
+
+/* Table */
+.emp-table{width:100%;background:#fff;border-radius:10px;box-shadow:var(--sh);border-collapse:collapse;overflow:hidden;}
+.emp-table th{font-size:11px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.06em;padding:10px 18px;background:#fff;border-bottom:1px solid var(--light);text-align:left;}
+.emp-table td{padding:13px 18px;font-size:13.5px;border-bottom:1px solid var(--light);vertical-align:middle;}
+.emp-table tr:last-child td{border-bottom:none;}
+.emp-table tr.inactive td{opacity:.7;}
+.emp-table tbody tr[data-id]{cursor:pointer;}
+.emp-table tbody tr[data-id]:hover td{background:rgba(30,40,50,.025);}
+.badge{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:10px;font-size:11px;font-weight:600;}
+.badge-active{background:#dcfce7;color:#166534;}
+.badge-inactive{background:#fde8e8;color:#991b1b;}
+.avatar-sm{width:28px;height:28px;border-radius:7px;background:var(--slate);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex:none;margin-right:10px;}
+.emp-name{display:flex;align-items:center;}
+.empty-row td{text-align:center;color:var(--mid);padding:40px 18px;font-size:13px;}
+
+/* Modal overlay */
+.m-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:100;}
+.m-overlay.open{display:flex;}
+
+/* Employee modal card */
+.m-card{background:#fff;border-radius:12px;width:620px;max-width:calc(100vw - 32px);max-height:calc(100vh - 48px);display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.18);}
+.m-hd{display:flex;align-items:center;padding:18px 22px 14px;border-bottom:1px solid var(--light);flex:none;}
+.m-hd-title{flex:1;font-size:15px;font-weight:700;color:var(--dark);}
+.m-close{border:none;background:transparent;cursor:pointer;color:var(--mid);font-size:22px;line-height:1;padding:0 2px;flex:none;}
+.m-close:hover{color:var(--dark);}
+.m-body{flex:1;overflow-y:auto;padding:18px 22px;display:flex;flex-direction:column;gap:14px;}
+.m-ft{display:flex;align-items:center;padding:14px 22px;border-top:1px solid var(--light);gap:10px;flex:none;}
+.ft-btns{display:flex;gap:8px;margin-left:auto;}
+
+/* Form fields */
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.fg{display:flex;flex-direction:column;gap:4px;}
+.flbl{font-size:11px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.05em;}
+.freq{color:#e53e3e;}
+.finp{
+  height:36px;padding:0 10px;border:1.5px solid var(--light);border-radius:6px;
+  font-size:13px;color:var(--dark);background:#fff;outline:none;font-family:inherit;
+  transition:border-color .15s,background .15s;width:100%;
+}
+.finp:focus{border-color:var(--brand);background:rgba(129,180,70,.04);}
+.finp[readonly]{background:var(--bg);border-color:transparent;cursor:default;color:var(--dark);}
+.finp[readonly]:focus{border-color:transparent;background:var(--bg);}
+.fsel{height:36px;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238296AA'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;}
+.fsel.ro{pointer-events:none;background-color:var(--bg);border-color:transparent;background-image:none;}
+.combo-wrap{position:relative;}
+.combo-drop{
+  position:absolute;top:100%;left:0;right:0;z-index:200;
+  background:#fff;border:1.5px solid var(--brand);border-top:none;
+  border-radius:0 0 7px 7px;box-shadow:0 4px 16px rgba(0,0,0,.1);
+  max-height:200px;overflow-y:auto;display:none;
+}
+.combo-opt{padding:9px 12px;font-size:13px;cursor:pointer;color:var(--dark);}
+.combo-opt:hover{background:rgba(129,180,70,.08);}
+.combo-add-opt{padding:9px 12px;font-size:13px;cursor:pointer;color:var(--brand);font-weight:600;border-top:1px solid var(--light);}
+.combo-add-opt:hover{background:rgba(129,180,70,.06);}
+
+/* Buttons */
+.btn-primary{height:34px;padding:0 18px;border:none;border-radius:6px;background:var(--brand);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;}
+.btn-primary:hover:not(:disabled){background:var(--brand-d);}
+.btn-primary:disabled{opacity:.6;cursor:default;}
+.btn-sec{height:34px;padding:0 14px;border:1.5px solid var(--light);border-radius:6px;background:#fff;color:var(--dark);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;}
+.btn-sec:hover{border-color:var(--mid);background:var(--bg);}
+.btn-danger{height:34px;padding:0 14px;border:none;border-radius:6px;background:#fee2e2;color:#991b1b;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;}
+.btn-grant{height:34px;padding:0 16px;border:1.5px solid var(--brand);border-radius:6px;background:#fff;color:var(--brand-d);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;}
+.btn-grant:hover{background:rgba(129,180,70,.08);}
+.btn-grant.revoke{border-color:rgba(220,38,38,.4);color:#991b1b;}
+.btn-grant.revoke:hover{background:#fee2e2;}
+.btn-danger:hover{background:#fecaca;}
+
+/* Status/error inside modal */
+.m-status{font-size:12.5px;color:#166534;}
+.m-error{background:#fee2e2;color:#991b1b;border-radius:6px;padding:8px 12px;font-size:13px;margin-top:4px;}
+
+/* Confirm delete modal */
+.confirm-card{background:#fff;border-radius:12px;padding:28px 24px;width:360px;box-shadow:0 20px 60px rgba(0,0,0,.18);}
+.confirm-msg{font-size:14px;color:var(--dark);margin-bottom:22px;text-align:center;line-height:1.5;}
+.confirm-btns{display:flex;gap:10px;justify-content:center;}
+</style>
+</head>
+<body>
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <a href="/" class="s-logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 18 18"><path d="M9 2L2 6v6l7 4 7-4V6z" opacity=".3"/><path d="M9 2l7 4-7 4L2 6z"/></svg>
+      </div>
+      <span class="logo-text">IT-innovation</span>
+    </a>
+    <div class="nav-body" id="navBody">
+      <div class="nav-group-label">Загрузка...</div>
+    </div>
+    <div class="s-footer">
+      <div class="user-row">
+        <div class="avatar" id="userAvatar">?</div>
+        <div class="u-info">
+          <div class="u-name" id="userName">...</div>
+          <div class="u-role" id="userRole">...</div>
+        </div>
+        <button class="logout-btn" title="Выйти" id="logoutBtn">⏻</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <span class="page-h">Сотрудники</span>
+      <span class="topbar-count" id="totalCount"></span>
+    </div>
+    <div class="content">
+      <div class="search-row">
+        <div class="search-wrap">
+          <svg viewBox="0 0 16 16"><circle cx="6.5" cy="6.5" r="4"/><line x1="10" y1="10" x2="14" y2="14"/></svg>
+          <input class="search-inp" id="searchInp" placeholder="Поиск по имени, должности, e-mail..." type="text">
+        </div>
+        <button class="btn-new" id="btnNewEmp">+ Новый сотрудник</button>
+      </div>
+      <table class="emp-table">
+        <thead>
+          <tr>
+            <th>Сотрудник</th>
+            <th>Должность</th>
+            <th>Телефон</th>
+            <th>E-mail</th>
+            <th>Статус</th>
+          </tr>
+        </thead>
+        <tbody id="empBody">
+          <tr class="empty-row"><td colspan="5">Загрузка...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Employee modal -->
+<div class="m-overlay" id="empModal">
+  <div class="m-card">
+    <div class="m-hd">
+      <span class="m-hd-title" id="mTitle">Новый сотрудник</span>
+      <button class="m-close" id="mClose" title="Закрыть">×</button>
+    </div>
+    <div class="m-body">
+      <div class="fg2">
+        <div class="fg">
+          <label class="flbl">Фамилия <span class="freq">*</span></label>
+          <input class="finp" id="fLastName" placeholder="Иванов" autocomplete="off">
+        </div>
+        <div class="fg">
+          <label class="flbl">Имя</label>
+          <input class="finp" id="fFirstName" placeholder="Иван" autocomplete="off">
+        </div>
+      </div>
+      <div class="fg2">
+        <div class="fg">
+          <label class="flbl">Отчество</label>
+          <input class="finp" id="fMiddleName" placeholder="Иванович" autocomplete="off">
+        </div>
+        <div class="fg">
+          <label class="flbl">Роль</label>
+          <select class="finp fsel" id="fRoleCode">
+            <option value="">- не указана -</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg">
+        <label class="flbl">Должность</label>
+        <div class="combo-wrap">
+          <input class="finp" id="fPosition" placeholder="Начните вводить должность..." autocomplete="off">
+          <div class="combo-drop" id="posDrop"></div>
+        </div>
+      </div>
+      <div class="fg3">
+        <div class="fg">
+          <label class="flbl">Тел. рабочий</label>
+          <input class="finp" id="fPhoneWork" placeholder="+7 (495) 000-00-00" autocomplete="off">
+        </div>
+        <div class="fg">
+          <label class="flbl">Тел. личный</label>
+          <input class="finp" id="fPhonePersonal" placeholder="+7 (999) 000-00-00" autocomplete="off">
+        </div>
+        <div class="fg">
+          <label class="flbl">Добавочный</label>
+          <input class="finp" id="fPhoneExt" placeholder="123" autocomplete="off">
+        </div>
+      </div>
+      <div class="fg2">
+        <div class="fg">
+          <label class="flbl">E-mail</label>
+          <input class="finp" id="fEmail" placeholder="ivanov@company.ru" type="email" autocomplete="off">
+        </div>
+        <div class="fg">
+          <label class="flbl">Доменное имя</label>
+          <input class="finp" id="fDomainName" placeholder="ivanov" autocomplete="off">
+        </div>
+      </div>
+      <div class="fg2">
+        <div class="fg">
+          <label class="flbl">Руководитель</label>
+          <select class="finp fsel" id="fManager">
+            <option value="">- не указан -</option>
+          </select>
+        </div>
+      </div>
+      <div class="m-error" id="mError" style="display:none"></div>
+    </div>
+    <div class="m-ft">
+      <button class="btn-grant" id="btnGrant" style="display:none">Выдать доступ</button>
+      <span class="m-status" id="mStatus"></span>
+      <div class="ft-btns">
+        <button class="btn-danger" id="btnDelete" style="display:none">Удалить</button>
+        <button class="btn-sec" id="btnEdit" style="display:none">Редактировать</button>
+        <button class="btn-primary" id="btnSave" style="display:none">Сохранить</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm delete modal -->
+<div class="m-overlay" id="confirmModal">
+  <div class="confirm-card">
+    <p class="confirm-msg">Вы точно хотите удалить сотрудника?</p>
+    <div class="confirm-btns">
+      <button class="btn-sec" id="confirmNo">Нет</button>
+      <button class="btn-danger" id="confirmYes">Да</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const MODULE_URLS = {sales:'/vendors'};
+const NAV_ICONS = {
+  sales:`<svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 10l4-4 3 3 5-5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>`,
+};
+const STAFF_ICON = `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M5 7a2.5 2.5 0 100-5 2.5 2.5 0 000 5zm-4 7a4 4 0 018 0H1zm9-7a2 2 0 100-4 2 2 0 000 4zm1 1a3 3 0 012.83 2H10a5 5 0 00-.8-2.75A3 3 0 0111 8z"/></svg>`;
+function defaultIcon(){return `<svg viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="12" height="12" rx="2" opacity=".3"/><rect x="5" y="5" width="6" height="1.5" rx=".75"/><rect x="5" y="8" width="6" height="1.5" rx=".75"/></svg>`;}
+function esc(s){const d=document.createElement('div');d.textContent=s??'';return d.innerHTML;}
+
+let _all = [];
+let _isSecurity = false;
+let _mode = 'create'; // 'create' | 'view' | 'edit'
+let _currentEmpId = null;
+let _currentEmp = null;
+
+const FIELD_IDS = ['LastName','FirstName','MiddleName','Position','PhoneWork','PhonePersonal','PhoneExt','Email','DomainName'];
+const SEL_IDS = ['Manager','RoleCode'];
+function f(name){ return document.getElementById('f'+name); }
+
+let _positions = [];
+let _canManagePositions = false;
+
+function initials(name) {
+  return (name||'').split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase();
+}
+
+// --- Table rendering ---
+
+function renderTable(list) {
+  const tbody = document.getElementById('empBody');
+  document.getElementById('totalCount').textContent = list.length ? `${list.length} чел.` : '';
+  if (!list.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="5">Ничего не найдено</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(e => {
+    const phone = e.phone_work || e.phone_personal || null;
+    const ext = e.phone_extension ? ` доб.${esc(e.phone_extension)}` : '';
+    return `
+    <tr class="${e.has_account?'':'inactive'}" data-id="${e.id}">
+      <td>
+        <div class="emp-name">
+          <div class="avatar-sm">${esc(initials(e.full_name))}</div>
+          ${esc(e.full_name)}
+        </div>
+      </td>
+      <td style="color:var(--mid)">${e.position ? esc(e.position) : '—'}</td>
+      <td style="color:var(--mid)">${phone ? esc(phone)+ext : '—'}</td>
+      <td style="color:var(--mid)">${e.email ? esc(e.email) : '—'}</td>
+      <td>${e.has_account
+        ? '<span class="badge badge-active">Активен</span>'
+        : '<span class="badge badge-inactive">Не активен</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function filterAndRender() {
+  const q = document.getElementById('searchInp').value.trim().toLowerCase();
+  const list = q
+    ? _all.filter(e =>
+        e.full_name.toLowerCase().includes(q) ||
+        (e.email && e.email.toLowerCase().includes(q)) ||
+        (e.position && e.position.toLowerCase().includes(q))
+      )
+    : _all;
+  renderTable(list);
+}
+
+document.getElementById('searchInp').addEventListener('input', filterAndRender);
+
+document.getElementById('empBody').addEventListener('click', e => {
+  const tr = e.target.closest('tr[data-id]');
+  if (!tr) return;
+  const emp = _all.find(x => x.id === parseInt(tr.dataset.id));
+  if (emp) openModal(emp);
+});
+
+async function loadEmployees() {
+  try {
+    const res = await fetch('/api/admin/employees');
+    if (res.status === 401) { window.location.href = '/login'; return; }
+    _all = await res.json();
+    filterAndRender();
+  } catch {
+    document.getElementById('empBody').innerHTML = '<tr class="empty-row"><td colspan="5">Ошибка загрузки</td></tr>';
+  }
+}
+
+// --- Modal ---
+
+function fillManagerSelect(excludeId) {
+  const sel = f('Manager');
+  const curVal = sel.value;
+  sel.innerHTML = '<option value="">- не указан -</option>';
+  _all.forEach(e => {
+    if (e.id === excludeId) return;
+    const opt = document.createElement('option');
+    opt.value = e.id;
+    opt.textContent = e.full_name + (e.position ? ` (${e.position})` : '');
+    sel.appendChild(opt);
+  });
+  sel.value = curVal;
+}
+
+function clearForm() {
+  FIELD_IDS.forEach(id => f(id).value = '');
+  SEL_IDS.forEach(id => f(id).value = '');
+}
+
+function fillForm(emp) {
+  f('LastName').value      = emp.last_name      || '';
+  f('FirstName').value     = emp.first_name     || '';
+  f('MiddleName').value    = emp.middle_name    || '';
+  f('RoleCode').value      = emp.role_code      || '';
+  f('Position').value      = emp.position       || '';
+  f('PhoneWork').value     = emp.phone_work     || '';
+  f('PhonePersonal').value = emp.phone_personal || '';
+  f('PhoneExt').value      = emp.phone_extension|| '';
+  f('Email').value         = emp.email          || '';
+  f('DomainName').value    = emp.domain_name    || '';
+  f('Manager').value       = emp.manager_id != null ? emp.manager_id : '';
+}
+
+function setEditable(editable) {
+  FIELD_IDS.forEach(id => { f(id).readOnly = !editable; });
+  SEL_IDS.forEach(id => { f(id).classList.toggle('ro', !editable); });
+  if (!editable) document.getElementById('posDrop').style.display = 'none';
+}
+
+// --- Position combo ---
+
+function renderPosDrop(query) {
+  const drop = document.getElementById('posDrop');
+  const q = (query || '').toLowerCase();
+  const matches = q ? _positions.filter(p => p.toLowerCase().includes(q)) : _positions;
+  const qTrim = (query || '').trim();
+  const exact = _positions.some(p => p.toLowerCase() === qTrim.toLowerCase());
+
+  let html = matches.map(p => `<div class="combo-opt">${esc(p)}</div>`).join('');
+  if (_canManagePositions && qTrim && !exact) {
+    html += `<div class="combo-add-opt">+ Добавить: ${esc(qTrim)}</div>`;
+  }
+  if (!html) { drop.style.display = 'none'; return; }
+
+  drop.innerHTML = html;
+  drop.style.display = 'block';
+
+  drop.querySelectorAll('.combo-opt').forEach(el => {
+    el.addEventListener('mousedown', e => {
+      e.preventDefault();
+      f('Position').value = el.textContent;
+      drop.style.display = 'none';
+    });
+  });
+
+  const addEl = drop.querySelector('.combo-add-opt');
+  if (addEl) {
+    addEl.addEventListener('mousedown', async e => {
+      e.preventDefault();
+      const name = qTrim;
+      f('Position').value = name;
+      drop.style.display = 'none';
+      const res = await fetch('/api/admin/positions', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({name}),
+      });
+      if (res.ok) {
+        const pos = await res.json();
+        if (!_positions.some(p => p.toLowerCase() === pos.name.toLowerCase())) {
+          _positions.push(pos.name);
+          _positions.sort((a, b) => a.localeCompare(b, 'ru'));
+        }
+      }
+    });
+  }
+}
+
+document.getElementById('fPosition').addEventListener('focus', function() {
+  if (!this.readOnly) renderPosDrop(this.value);
+});
+document.getElementById('fPosition').addEventListener('input', function() {
+  if (!this.readOnly) renderPosDrop(this.value);
+});
+document.getElementById('fPosition').addEventListener('blur', () => {
+  setTimeout(() => { document.getElementById('posDrop').style.display = 'none'; }, 200);
+});
+
+function computeFullName() {
+  return [f('LastName').value, f('FirstName').value, f('MiddleName').value]
+    .map(v => v.trim()).filter(Boolean).join(' ');
+}
+
+function applyMode(mode) {
+  _mode = mode;
+  document.getElementById('mError').style.display = 'none';
+  document.getElementById('mStatus').textContent = '';
+
+  const btnGrant = document.getElementById('btnGrant');
+
+  if (mode === 'create') {
+    document.getElementById('mTitle').textContent = 'Новый сотрудник';
+    setEditable(true);
+    document.getElementById('btnSave').style.display   = _isSecurity ? '' : 'none';
+    document.getElementById('btnEdit').style.display   = 'none';
+    document.getElementById('btnDelete').style.display = 'none';
+    btnGrant.style.display = 'none';
+  } else if (mode === 'view') {
+    document.getElementById('mTitle').textContent = computeFullName() || 'Сотрудник';
+    setEditable(false);
+    document.getElementById('btnSave').style.display   = 'none';
+    document.getElementById('btnEdit').style.display   = _isSecurity ? '' : 'none';
+    document.getElementById('btnDelete').style.display = _isSecurity ? '' : 'none';
+    // Доступ — только ИБ: «Выдать» если аккаунта нет, «Забрать» если есть
+    if (_isSecurity && _currentEmp) {
+      btnGrant.style.display = 'inline-flex';
+      if (_currentEmp.has_account) {
+        btnGrant.textContent = 'Забрать доступ';
+        btnGrant.classList.add('revoke');
+      } else {
+        btnGrant.textContent = 'Выдать доступ';
+        btnGrant.classList.remove('revoke');
+      }
+    } else {
+      btnGrant.style.display = 'none';
+    }
+  } else if (mode === 'edit') {
+    document.getElementById('mTitle').textContent = 'Редактирование';
+    setEditable(true);
+    document.getElementById('btnSave').style.display   = _isSecurity ? '' : 'none';
+    document.getElementById('btnEdit').style.display   = 'none';
+    document.getElementById('btnDelete').style.display = 'none';
+    btnGrant.style.display = 'none';
+  }
+}
+
+async function loadRolesIntoSelect() {
+  const res = await fetch('/api/admin/roles');
+  if (!res.ok) return;
+  const roles = await res.json();
+  const sel = f('RoleCode');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">- не указана -</option>';
+  roles.forEach(r => {
+    const opt = document.createElement('option');
+    opt.value = r.code; opt.textContent = r.name;
+    sel.appendChild(opt);
+  });
+  sel.value = cur;
+}
+
+async function loadPositionsList() {
+  const res = await fetch('/api/admin/positions');
+  if (!res.ok) return;
+  _positions = (await res.json()).map(p => p.name);
+}
+
+async function openModal(emp) {
+  _currentEmpId = emp ? emp.id : null;
+  _currentEmp = emp || null;
+  await Promise.all([loadRolesIntoSelect(), loadPositionsList()]);
+  fillManagerSelect(_currentEmpId);
+  if (emp) {
+    fillForm(emp);
+    applyMode('view');
+  } else {
+    clearForm();
+    applyMode('create');
+  }
+  document.getElementById('empModal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('empModal').classList.remove('open');
+  _currentEmpId = null;
+  _currentEmp = null;
+}
+
+function showError(msg) {
+  const el = document.getElementById('mError');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function getFormPayload() {
+  const v = id => f(id).value.trim() || null;
+  return {
+    last_name:       f('LastName').value.trim(),
+    first_name:      v('FirstName'),
+    middle_name:     v('MiddleName'),
+    role_code:       v('RoleCode'),
+    position:        v('Position'),
+    email:           v('Email'),
+    phone_work:      v('PhoneWork'),
+    phone_personal:  v('PhonePersonal'),
+    phone_extension: v('PhoneExt'),
+    domain_name:     v('DomainName'),
+    manager_id:      f('Manager').value ? parseInt(f('Manager').value) : null,
+  };
+}
+
+async function saveEmployee() {
+  const data = getFormPayload();
+  if (!data.last_name) { showError('Фамилия обязательна'); return; }
+
+  const btn = document.getElementById('btnSave');
+  btn.disabled = true;
+  document.getElementById('mError').style.display = 'none';
+
+  try {
+    const isNew = _currentEmpId === null;
+    const url    = isNew ? '/api/admin/employees' : `/api/admin/employees/${_currentEmpId}`;
+    const method = isNew ? 'POST' : 'PATCH';
+
+    const res = await fetch(url, {
+      method,
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(data),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(()=>({}));
+      showError(err.detail || 'Ошибка сохранения');
+      return;
+    }
+
+    const saved = await res.json();
+    _currentEmpId = saved.id;
+
+    await loadEmployees();
+    // Refresh local employee object from updated list
+    const updated = _all.find(e => e.id === saved.id) || saved;
+    _currentEmp = updated;
+    fillForm(updated);
+    applyMode('view');
+    document.getElementById('mStatus').textContent = 'Сохранено';
+  } catch {
+    showError('Ошибка соединения');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function grantAccess() {
+  if (!_currentEmpId) return;
+  const btn = document.getElementById('btnGrant');
+  btn.disabled = true;
+  document.getElementById('mError').style.display = 'none';
+  try {
+    const res = await fetch(`/api/admin/employees/${_currentEmpId}/grant-access`, { method: 'POST' });
+    if (!res.ok) {
+      const err = await res.json().catch(()=>({}));
+      showError(err.detail || 'Не удалось выдать доступ');
+      return;
+    }
+    const updated = await res.json();
+    _currentEmp = updated;
+    await loadEmployees();
+    applyMode('view');
+    document.getElementById('mStatus').textContent =
+      `Доступ выдан. Логин: ${updated.domain_name} · пароль: добавочный (${updated.phone_extension}). Сменить при первом входе.`;
+  } catch {
+    showError('Ошибка соединения');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function revokeAccess() {
+  if (!_currentEmpId) return;
+  const btn = document.getElementById('btnGrant');
+  btn.disabled = true;
+  document.getElementById('mError').style.display = 'none';
+  try {
+    const res = await fetch(`/api/admin/employees/${_currentEmpId}/grant-access`, { method: 'DELETE' });
+    if (!res.ok) {
+      const err = await res.json().catch(()=>({}));
+      showError(err.detail || 'Не удалось забрать доступ');
+      return;
+    }
+    const updated = await res.json();
+    _currentEmp = updated;
+    await loadEmployees();
+    applyMode('view');
+    document.getElementById('mStatus').textContent = 'Доступ забран. Вход для сотрудника отключён.';
+  } catch {
+    showError('Ошибка соединения');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function deleteEmployee() {
+  try {
+    const res = await fetch(`/api/admin/employees/${_currentEmpId}`, { method: 'DELETE' });
+    if (!res.ok && res.status !== 204) {
+      const err = await res.json().catch(()=>({}));
+      showError(err.detail || 'Ошибка удаления');
+      return;
+    }
+    closeModal();
+    await loadEmployees();
+  } catch {
+    showError('Ошибка соединения');
+  }
+}
+
+// Modal events
+document.getElementById('mClose').addEventListener('click', closeModal);
+document.getElementById('empModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('empModal')) closeModal();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (document.getElementById('confirmModal').classList.contains('open')) {
+      document.getElementById('confirmModal').classList.remove('open');
+    } else {
+      closeModal();
+    }
+  }
+});
+
+document.getElementById('btnSave').addEventListener('click', saveEmployee);
+document.getElementById('btnGrant').addEventListener('click', () => {
+  if (_currentEmp && _currentEmp.has_account) revokeAccess();
+  else grantAccess();
+});
+document.getElementById('btnEdit').addEventListener('click', () => {
+  fillManagerSelect(_currentEmpId);
+  applyMode('edit');
+});
+document.getElementById('btnDelete').addEventListener('click', () => {
+  document.getElementById('confirmModal').classList.add('open');
+});
+document.getElementById('confirmNo').addEventListener('click', () => {
+  document.getElementById('confirmModal').classList.remove('open');
+});
+document.getElementById('confirmYes').addEventListener('click', async () => {
+  document.getElementById('confirmModal').classList.remove('open');
+  await deleteEmployee();
+});
+
+document.getElementById('btnNewEmp').addEventListener('click', () => openModal(null));
+
+// --- Init ---
+
+async function init() {
+  const meRes = await fetch('/me');
+  if (!meRes.ok) { window.location.href = '/login'; return; }
+  const me = await meRes.json();
+  if (me.must_change_password) { window.location.href = '/login'; return; }
+  document.getElementById('userName').textContent = me.login;
+  document.getElementById('userAvatar').textContent = me.login.slice(0,2).toUpperCase();
+
+  const navRes = await fetch('/nav');
+  const nav = await navRes.json();
+  document.getElementById('userRole').textContent = nav.roles.join(', ') || 'нет роли';
+
+  _isSecurity = nav.roles.includes('security');
+  _canManagePositions = nav.roles.includes('security') || nav.roles.includes('analyst');
+  if (_isSecurity) document.getElementById('btnNewEmp').style.display = 'inline-flex';
+
+  const navBody = document.getElementById('navBody');
+  navBody.innerHTML = '';
+  if (nav.modules.length) {
+    const lbl = document.createElement('div');
+    lbl.className = 'nav-group-label'; lbl.textContent = 'Модули';
+    navBody.appendChild(lbl);
+    nav.modules.forEach(m => {
+      const url = MODULE_URLS[m.code];
+      const item = document.createElement(url ? 'a' : 'div');
+      item.className = 'nav-item';
+      if (url) { item.href = url; item.style.textDecoration = 'none'; }
+      item.innerHTML = (NAV_ICONS[m.code] || defaultIcon()) + `<span>${esc(m.name)}</span>`;
+      navBody.appendChild(item);
+    });
+  }
+  const staffItem = document.createElement('a');
+  staffItem.className = 'nav-item act';
+  staffItem.href = '/employees';
+  staffItem.style.textDecoration = 'none';
+  staffItem.innerHTML = STAFF_ICON + '<span>Сотрудники</span>';
+  navBody.appendChild(staffItem);
+
+  loadEmployees();
+}
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await fetch('/logout', {method:'POST'});
+  window.location.href = '/login';
+});
+
+init();
+</script>
+</body>
+</html>

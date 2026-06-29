@@ -77,6 +77,11 @@ class User(Base):
     login: Mapped[str] = mapped_column(String(150), nullable=False)
     password_hash: Mapped[str] = mapped_column(Text, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    # При выдаче доступа ставится True: при первом входе платформа потребует
+    # сменить временный пароль (добавочный номер) на постоянный.
+    must_change_password: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=func.false()
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -138,26 +143,62 @@ class Session(Base):
 class Employee(Base):
     """Сотрудник компании-арендатора (мастер-данные).
 
-    full_name - единый формат «Иванов А.А.» (выученное правило: разнобой
-    форматов ломал агрегаты в реестре передачи). crm_name - псевдоним
-    в CRM-выгрузках для маппинга. Уволенных деактивируем, не удаляем.
+    ФИО хранятся тремя полями; full_name - Python-свойство для отображения.
+    crm_name - псевдоним в CRM-выгрузках для маппинга.
+    manager_id - самоссылка для иерархии подчинения.
+    Уволенных деактивируем, не удаляем.
     """
 
     __tablename__ = "employees"
     __table_args__ = (
-        UniqueConstraint("tenant_id", "full_name", name="uq_employees_tenant_name"),
+        UniqueConstraint("tenant_id", "last_name", "first_name", "middle_name", name="uq_employees_tenant_fio"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     tenant_id: Mapped[int] = mapped_column(
         ForeignKey("tenants.id", ondelete="RESTRICT"), nullable=False, index=True
     )
-    full_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    last_name: Mapped[str] = mapped_column(String(150), nullable=False)
+    first_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    middle_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     crm_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    position: Mapped[str | None] = mapped_column(String(255), nullable=True)
     email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    phone_personal: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    phone_work: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    phone_extension: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    domain_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    role_code: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    manager_id: Mapped[int | None] = mapped_column(
+        ForeignKey("employees.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
+    @property
+    def full_name(self) -> str:
+        parts = [self.last_name]
+        if self.first_name:
+            parts.append(self.first_name)
+        if self.middle_name:
+            parts.append(self.middle_name)
+        return " ".join(parts)
+
     users: Mapped[list[User]] = relationship(back_populates="employee")
+
+
+class EmployeePosition(Base):
+    """Справочник должностей арендатора. Наполняется вручную через UI."""
+
+    __tablename__ = "employee_positions"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "name", name="uq_emp_pos_tenant_name"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(
+        ForeignKey("tenants.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
 
 
 class Company(Base):

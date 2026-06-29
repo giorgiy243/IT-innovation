@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Пользователи — IT-innovation</title>
+<style>
+:root{
+  --brand:#81B446;--brand-d:#6a9338;--dark:#1E2832;--slate:#323C50;
+  --mid:#8296AA;--light:#D7DCE6;--bg:#F5FAFA;--red:#DC2626;--red-bg:#fde8e8;
+  --nav-bg:#1E2832;--nav-hover:#323C50;
+  --sidebar-w:232px;--topbar-h:56px;
+  --sh:0 2px 10px rgba(30,40,50,.08),0 1px 3px rgba(30,40,50,.05);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,sans-serif;color:var(--dark);-webkit-font-smoothing:antialiased;}
+
+.layout{display:flex;height:100vh;overflow:hidden;}
+
+/* Sidebar */
+.sidebar{width:var(--sidebar-w);flex:none;background:var(--nav-bg);display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,.05);}
+.s-logo{height:var(--topbar-h);display:flex;align-items:center;padding:0 16px;gap:10px;border-bottom:1px solid rgba(255,255,255,.07);flex:none;text-decoration:none;transition:background .12s;}
+.s-logo:hover{background:rgba(255,255,255,.05);}
+.logo-mark{width:30px;height:30px;border-radius:8px;flex:none;background:var(--brand);display:flex;align-items:center;justify-content:center;}
+.logo-mark svg{width:16px;height:16px;fill:#fff;}
+.logo-text{font-size:14px;font-weight:700;color:#fff;letter-spacing:-.01em;}
+.nav-body{flex:1;overflow-y:auto;padding:10px 8px;}
+.nav-group-label{font-size:10.5px;font-weight:600;color:rgba(130,150,170,.7);text-transform:uppercase;letter-spacing:.08em;padding:10px 10px 4px;}
+.nav-item{display:flex;align-items:center;gap:9px;height:38px;padding:0 10px;border-radius:7px;font-size:13px;font-weight:500;color:rgba(255,255,255,.6);cursor:pointer;margin-bottom:1px;border-left:2px solid transparent;transition:background .12s,color .12s;text-decoration:none;}
+.nav-item:hover{background:var(--nav-hover);color:#fff;}
+.nav-item.act{background:rgba(129,180,70,.14);color:#fff;border-left-color:var(--brand);}
+.nav-item svg{width:16px;height:16px;flex:none;opacity:.7;}
+.s-footer{padding:10px 8px;border-top:1px solid rgba(255,255,255,.06);flex:none;}
+.user-row{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;cursor:pointer;}
+.user-row:hover{background:var(--nav-hover);}
+.avatar{width:30px;height:30px;border-radius:8px;flex:none;background:var(--slate);display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:#fff;}
+.u-info{flex:1;min-width:0;}
+.u-name{font-size:12.5px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.u-role{font-size:11px;color:var(--mid);}
+.logout-btn{width:24px;height:24px;display:flex;align-items:center;justify-content:center;border:none;background:transparent;cursor:pointer;border-radius:5px;color:rgba(255,255,255,.3);transition:color .15s,background .15s;flex:none;font-size:16px;line-height:1;}
+.logout-btn:hover{color:#fff;background:rgba(255,255,255,.08);}
+
+/* Main */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{height:var(--topbar-h);flex:none;display:flex;align-items:center;padding:0 24px;background:#fff;border-bottom:1px solid var(--light);gap:12px;}
+.page-h{font-size:15px;font-weight:700;color:var(--dark);}
+.content{flex:1;overflow-y:auto;padding:28px 24px;display:flex;gap:24px;align-items:flex-start;}
+
+/* Create form card */
+.create-card{
+  width:320px;flex:none;background:#fff;border-radius:10px;
+  box-shadow:var(--sh);padding:22px 20px;
+}
+.create-card h2{font-size:14px;font-weight:700;color:var(--dark);margin-bottom:18px;}
+
+.fgrp{display:flex;flex-direction:column;margin-bottom:14px;}
+.flbl{font-size:11.5px;font-weight:600;color:var(--slate);display:block;margin-bottom:5px;}
+.fc{
+  width:100%;height:38px;padding:0 12px;border:1.5px solid transparent;
+  border-radius:6px;font-size:13px;color:var(--dark);
+  background:rgba(30,40,50,.06);outline:none;
+  transition:background .15s,border-color .15s;font-family:inherit;
+}
+.fc:focus{background:rgba(129,180,70,.07);border-color:rgba(129,180,70,.35);}
+.fc::placeholder{color:var(--mid);}
+select.fc{cursor:pointer;}
+
+.pw-wrap{position:relative;}
+.pw-wrap .fc{padding-right:38px;}
+.pw-toggle{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--mid);font-size:14px;line-height:1;padding:0;}
+.pw-toggle:hover{color:var(--dark);}
+
+.btn-primary{
+  width:100%;height:38px;border:none;border-radius:6px;
+  background:var(--brand);color:#fff;font-size:13px;font-weight:600;
+  cursor:pointer;transition:background .15s;font-family:inherit;
+  display:flex;align-items:center;justify-content:center;
+}
+.btn-primary:hover{background:var(--brand-d);}
+.btn-primary:disabled{opacity:.6;cursor:default;}
+
+.form-err{display:none;margin-top:10px;padding:9px 12px;border-radius:6px;background:rgba(220,38,38,.07);border:1px solid rgba(220,38,38,.18);font-size:12.5px;color:var(--red);}
+.form-err.show{display:block;}
+.form-ok{display:none;margin-top:10px;padding:9px 12px;border-radius:6px;background:rgba(129,180,70,.09);border:1px solid rgba(129,180,70,.28);font-size:12.5px;color:#3a6e2a;}
+.form-ok.show{display:block;}
+
+/* Users table */
+.users-section{flex:1;min-width:0;}
+.users-section h2{font-size:14px;font-weight:700;color:var(--dark);margin-bottom:16px;}
+
+.users-table{width:100%;background:#fff;border-radius:10px;box-shadow:var(--sh);border-collapse:collapse;overflow:hidden;}
+.users-table th{
+  font-size:11px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.06em;
+  padding:10px 16px;background:#fff;border-bottom:1px solid var(--light);text-align:left;
+}
+.users-table td{padding:12px 16px;font-size:13px;border-bottom:1px solid var(--light);vertical-align:middle;}
+.users-table tr:last-child td{border-bottom:none;}
+.users-table tr.inactive td{opacity:.5;}
+
+.badge{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:10px;font-size:11px;font-weight:600;}
+.badge-active{background:#dcfce7;color:#166534;}
+.badge-inactive{background:var(--red-bg);color:#991b1b;}
+
+.role-chip{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 8px;border-radius:10px;font-size:11px;font-weight:600;background:rgba(129,180,70,.12);color:#3a6e2a;margin-right:4px;margin-bottom:2px;}
+.scope-chip{font-size:10px;font-weight:500;color:var(--mid);}
+
+.btn-toggle{
+  height:28px;padding:0 12px;border-radius:5px;border:1px solid var(--light);
+  background:#fff;font-size:12px;font-weight:600;cursor:pointer;
+  transition:background .12s,color .12s,border-color .12s;font-family:inherit;
+  white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;
+}
+.btn-toggle.deactivate{color:var(--red);border-color:rgba(220,38,38,.25);}
+.btn-toggle.deactivate:hover{background:var(--red-bg);border-color:rgba(220,38,38,.4);}
+.btn-toggle.activate{color:#166534;border-color:rgba(22,101,52,.25);}
+.btn-toggle.activate:hover{background:#dcfce7;border-color:rgba(22,101,52,.4);}
+
+.empty-row td{text-align:center;color:var(--mid);padding:32px 16px;font-size:13px;}
+
+.hint{font-size:12px;color:var(--mid);margin-top:8px;line-height:1.5;}
+</style>
+</head>
+<body>
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <a href="/" class="s-logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 18 18"><path d="M9 2L2 6v6l7 4 7-4V6z" opacity=".3"/><path d="M9 2l7 4-7 4L2 6z"/></svg>
+      </div>
+      <span class="logo-text">IT-innovation</span>
+    </a>
+    <div class="nav-body" id="navBody">
+      <div class="nav-group-label">Загрузка...</div>
+    </div>
+    <div class="s-footer">
+      <div class="user-row">
+        <div class="avatar" id="userAvatar">?</div>
+        <div class="u-info">
+          <div class="u-name" id="userName">...</div>
+          <div class="u-role" id="userRole">...</div>
+        </div>
+        <button class="logout-btn" title="Выйти" id="logoutBtn">⏻</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <span class="page-h">Пользователи</span>
+    </div>
+    <div class="content">
+
+      <!-- Create form -->
+      <div class="create-card">
+        <h2>Добавить сотрудника</h2>
+        <form id="createForm" autocomplete="off">
+          <div class="fgrp">
+            <label class="flbl" for="fLogin">Логин</label>
+            <input class="fc" id="fLogin" name="login" type="text" placeholder="ivanov_aa" required autocomplete="off">
+          </div>
+          <div class="fgrp">
+            <label class="flbl" for="fPassword">Пароль (мин. 8 символов)</label>
+            <div class="pw-wrap">
+              <input class="fc" id="fPassword" name="password" type="password" placeholder="••••••••" required autocomplete="new-password">
+              <button type="button" class="pw-toggle" id="pwToggle" title="Показать/скрыть пароль">👁</button>
+            </div>
+          </div>
+          <div class="fgrp">
+            <label class="flbl" for="fRole">Роль</label>
+            <select class="fc" id="fRole" name="role_code">
+              <option value="">— без роли —</option>
+              <option value="mop">МОП - Менеджер по продажам</option>
+              <option value="rop">РОП - Руководитель отдела продаж</option>
+              <option value="marketer">Маркетолог</option>
+              <option value="presale_engineer">Пресейл-инженер</option>
+              <option value="analyst">Аналитик / Админ</option>
+              <option value="security">ИБ / Аудит</option>
+              <option value="domain_head">Руководитель домена</option>
+            </select>
+          </div>
+          <div class="fgrp" id="scopeGrp">
+            <label class="flbl" for="fScope">Область данных</label>
+            <select class="fc" id="fScope" name="scope">
+              <option value="own">Свои данные</option>
+              <option value="team">Команда</option>
+              <option value="domain">Домен</option>
+              <option value="all">Все данные</option>
+            </select>
+          </div>
+          <button class="btn-primary" type="submit" id="createBtn">Создать аккаунт</button>
+          <div class="form-err" id="createErr"></div>
+          <div class="form-ok" id="createOk"></div>
+        </form>
+        <p class="hint">Сотрудник получит логин и пароль лично. Сохрани пароль — он не восстанавливается (только сброс).</p>
+      </div>
+
+      <!-- Users table -->
+      <div class="users-section">
+        <h2>Все аккаунты</h2>
+        <table class="users-table" id="usersTable">
+          <thead>
+            <tr>
+              <th>Логин</th>
+              <th>Роли</th>
+              <th>Статус</th>
+              <th>Добавлен</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="usersBody">
+            <tr class="empty-row"><td colspan="5">Загрузка...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const SCOPE_LABEL = {own:'Свои', team:'Команда', domain:'Домен', all:'Все'};
+const NAV_ICONS = {
+  sales:`<svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 10l4-4 3 3 5-5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>`,
+};
+function defaultIcon(){return `<svg viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="12" height="12" rx="2" opacity=".3"/><rect x="5" y="5" width="6" height="1.5" rx=".75"/><rect x="5" y="8" width="6" height="1.5" rx=".75"/></svg>`;}
+const MODULE_URLS = {sales:'/vendors'};
+const STAFF_ICON = `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M5 7a2.5 2.5 0 100-5 2.5 2.5 0 000 5zm-4 7a4 4 0 018 0H1zm9-7a2 2 0 100-4 2 2 0 000 4zm1 1a3 3 0 012.83 2H10a5 5 0 00-.8-2.75A3 3 0 0111 8z"/></svg>`;
+
+function esc(s){const d=document.createElement('div');d.textContent=s??'';return d.innerHTML;}
+
+function formatDate(iso){
+  try{
+    const d=new Date(iso);
+    return d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'});
+  }catch{return iso;}
+}
+
+function renderRow(u){
+  const rolesHtml = u.roles.length
+    ? u.roles.map(r=>`<span class="role-chip">${esc(r.name)} <span class="scope-chip">${esc(SCOPE_LABEL[r.scope]||r.scope)}</span></span>`).join('')
+    : '<span style="color:var(--mid);font-size:12px;">без роли</span>';
+
+  const statusHtml = u.is_active
+    ? '<span class="badge badge-active">Активен</span>'
+    : '<span class="badge badge-inactive">Отключён</span>';
+
+  const toggleLabel = u.is_active ? 'Отключить' : 'Включить';
+  const toggleCls = u.is_active ? 'deactivate' : 'activate';
+
+  return `<tr data-uid="${u.id}" class="${u.is_active?'':'inactive'}">
+    <td><strong>${esc(u.login)}</strong></td>
+    <td>${rolesHtml}</td>
+    <td>${statusHtml}</td>
+    <td style="color:var(--mid);font-size:12px;">${formatDate(u.created_at)}</td>
+    <td><button class="btn-toggle ${toggleCls}" onclick="toggleUser(${u.id},${!u.is_active})">${toggleLabel}</button></td>
+  </tr>`;
+}
+
+let _users = [];
+
+function renderTable(){
+  const tbody = document.getElementById('usersBody');
+  if(_users.length===0){
+    tbody.innerHTML='<tr class="empty-row"><td colspan="5">Аккаунтов пока нет</td></tr>';
+    return;
+  }
+  tbody.innerHTML = _users.map(renderRow).join('');
+}
+
+async function loadUsers(){
+  try{
+    const res = await fetch('/api/admin/users');
+    if(res.status===403){
+      document.getElementById('usersBody').innerHTML='<tr class="empty-row"><td colspan="5">Нет доступа к этому разделу</td></tr>';
+      return;
+    }
+    _users = await res.json();
+    renderTable();
+  }catch{
+    document.getElementById('usersBody').innerHTML='<tr class="empty-row"><td colspan="5">Ошибка загрузки</td></tr>';
+  }
+}
+
+async function toggleUser(uid, newActive){
+  try{
+    const res = await fetch(`/api/admin/users/${uid}`,{
+      method:'PATCH',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({is_active:newActive}),
+    });
+    if(!res.ok)throw new Error();
+    const updated = await res.json();
+    const idx = _users.findIndex(u=>u.id===uid);
+    if(idx!==-1) _users[idx]=updated;
+    renderTable();
+  }catch{
+    alert('Не удалось изменить статус пользователя');
+  }
+}
+
+// Show/hide scope when no role selected
+document.getElementById('fRole').addEventListener('change',function(){
+  document.getElementById('scopeGrp').style.display = this.value ? '' : 'none';
+});
+document.getElementById('scopeGrp').style.display = 'none';
+
+// Password toggle
+document.getElementById('pwToggle').addEventListener('click',function(){
+  const inp = document.getElementById('fPassword');
+  inp.type = inp.type==='password' ? 'text' : 'password';
+});
+
+// Create form submit
+document.getElementById('createForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const btn = document.getElementById('createBtn');
+  const errEl = document.getElementById('createErr');
+  const okEl = document.getElementById('createOk');
+  errEl.classList.remove('show');
+  okEl.classList.remove('show');
+  btn.disabled = true;
+  btn.textContent = 'Создаю...';
+
+  const login = document.getElementById('fLogin').value.trim();
+  const password = document.getElementById('fPassword').value;
+  const role_code = document.getElementById('fRole').value || null;
+  const scope = document.getElementById('fScope').value;
+
+  try{
+    const res = await fetch('/api/admin/users',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({login, password, role_code, scope}),
+    });
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok){
+      errEl.textContent = data.detail || 'Ошибка создания';
+      errEl.classList.add('show');
+    } else {
+      okEl.textContent = `Аккаунт «${login}» создан. Передай логин и пароль сотруднику.`;
+      okEl.classList.add('show');
+      e.target.reset();
+      document.getElementById('scopeGrp').style.display='none';
+      _users.unshift(data);
+      renderTable();
+    }
+  }catch{
+    errEl.textContent='Нет связи с сервером';
+    errEl.classList.add('show');
+  }finally{
+    btn.disabled=false;
+    btn.textContent='Создать аккаунт';
+  }
+});
+
+// Init
+async function init(){
+  const meRes = await fetch('/me');
+  if(!meRes.ok){window.location.href='/login';return;}
+  const me = await meRes.json();
+  if(me.must_change_password){window.location.href='/login';return;}
+  document.getElementById('userName').textContent=me.login;
+  document.getElementById('userAvatar').textContent=me.login.slice(0,2).toUpperCase();
+
+  const navRes = await fetch('/nav');
+  const nav = await navRes.json();
+  document.getElementById('userRole').textContent=nav.roles.join(', ')||'нет роли';
+
+  const navBody=document.getElementById('navBody');
+  navBody.innerHTML='';
+  if(nav.modules.length){
+    const lbl=document.createElement('div');lbl.className='nav-group-label';lbl.textContent='Модули';
+    navBody.appendChild(lbl);
+    nav.modules.forEach(m=>{
+      const url=MODULE_URLS[m.code];
+      const el=document.createElement(url?'a':'div');
+      el.className='nav-item';
+      if(url){el.href=url;el.style.textDecoration='none';}
+      el.innerHTML=(NAV_ICONS[m.code]||defaultIcon())+`<span>${esc(m.name)}</span>`;
+      navBody.appendChild(el);
+    });
+  }
+  const staffItem=document.createElement('a');
+  staffItem.className='nav-item';
+  staffItem.href='/employees';
+  staffItem.style.textDecoration='none';
+  staffItem.innerHTML=STAFF_ICON+'<span>Сотрудники</span>';
+  navBody.appendChild(staffItem);
+  const adminItem=document.createElement('a');
+  adminItem.className='nav-item act';
+  adminItem.href='/admin/users';
+  adminItem.style.textDecoration='none';
+  adminItem.innerHTML=`<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zm-5 6a5 5 0 0110 0H3z"/></svg><span>Пользователи</span>`;
+  navBody.appendChild(adminItem);
+
+  loadUsers();
+}
+
+document.getElementById('logoutBtn').addEventListener('click',async()=>{
+  await fetch('/logout',{method:'POST'});
+  window.location.href='/login';
+});
+
+init();
+</script>
+</body>
+</html>
