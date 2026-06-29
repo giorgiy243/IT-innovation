@@ -90,9 +90,18 @@ html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,san
 .badge{display:inline-block;font-size:11px;font-weight:600;border-radius:5px;padding:3px 10px;}
 .badge-active{background:#e8f5d9;color:#4a7a1e;}
 .badge-suspended{background:#fef9c3;color:#854d0e;}
-.badge-revoked,.badge-deauth,.badge-closed{background:#fde8e8;color:#991b1b;}
+.badge-revoked,.badge-deauth,.badge-closed,.badge-overdue{background:#fde8e8;color:#991b1b;}
 .badge-none{background:#eef2f7;color:#64748b;}
 .badge-unknown{background:#f1f5f9;color:#94a3b8;}
+
+/* Иконка предупреждения */
+.warn-icon{display:inline-block;color:#d97706;font-weight:700;margin-right:4px;}
+
+/* Чекбоксы продления */
+.renewal-options{display:flex;gap:12px;margin-top:10px;align-items:center;}
+.renewal-checkbox{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;}
+.renewal-checkbox input{cursor:pointer;accent-color:var(--brand);}
+.renewal-checkbox:hover{color:var(--brand);}
 
 .footer-meta{font-size:11.5px;color:var(--mid);margin-top:4px;}
 .loading{padding:48px;text-align:center;color:var(--mid);}
@@ -204,12 +213,12 @@ function defaultIcon() {
 
 const STATUS_LABEL = {
   active: 'Активный', suspended: 'Приостановлен', revoked: 'Отозван',
-  deauth: 'Деавторизован', closed: 'Закрыт', none: 'Без статуса'
+  deauth: 'Деавторизован', closed: 'Закрыт', none: 'Без статуса', overdue: 'Просрочен'
 };
 const STATUS_CLASS = {
   active: 'badge-active', suspended: 'badge-suspended',
   revoked: 'badge-revoked', deauth: 'badge-deauth', closed: 'badge-closed',
-  none: 'badge-none'
+  none: 'badge-none', overdue: 'badge-overdue'
 };
 
 function esc(s) {
@@ -245,6 +254,7 @@ function renderVendor(v) {
   const expired = isExpired(v.valid_until);
   const ctype = v.company_type || 'vendor';
   const typeChip = `<span class="type-chip ${TYPE_CLASS[ctype] || ''}">${TYPE_LABEL[ctype] || ctype}</span>`;
+  const showRenewal = _navRoles.some(r => ['marketer', 'analyst'].includes(r));
 
   // Distributors table
   const distHtml = v.distributors.length ? `
@@ -279,7 +289,10 @@ function renderVendor(v) {
     <div class="vendor-header">
       <div class="vh-top">
         <div class="vh-name">${esc(v.name)}${typeChip}</div>
-        <span class="badge ${statusCls}">${esc(statusLbl)}</span>
+        <span class="badge ${statusCls}">
+          ${v.has_warning ? '<span class="warn-icon">⚠</span>' : ''}
+          ${esc(statusLbl)}
+        </span>
       </div>
       <div class="vh-meta">
         ${v.partner_id ? `<span class="vh-pid">ID партнёра: ${esc(v.partner_id)}</span>` : ''}
@@ -288,6 +301,17 @@ function renderVendor(v) {
         </span>` : ''}
         ${v.status_text ? `<span style="font-size:12px;color:var(--slate)">${esc(v.status_text)}</span>` : ''}
       </div>
+      ${showRenewal && v.valid_until ? `
+      <div class="renewal-options">
+        <label class="renewal-checkbox">
+          <input type="radio" name="renewal_${v.id}" value="yes" ${v.renewal_decision === 'yes' ? 'checked' : ''}>
+          Будем продлевать
+        </label>
+        <label class="renewal-checkbox">
+          <input type="radio" name="renewal_${v.id}" value="no" ${v.renewal_decision === 'no' ? 'checked' : ''}>
+          Не будем продлевать
+        </label>
+      </div>` : ''}
     </div>
 
     <!-- Partnership -->
@@ -466,7 +490,7 @@ function enterEditMode() {
         <div class="field"><div class="field-label">Статус (тип)</div>
           ${full ? `<select class="edit-inp" id="eStatusType">
             <option value="">—</option>
-            ${['active','suspended','revoked','deauth','closed','none'].map(s =>
+            ${['active','suspended','revoked','deauth','closed','none','overdue'].map(s =>
               `<option value="${s}"${v.status_type === s ? ' selected' : ''}>${STATUS_LABEL[s]||s}</option>`
             ).join('')}
           </select>` : `<span class="edit-readonly">${STATUS_LABEL[v.status_type] || '-'}</span>`}
@@ -557,6 +581,13 @@ async function saveEdit() {
       const pwd = g('ePortalPassword');
       if (pwd) body.portal_password = pwd;
     }
+
+    // Renewal decision (только если показывали чекбоксы)
+    const renewalRadio = document.querySelector(`input[name="renewal_${VENDOR_ID}"]:checked`);
+    if (renewalRadio) {
+      body.renewal_decision = renewalRadio.value;
+    }
+
     body.vendor_contact = gs('eVendorContact');
     body.deal_registration = gs('eDealReg');
 

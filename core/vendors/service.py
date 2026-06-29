@@ -5,7 +5,8 @@
 """
 from __future__ import annotations
 
-from datetime import date as date_type
+from datetime import date as date_type, datetime, timezone
+from dateutil.relativedelta import relativedelta
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session as DBSession
@@ -19,6 +20,7 @@ ROP_ALLOWED_FIELDS: frozenset[str] = frozenset({"vendor_contact", "deal_registra
 # Все редактируемые поля (без id, tenant_id, created_at, updated_at)
 ALL_EDITABLE_FIELDS: frozenset[str] = frozenset({
     "company_type", "name", "categories", "status_type", "status_text", "valid_until",
+    "renewal_decision",
     "partner_id", "legal_entity", "directions", "discount", "purchase_method",
     "portal_url", "portal_login", "portal_password",
     "vendor_contact", "deal_registration", "mop_comments",
@@ -77,6 +79,7 @@ def unique_categories(db: DBSession, tenant_id: int) -> list[str]:
 
 def vendor_to_list_item(v: Vendor) -> dict:
     """Сокращённый словарь вендора для строки таблицы (без чувствительных данных)."""
+    check_and_update_status(v)
     return {
         "id": v.id,
         "name": v.name,
@@ -85,6 +88,7 @@ def vendor_to_list_item(v: Vendor) -> dict:
         "status_type": v.status_type,
         "status_text": v.status_text,
         "valid_until": v.valid_until.isoformat() if v.valid_until else None,
+        "has_warning": should_show_warning(v),
         "directions": v.directions,
         "partner_id": v.partner_id,
     }
@@ -127,8 +131,46 @@ def delete_vendor(db: DBSession, vendor: Vendor) -> None:
     db.flush()
 
 
+def check_and_update_status(v: Vendor) -> None:
+    """Проверить и обновить статус вендора если срок истек.
+
+    Логика:
+    - Если valid_until < сегодня и renewal_decision != 'yes' → status_type = 'overdue'
+    """
+    if not v.valid_until:
+        return
+    today = date_type.today()
+    if v.valid_until < today and v.renewal_decision != "yes":
+        v.status_type = "overdue"
+
+
+def should_show_warning(v: Vendor) -> bool:
+    """Вернуть True если нужно показать иконку (!) для маркетолога/аналитика.
+
+    Логика:
+    - Показываем (!) если: valid_until не пуст И
+      - (статус 'overdue' И renewal_decision != 'no') ИЛИ
+      - (valid_until < сегодня + 30 дней И status_type != 'overdue' И renewal_decision != 'yes')
+    """
+    if not v.valid_until:
+        return False
+    today = date_type.today()
+    warning_date = today + relativedelta(months=1)
+
+    # Если просрочен и не выбран "не продлеваем" - показываем иконку
+    if v.status_type == "overdue" and v.renewal_decision != "no":
+        return True
+
+    # Если до истечения менее месяца (и не просрочен) - показываем иконку
+    if v.valid_until <= warning_date and v.status_type != "overdue":
+        return True
+
+    return False
+
+
 def vendor_to_detail(v: Vendor) -> dict:
     """Полный словарь вендора; пароль портала расшифрован."""
+    check_and_update_status(v)
     return {
         "id": v.id,
         "name": v.name,
@@ -137,6 +179,8 @@ def vendor_to_detail(v: Vendor) -> dict:
         "status_type": v.status_type,
         "status_text": v.status_text,
         "valid_until": v.valid_until.isoformat() if v.valid_until else None,
+        "renewal_decision": v.renewal_decision,
+        "has_warning": should_show_warning(v),
         "partner_id": v.partner_id,
         "legal_entity": v.legal_entity,
         "directions": v.directions,

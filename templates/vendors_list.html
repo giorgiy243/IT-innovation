@@ -74,7 +74,8 @@ html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,san
 .cl-card.s-suspended .cl-stripe{background:linear-gradient(180deg,#3d2600,#7a4a00);}
 .cl-card.s-revoked .cl-stripe,
 .cl-card.s-deauth .cl-stripe,
-.cl-card.s-closed .cl-stripe{background:linear-gradient(180deg,#3d1010,#7a2020);}
+.cl-card.s-closed .cl-stripe,
+.cl-card.s-overdue .cl-stripe{background:linear-gradient(180deg,#3d1010,#7a2020);}
 .cl-card.s-none .cl-stripe,
 .cl-card.s-unknown .cl-stripe{background:linear-gradient(180deg,#2a3040,#3a4050);}
 
@@ -110,9 +111,10 @@ html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,san
 .badge{display:inline-block;font-size:11px;font-weight:600;border-radius:5px;padding:2px 8px;white-space:nowrap;}
 .badge-active{background:#e8f5d9;color:#4a7a1e;}
 .badge-suspended{background:#fef9c3;color:#854d0e;}
-.badge-revoked,.badge-deauth,.badge-closed{background:#fde8e8;color:#991b1b;}
+.badge-revoked,.badge-deauth,.badge-closed,.badge-overdue{background:#fde8e8;color:#991b1b;}
 .badge-none{background:#eef2f7;color:#64748b;}
 .badge-unknown{background:#f1f5f9;color:#94a3b8;}
+.warn-icon{color:#d97706;font-weight:700;margin-right:2px;}
 
 .empty-state{padding:48px;text-align:center;color:var(--mid);font-size:14px;}
 .scroll-top{position:fixed;bottom:24px;right:24px;width:44px;height:44px;border-radius:50%;background:var(--slate);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(30,40,50,.3);opacity:0;pointer-events:none;transition:opacity .2s,transform .18s,background .15s;z-index:999;}
@@ -229,6 +231,7 @@ html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,san
           <option value="deauth">Деавторизован</option>
           <option value="closed">Закрыт</option>
           <option value="none">Без статуса</option>
+          <option value="overdue">Просрочен</option>
         </select>
         <button class="btn-reset" id="resetBtn">Сбросить</button>
         <button class="btn-add" id="btnAdd">+ Добавить</button>
@@ -261,16 +264,16 @@ const TYPE_CLASS = {vendor: 't-vendor', distributor: 't-distributor', partner: '
 
 const STATUS_LABEL = {
   active: 'Активный', suspended: 'Приостановлен', revoked: 'Отозван',
-  deauth: 'Деавторизован', closed: 'Закрыт', none: 'Без статуса'
+  deauth: 'Деавторизован', closed: 'Закрыт', none: 'Без статуса', overdue: 'Просрочен'
 };
 const STATUS_CLASS = {
   active: 'badge-active', suspended: 'badge-suspended',
   revoked: 'badge-revoked', deauth: 'badge-deauth', closed: 'badge-closed',
-  none: 'badge-none'
+  none: 'badge-none', overdue: 'badge-overdue'
 };
 const STRIPE_LABEL = {
   active: 'Активный', suspended: 'Приост.', revoked: 'Отозван',
-  deauth: 'Деавт.', closed: 'Закрыт', none: 'Нет'
+  deauth: 'Деавт.', closed: 'Закрыт', none: 'Нет', overdue: 'Просроч.'
 };
 const VENDOR_ICON = `<svg width="14" height="14" style="color:rgba(255,255,255,.75);" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>`;
 
@@ -351,6 +354,7 @@ function renderCards(vendors, total) {
     const metaRight = v.partner_id
       ? `<span class="cl-meta" style="color:var(--slate)">${esc(v.partner_id)}</span>`
       : '';
+    const warnIcon = v.has_warning ? '<span class="warn-icon">⚠</span>' : '';
     return `<div class="cl-card s-${st}" onclick="window.location='/vendors/${v.id}'">
       <div class="cl-stripe">
         <div class="cl-stripe-icon">${VENDOR_ICON}</div>
@@ -362,7 +366,7 @@ function renderCards(vendors, total) {
             <div class="cl-name">${esc(v.name)}${typeChip}</div>
             <div class="cl-sub">${v.categories ? esc(v.categories) : ''}</div>
           </div>
-          <span class="badge ${badgeCls} cl-badge">${badgeLbl}</span>
+          <span class="badge ${badgeCls} cl-badge">${warnIcon}${badgeLbl}</span>
         </div>
         <div class="cl-ft">
           ${metaLeft}

@@ -102,7 +102,8 @@ html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,san
 .mod-card.c-blue .mod-card-head{background:linear-gradient(120deg,#0a2040,#1a4a80);}
 .mod-card.c-amber .mod-card-head{background:linear-gradient(120deg,#3d2600,#7a4a00);}
 .mod-card.c-gray .mod-card-head{background:linear-gradient(120deg,#2a3040,#3a4050);}
-.mod-card-name{font-size:13.5px;font-weight:700;color:#fff;}
+.mod-card-name{font-size:13.5px;font-weight:700;color:#fff;display:flex;align-items:center;gap:6px;}
+.mod-card-warn{color:#fcd34d;font-weight:700;}
 .mod-card-sub{font-size:11.5px;color:rgba(255,255,255,.55);margin-top:2px;}
 .mod-card-body{padding:14px 15px;background:#fff;}
 .mod-card-scope{font-size:13px;color:var(--mid);}
@@ -228,6 +229,21 @@ async function init() {
     const card = document.createElement(url ? 'a' : 'div');
     card.className = 'mod-card ' + (MODULE_COLORS[m.code] || 'c-gray');
     if (url) { card.href = url; card.style.textDecoration = 'none'; }
+
+    // Проверяем есть ли просроченные вендоры для sales модуля
+    let warnIcon = '';
+    if (m.code === 'sales' && ['marketer', 'analyst'].some(r => nav.roles.includes(r))) {
+      // Запросим количество просроченных вендоров асинхронно
+      fetch('/api/vendors?status_type=overdue').then(r => r.json()).then(data => {
+        if (data.total > 0 && card.querySelector('.mod-card-warn') === null) {
+          const nameEl = card.querySelector('.mod-card-name');
+          if (nameEl) {
+            nameEl.insertAdjacentHTML('afterbegin', '<span class="mod-card-warn">⚠</span>');
+          }
+        }
+      }).catch(() => {});
+    }
+
     card.innerHTML = `<div class="mod-card-head"><div><div class="mod-card-name">${m.name}</div><div class="mod-card-sub">Модуль</div></div></div><div class="mod-card-body"><div class="mod-card-scope">${SCOPE_LABEL[m.scope] || m.scope}</div></div>`;
     grid.appendChild(card);
   });

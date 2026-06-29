@@ -192,8 +192,10 @@ class Company(Base):
 # Дистрибьюторы — отдельная таблица (в CSV было 5×5 колонок — нормализовано).
 
 # Допустимые типы партнёрского статуса. Хранятся строкой — дополняемо без миграции.
-VENDOR_STATUS_VALUES = ("active", "suspended", "revoked", "deauth", "closed", "none")
+VENDOR_STATUS_VALUES = ("active", "suspended", "revoked", "deauth", "closed", "none", "overdue")
 
+# Решение по продлению статуса (null = не принято, yes = продлеваем, no = не продлеваем)
+RENEWAL_DECISION_VALUES = ("yes", "no")
 
 COMPANY_TYPE_VALUES = ("vendor", "distributor", "partner")
 
@@ -225,6 +227,7 @@ class Vendor(Base):
     status_type: Mapped[str | None] = mapped_column(String(20), nullable=True)
     status_text: Mapped[str | None] = mapped_column(String(500), nullable=True)
     valid_until: Mapped[date | None] = mapped_column(Date, nullable=True)
+    renewal_decision: Mapped[str | None] = mapped_column(String(10), nullable=True)
     partner_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
     legal_entity: Mapped[str | None] = mapped_column(String(255), nullable=True)
     directions: Mapped[str | None] = mapped_column(String(500), nullable=True)
