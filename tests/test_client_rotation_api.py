@@ -287,6 +287,17 @@ class TestAssignment:
         r = client.post("/api/client-rotation/assignments", json={"transfer_status": "x"})
         assert r.status_code == 422
 
+    def test_bool_company_id_rejected_422(self, client, db):
+        # JSON true не должен пройти как id=1 (bool - подкласс int).
+        t = _tenant(db)
+        _user(db, t, "rop", "rop", "all")
+        c = _company(db, t.id, "Клиент", "7700000001", "7700000001")
+        _crd(db, t.id, c.id)
+        db.commit()
+        _login(client, "rop")
+        r = client.post("/api/client-rotation/assignments", json={"company_id": True})
+        assert r.status_code == 422
+
     def test_unknown_company_404(self, client, db):
         t = _tenant(db)
         _user(db, t, "rop", "rop", "all")

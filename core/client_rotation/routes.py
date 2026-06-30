@@ -93,7 +93,8 @@ def api_save_assignment(
     transfer_status (опц.). Запись валидируется в границах арендатора.
     """
     company_id = body.get("company_id")
-    if not isinstance(company_id, int):
+    # bool - подкласс int, поэтому отсекаем явно: JSON true не должен стать id=1.
+    if not isinstance(company_id, int) or isinstance(company_id, bool):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="company_id обязателен (int)",
@@ -103,7 +104,7 @@ def api_save_assignment(
 
     emp_id = body.get("assigned_to_employee_id")
     if emp_id is not None:
-        if not isinstance(emp_id, int) or not employee_in_tenant(db, auth.tenant_id, emp_id):
+        if not isinstance(emp_id, int) or isinstance(emp_id, bool) or not employee_in_tenant(db, auth.tenant_id, emp_id):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="assigned_to_employee_id неизвестен",

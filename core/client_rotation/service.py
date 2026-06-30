@@ -22,6 +22,7 @@ from core.models import (
     Company,
     Employee,
     Summary,
+    User,
 )
 
 # scope, при которых менеджерный фильтр не накладывается (видно всё в tenant).
@@ -30,8 +31,6 @@ _UNRESTRICTED_SCOPES = frozenset({"all", "domain"})
 
 def get_user_employee(db: DBSession, tenant_id: int, user_id: int) -> Employee | None:
     """Сотрудник, привязанный к пользователю (User.employee_id), или None."""
-    from core.models import User
-
     user = db.get(User, user_id)
     if user is None or user.employee_id is None:
         return None

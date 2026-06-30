@@ -347,15 +347,13 @@ function renderTable(clients, total){
       <td>${statusBadge(c.transfer_status)}</td>
       <td>${c.assigned_to ? `<span class="assigned-pill">${esc(c.assigned_to)}</span>` : '-'}</td>
     </tr>`).join('');
-  // клик по строке -> модал
-  _lastClients = clients;
+  // клик по строке -> модал (клиент берётся из замыкания clients по индексу строки)
   body.querySelectorAll('tr[data-idx]').forEach(tr => {
     tr.addEventListener('click', () => openAssign(clients[+tr.dataset.idx]));
   });
 }
 
 // ─── Модал назначения ──────────────────────────────────────────────────────
-let _lastClients = [];
 let _modalClient = null;
 
 function infoCell(lbl, val){
