@@ -88,6 +88,11 @@ class User(Base):
     must_change_password: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default=func.false()
     )
+    # Дата последней смены пароля. nullable: у старых учёток ещё не заполнена,
+    # выставляется при каждой смене (initial/self_change) через password_log.
+    password_changed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -137,6 +142,40 @@ class Session(Base):
     )
 
     user: Mapped[User] = relationship(back_populates="sessions")
+
+
+# Типы событий журнала смены пароля. initial — пароль задан при выдаче доступа
+# или создании учётки; self_change — пользователь сменил свой пароль сам.
+PASSWORD_EVENT_VALUES = ("initial", "self_change")
+
+
+class PasswordChangeLog(Base):
+    """Журнал смены паролей (append-only, без FK-каскадов).
+
+    По образцу vendor_audit_log. Значение пароля/хеша НИКОГДА не пишется —
+    только факт: чей пароль, кто сменил, какого типа событие, когда.
+    user_login/actor_login — снимки логинов на момент события: запись остаётся
+    читаемой, даже если учётка позже удалена.
+    """
+
+    __tablename__ = "password_change_log"
+    # Составной индекс под фактический запрос истории (tenant_id, user_id).
+    # Явное имя совпадает с миграцией 0112 — иначе index=True даст автоимена и
+    # autogenerate увидит ложный drift (как в employee_positions).
+    __table_args__ = (
+        Index("ix_password_change_log_tenant_user", "tenant_id", "user_id"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    user_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    user_login: Mapped[str] = mapped_column(String(150), nullable=False)
+    actor_user_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    actor_login: Mapped[str] = mapped_column(String(150), nullable=False)
+    event: Mapped[str] = mapped_column(String(20), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=utcnow, server_default=func.now()
+    )
 
 
 # --- Мастер-данные (Фаза 1.4): сотрудники и компании-клиенты ---

@@ -21,6 +21,7 @@ from core.auth.passwords import (
     password_policy_errors,
     verify_password,
 )
+from core.auth.password_log import log_password_change
 from core.auth.service import (
     SESSION_COOKIE,
     AuthContext,
@@ -136,6 +137,14 @@ def change_password(
 
     user.password_hash = hash_password(new_password)
     user.must_change_password = False
+    log_password_change(
+        db,
+        tenant_id=user.tenant_id,
+        user=user,
+        actor_user_id=user.id,
+        actor_login=user.login,
+        event="self_change",
+    )
     db.commit()
     response.status_code = status.HTTP_204_NO_CONTENT
     return response

@@ -15,6 +15,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session as DBSession
 
 from core.auth.deps import get_current_auth
+from core.auth.password_log import get_password_history, log_password_change
 from core.auth.passwords import hash_password
 from core.auth.service import AuthContext
 from core.db import get_db
@@ -64,6 +65,8 @@ class UserItem(BaseModel):
     login: str
     is_active: bool
     created_at: str
+    password_changed_at: str | None = None
+    must_change_password: bool = False
     roles: list[RoleInfo]
 
 
@@ -326,6 +329,7 @@ def grant_access(
     emp_id: int,
     db: DBSession = Depends(get_db),
     access: AccessProfile = Depends(_require_security),
+    auth: AuthContext = Depends(get_current_auth),
 ) -> EmployeeItem:
     """Выдать сотруднику учётную запись для входа.
 
@@ -361,6 +365,14 @@ def grant_access(
     )
     db.add(user)
     db.flush()
+    log_password_change(
+        db,
+        tenant_id=access.tenant_id,
+        user=user,
+        actor_user_id=auth.user_id,
+        actor_login=auth.login,
+        event="initial",
+    )
 
     if emp.role_code:
         role = db.execute(
@@ -413,6 +425,8 @@ def _user_to_item(u: User) -> UserItem:
         login=u.login,
         is_active=u.is_active,
         created_at=u.created_at.isoformat(),
+        password_changed_at=u.password_changed_at.isoformat() if u.password_changed_at else None,
+        must_change_password=u.must_change_password,
         roles=roles,
     )
 
@@ -439,6 +453,7 @@ def create_user(
     payload: CreateUserRequest,
     db: DBSession = Depends(get_db),
     access: AccessProfile = Depends(_require_security),
+    auth: AuthContext = Depends(get_current_auth),
 ) -> UserItem:
     login = payload.login.strip()
     if not login:
@@ -457,6 +472,14 @@ def create_user(
     )
     db.add(user)
     db.flush()
+    log_password_change(
+        db,
+        tenant_id=access.tenant_id,
+        user=user,
+        actor_user_id=auth.user_id,
+        actor_login=auth.login,
+        event="initial",
+    )
 
     if payload.role_code:
         scope = payload.scope if payload.scope in SCOPE_VALUES else "own"
@@ -491,3 +514,32 @@ def patch_user(
     db.commit()
     db.refresh(user)
     return _user_to_item(user)
+
+
+class PasswordHistoryItem(BaseModel):
+    id: int
+    event: str
+    event_label: str
+    actor_login: str
+    created_at: str
+
+
+@router.get(
+    "/users/{user_id}/password-history",
+    response_model=list[PasswordHistoryItem],
+)
+def password_history(
+    user_id: int,
+    db: DBSession = Depends(get_db),
+    access: AccessProfile = Depends(_require_security),
+) -> list[PasswordHistoryItem]:
+    """История смены пароля учётки. Доступ: только роль security."""
+    user = db.get(User, user_id)
+    if user is None or user.tenant_id != access.tenant_id:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+    return [
+        PasswordHistoryItem(**item)
+        for item in get_password_history(
+            db, tenant_id=access.tenant_id, user_id=user_id
+        )
+    ]
