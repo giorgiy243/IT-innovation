@@ -10,6 +10,9 @@ SQLite in-memory (StaticPool) - изоляция от prod-БД. Покрыва�
 """
 from __future__ import annotations
 
+import io
+
+import openpyxl
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -19,6 +22,7 @@ from sqlalchemy.pool import StaticPool
 
 from core.auth.passwords import hash_password
 from core.auth.routes import router as auth_router
+from core.client_rotation.export import TEMPLATE_HEADERS
 from core.client_rotation.routes import router as client_rotation_router
 from core.db import get_db
 from core.models import (
@@ -30,6 +34,7 @@ from core.models import (
     Module,
     Role,
     RoleModule,
+    Summary,
     Tenant,
     User,
     UserRole,
@@ -117,10 +122,10 @@ def _company(s, tenant_id, name, source_key, inn=None) -> Company:
     return c
 
 
-def _crd(s, tenant_id, company_id, current_manager=None, score=0, transfer_status=None) -> ClientRotationData:
+def _crd(s, tenant_id, company_id, current_manager=None, score=0, transfer_status=None, **extra) -> ClientRotationData:
     crd = ClientRotationData(
         tenant_id=tenant_id, company_id=company_id,
-        current_manager=current_manager, score=score, transfer_status=transfer_status,
+        current_manager=current_manager, score=score, transfer_status=transfer_status, **extra,
     )
     s.add(crd)
     s.flush()
@@ -313,3 +318,87 @@ def test_tenant_isolation(client, db):
     _login(client, "rop1")
     data = client.get("/api/client-rotation/clients").json()
     assert data["total"] == 0  # клиент другого арендатора не виден
+
+
+# --- экспорт в 1С (xlsx) ---
+
+def _xlsx_rows(content: bytes) -> list[tuple]:
+    wb = openpyxl.load_workbook(io.BytesIO(content))
+    return list(wb.active.iter_rows(values_only=True))
+
+
+class TestExport:
+    def test_returns_xlsx_with_assigned(self, client, db):
+        t = _tenant(db)
+        _user(db, t, "rop", "rop", "all")
+        emp = _employee(db, t.id, "Принимающий", "Принимающий П.П.")
+        c = _company(db, t.id, "Альфа", "7700000001", "7700000001")
+        _crd(db, t.id, c.id, current_manager="Иванов И.И.", phone="111")
+        db.add(Assignment(tenant_id=t.id, company_id=c.id, assigned_to_employee_id=emp.id))
+        db.commit()
+        _login(client, "rop")
+        r = client.get("/api/client-rotation/export")
+        assert r.status_code == 200
+        assert "spreadsheetml" in r.headers["content-type"]
+        rows = _xlsx_rows(r.content)
+        assert rows[0] == tuple(TEMPLATE_HEADERS)
+        assert any(row[1] == "Альфа" and row[0] == "Принимающий П.П." for row in rows[1:])
+
+    def test_only_assigned_exported(self, client, db):
+        t = _tenant(db)
+        _user(db, t, "rop", "rop", "all")
+        c = _company(db, t.id, "БезМенеджера", "7700000002", "7700000002")
+        _crd(db, t.id, c.id)
+        db.add(Assignment(tenant_id=t.id, company_id=c.id, transfer_status="свой"))  # без менеджера
+        db.commit()
+        _login(client, "rop")
+        rows = _xlsx_rows(client.get("/api/client-rotation/export").content)
+        assert len(rows) == 1  # только шапка
+
+    def test_holding_expansion(self, client, db):
+        t = _tenant(db)
+        _user(db, t, "rop", "rop", "all")
+        emp = _employee(db, t.id, "Босс", "Босс Б.Б.")
+        head = _company(db, t.id, "Голова", "7700000010", "7700000010")
+        head.holding_id, head.is_holding_head = "7700000010", True
+        member = _company(db, t.id, "Член", "7700000011", "7700000011")
+        member.holding_id, member.is_holding_head = "7700000010", False
+        _crd(db, t.id, head.id)
+        _crd(db, t.id, member.id)
+        db.add(Assignment(tenant_id=t.id, company_id=head.id, assigned_to_employee_id=emp.id))
+        db.commit()
+        _login(client, "rop")
+        rows = _xlsx_rows(client.get("/api/client-rotation/export").content)
+        names = {row[1] for row in rows[1:]}
+        managers = {row[0] for row in rows[1:]}
+        assert names == {"Голова", "Член"}  # холдинг развёрнут
+        assert managers == {"Босс Б.Б."}    # оба под одним менеджером
+
+    def test_summary_contact_priority(self, client, db):
+        t = _tenant(db)
+        _user(db, t, "rop", "rop", "all")
+        emp = _employee(db, t.id, "М", "М М.М.")
+        c = _company(db, t.id, "Клиент", "7700000020", "7700000020")
+        _crd(db, t.id, c.id, phone="auto-phone", contact_person="auto-name")
+        db.add(Summary(tenant_id=t.id, company_id=c.id, contact_phone="verified-phone", contact_name="verified-name"))
+        db.add(Assignment(tenant_id=t.id, company_id=c.id, assigned_to_employee_id=emp.id))
+        db.commit()
+        _login(client, "rop")
+        rows = _xlsx_rows(client.get("/api/client-rotation/export").content)
+        row = rows[1]
+        assert row[2] == "verified-phone"  # summary важнее crd
+        assert row[3] == "verified-name"
+
+    def test_surrogate_inn_empty(self, client, db):
+        t = _tenant(db)
+        _user(db, t, "rop", "rop", "all")
+        emp = _employee(db, t.id, "М", "М М.М.")
+        c = _company(db, t.id, "БезИНН", "|БезИНН|Иванов", inn=None)  # суррогат
+        _crd(db, t.id, c.id)
+        db.add(Assignment(tenant_id=t.id, company_id=c.id, assigned_to_employee_id=emp.id))
+        db.commit()
+        _login(client, "rop")
+        rows = _xlsx_rows(client.get("/api/client-rotation/export").content)
+        # ИНН пустой (openpyxl читает пустую ячейку как None), суррогат не утёк.
+        assert rows[1][8] in (None, "")
+        assert "|" not in (rows[1][8] or "")

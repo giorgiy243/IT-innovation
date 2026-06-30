@@ -11,10 +11,12 @@ POST /api/client-rotation/assignments  - назначить менеджера /
 from __future__ import annotations
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from fastapi.responses import Response
 from sqlalchemy.orm import Session as DBSession
 
 from core.auth.deps import get_current_auth
 from core.auth.service import AuthContext
+from core.client_rotation.export import export_assignments_xlsx
 from core.client_rotation.service import (
     company_in_tenant,
     employee_in_tenant,
@@ -26,6 +28,8 @@ from core.client_rotation.service import (
 from core.db import get_db
 from core.rbac.deps import require_module
 from core.rbac.service import ModuleAccess
+
+_XLSX_MEDIA = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 router = APIRouter(prefix="/api/client-rotation", tags=["client_rotation"])
 
@@ -59,6 +63,21 @@ def api_managers(
 ) -> list[dict]:
     """Принимающие менеджеры: активные сотрудники арендатора с crm_name."""
     return list_receiving_managers(db, auth.tenant_id)
+
+
+@router.get("/export")
+def api_export(
+    _access: ModuleAccess = Depends(require_module(_MODULE)),
+    auth: AuthContext = Depends(get_current_auth),
+    db: DBSession = Depends(get_db),
+) -> Response:
+    """Выгрузка назначений в 1С (xlsx по шаблону ДСП, с разворотом холдингов)."""
+    data = export_assignments_xlsx(db, auth.tenant_id)
+    return Response(
+        content=data,
+        media_type=_XLSX_MEDIA,
+        headers={"Content-Disposition": "attachment; filename=dsp_export.xlsx"},
+    )
 
 
 @router.post("/assignments")
