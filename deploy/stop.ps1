@@ -1,19 +1,24 @@
 $root = Split-Path -Parent $PSScriptRoot
 $pidFile = "$root\.uvicorn.pid"
 
-if (-not (Test-Path $pidFile)) {
-    Write-Host "[IT-innovation] Не запущен"
-    exit 0
-}
+# Гасим ВСЕ процессы uvicorn core.app:app, а не только PID из pidfile.
+# Иначе «осиротевший» процесс может пережить остановку, держать порт и
+# отдавать устаревший код (после рестарта health-check отвечает он -> ложное «OK»).
+$procs = @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
+    Where-Object { $_.CommandLine -like '*uvicorn*core.app:app*' })
 
-$savedPid = [int](Get-Content $pidFile -Raw).Trim()
-$proc = Get-Process -Id $savedPid -ErrorAction SilentlyContinue
-
-if ($proc) {
-    Stop-Process -Id $savedPid -Force
-    Write-Host "[IT-innovation] Остановлен (PID $savedPid)"
+if ($procs.Count -gt 0) {
+    foreach ($p in $procs) {
+        # Дочерний процесс мог уже умереть вместе с родителем - проверяем перед kill,
+        # чтобы не словить «process not found» и не уронить exit-код.
+        if (Get-Process -Id $p.ProcessId -ErrorAction SilentlyContinue) {
+            Stop-Process -Id $p.ProcessId -Force -ErrorAction SilentlyContinue
+            Write-Host "[IT-innovation] Остановлен PID $($p.ProcessId)"
+        }
+    }
 } else {
-    Write-Host "[IT-innovation] Процесс $savedPid уже не работал"
+    Write-Host "[IT-innovation] Не запущен (процессов uvicorn core.app не найдено)"
 }
 
 Remove-Item $pidFile -Force -ErrorAction SilentlyContinue
+exit 0
