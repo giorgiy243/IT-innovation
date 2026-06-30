@@ -21,7 +21,7 @@ from sqlalchemy.orm import Session as DBSession
 from core.auth.deps import get_current_auth
 from core.auth.service import AuthContext
 from core.client_rotation.export import export_assignments_by_manager
-from core.client_rotation.export_managers import build_managers_doc
+from core.client_rotation.export_managers import build_manager_docs
 from core.client_rotation.service import (
     company_in_tenant,
     employee_in_tenant,
@@ -114,17 +114,27 @@ def api_export_managers(
     auth: AuthContext = Depends(get_current_auth),
     db: DBSession = Depends(get_db),
 ) -> Response:
-    """Выгрузка для МОП: standalone HTML-досье для принимающих менеджеров.
+    """Выгрузка для МОП: ZIP с отдельным HTML-досье на каждого принимающего МОП.
 
-    Один самодостаточный HTML-файл (инлайн-CSS) со всеми назначенными клиентами,
-    сгруппированными по принимающему менеджеру. ПД (контакты, ИНН) - только в
-    границах арендатора и под доступом к модулю.
+    Каждый файл - самодостаточная HTML-страница (инлайн-CSS) с клиентами одного
+    принимающего менеджера. Имена файлов - по ФИО МОП, при совпадении добавляется
+    числовой суффикс. ПД (контакты, ИНН) - только в границах арендатора и под
+    доступом к модулю.
     """
-    html = build_managers_doc(db, auth.tenant_id)
+    docs = build_manager_docs(db, auth.tenant_id)
+    buf = io.BytesIO()
+    used: dict[str, int] = {}
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        for mgr, html in docs:
+            base = _safe_filename(mgr)
+            n = used.get(base, 0)
+            used[base] = n + 1
+            fname = f"{base}.html" if n == 0 else f"{base} ({n}).html"
+            zf.writestr(fname, html)
     return Response(
-        content=html,
-        media_type="text/html; charset=utf-8",
-        headers={"Content-Disposition": "attachment; filename=rotation_managers.html"},
+        content=buf.getvalue(),
+        media_type=_ZIP_MEDIA,
+        headers={"Content-Disposition": "attachment; filename=rotation_managers.zip"},
     )
 
 

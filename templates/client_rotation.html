@@ -775,7 +775,7 @@ async function exportXlsx(){
   }
 }
 
-// Выгрузка для МОП: standalone HTML-досье (то же, что в client-rotate).
+// Выгрузка для МОП: ZIP с отдельным HTML-досье на каждого принимающего МОП.
 async function exportMop(){
   const btn = document.getElementById('btnExportMop');
   btn.disabled = true;
@@ -788,7 +788,7 @@ async function exportMop(){
     const stamp = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'rotation_managers_' + stamp + '.html';
+    a.download = 'rotation_managers_' + stamp + '.zip';
     document.body.appendChild(a); a.click(); a.remove();
     URL.revokeObjectURL(a.href);
   } finally {

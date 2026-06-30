@@ -503,10 +503,19 @@ class TestExport:
         assert "|" not in (rows[1][8] or "")
 
 
-# --- выгрузка для МОП (HTML-досье) ---
+# --- выгрузка для МОП (ZIP: отдельный HTML-файл на каждого МОП) ---
+
+def _zip_html(content: bytes) -> dict[str, str]:
+    """Имя файла внутри ZIP -> его HTML-текст."""
+    out: dict[str, str] = {}
+    with zipfile.ZipFile(io.BytesIO(content)) as zf:
+        for name in zf.namelist():
+            out[name] = zf.read(name).decode("utf-8")
+    return out
+
 
 class TestExportManagers:
-    def test_returns_html_with_manager_and_client(self, client, db):
+    def test_returns_zip_with_per_manager_file(self, client, db):
         t = _tenant(db)
         _user(db, t, "rop", "rop", "all")
         emp = _employee(db, t.id, "Принимающий", "Принимающий П.П.")
@@ -517,11 +526,32 @@ class TestExportManagers:
         _login(client, "rop")
         r = client.get("/api/client-rotation/export-managers")
         assert r.status_code == 200
-        assert "text/html" in r.headers["content-type"]
-        assert "attachment" in r.headers["content-disposition"]
-        assert "Принимающий П.П." in r.text
-        assert "Альфа" in r.text
-        assert "Высокий приоритет" in r.text  # вердикт по score=80
+        assert "zip" in r.headers["content-type"]
+        files = _zip_html(r.content)
+        assert "Принимающий П.П..html" in files
+        html = files["Принимающий П.П..html"]
+        assert "Альфа" in html
+        assert "Высокий приоритет" in html              # вердикт по score=80
+        assert "Досье для МОП: Принимающий П.П." in html  # имя МОП в заголовке файла
+
+    def test_separate_file_per_manager(self, client, db):
+        # Два разных принимающих МОП -> два HTML-файла в архиве, без перекрёстных клиентов.
+        t = _tenant(db)
+        _user(db, t, "rop", "rop", "all")
+        e1 = _employee(db, t.id, "Первый", "Первый П.П.")
+        e2 = _employee(db, t.id, "Второй", "Второй В.В.")
+        c1 = _company(db, t.id, "Альфа", "7700000001", "7700000001")
+        c2 = _company(db, t.id, "Бета", "7700000002", "7700000002")
+        _crd(db, t.id, c1.id)
+        _crd(db, t.id, c2.id)
+        db.add(Assignment(tenant_id=t.id, company_id=c1.id, assigned_to_employee_id=e1.id))
+        db.add(Assignment(tenant_id=t.id, company_id=c2.id, assigned_to_employee_id=e2.id))
+        db.commit()
+        _login(client, "rop")
+        files = _zip_html(client.get("/api/client-rotation/export-managers").content)
+        assert set(files) == {"Первый П.П..html", "Второй В.В..html"}
+        assert "Альфа" in files["Первый П.П..html"] and "Бета" not in files["Первый П.П..html"]
+        assert "Бета" in files["Второй В.В..html"] and "Альфа" not in files["Второй В.В..html"]
 
     def test_only_assigned_clients_included(self, client, db):
         t = _tenant(db)
@@ -535,11 +565,12 @@ class TestExportManagers:
         db.add(Assignment(tenant_id=t.id, company_id=orphan.id, transfer_status="свой"))  # без принимающего
         db.commit()
         _login(client, "rop")
-        r = client.get("/api/client-rotation/export-managers")
-        assert "Назначенный" in r.text
-        assert "БезПринимающего" not in r.text
+        files = _zip_html(client.get("/api/client-rotation/export-managers").content)
+        joined = "".join(files.values())
+        assert "Назначенный" in joined
+        assert "БезПринимающего" not in joined
 
-    def test_empty_doc_when_no_assignments(self, client, db):
+    def test_empty_zip_when_no_assignments(self, client, db):
         t = _tenant(db)
         _user(db, t, "rop", "rop", "all")
         c = _company(db, t.id, "Альфа", "7700000001", "7700000001")
@@ -548,24 +579,7 @@ class TestExportManagers:
         _login(client, "rop")
         r = client.get("/api/client-rotation/export-managers")
         assert r.status_code == 200
-        assert "Нет клиентов с назначенным получателем" in r.text
-
-    def test_grouping_by_manager(self, client, db):
-        t = _tenant(db)
-        _user(db, t, "rop", "rop", "all")
-        e1 = _employee(db, t.id, "Первый", "Первый П.П.")
-        e2 = _employee(db, t.id, "Второй", "Второй В.В.")
-        c1 = _company(db, t.id, "Альфа", "7700000001", "7700000001")
-        c2 = _company(db, t.id, "Бета", "7700000002", "7700000002")
-        _crd(db, t.id, c1.id)
-        _crd(db, t.id, c2.id)
-        db.add(Assignment(tenant_id=t.id, company_id=c1.id, assigned_to_employee_id=e1.id))
-        db.add(Assignment(tenant_id=t.id, company_id=c2.id, assigned_to_employee_id=e2.id))
-        db.commit()
-        _login(client, "rop")
-        r = client.get("/api/client-rotation/export-managers")
-        assert "Первый П.П." in r.text and "Второй В.В." in r.text
-        assert "Альфа" in r.text and "Бета" in r.text
+        assert _zip_html(r.content) == {}  # ни одного принимающего - архив пуст
 
     def test_html_escaping(self, client, db):
         t = _tenant(db)
@@ -576,9 +590,9 @@ class TestExportManagers:
         db.add(Assignment(tenant_id=t.id, company_id=c.id, assigned_to_employee_id=emp.id))
         db.commit()
         _login(client, "rop")
-        r = client.get("/api/client-rotation/export-managers")
-        assert "<script>" not in r.text  # экранировано
-        assert "&lt;script&gt;" in r.text
+        html = _zip_html(client.get("/api/client-rotation/export-managers").content)["М М.М..html"]
+        assert "<script>" not in html  # экранировано
+        assert "&lt;script&gt;" in html
 
     def test_rich_fields_render(self, client, db):
         t = _tenant(db)
@@ -598,12 +612,12 @@ class TestExportManagers:
         ))
         db.commit()
         _login(client, "rop")
-        r = client.get("/api/client-rotation/export-managers")
-        assert "Ключевой" in r.text                       # чип уровня
-        assert "Обороты по кварталам" in r.text            # график оборотов
-        assert "Холдинг" in r.text and "ЮЛ-2" in r.text    # разворот холдинга
-        assert "передаём потому что важно" in r.text       # комментарий РОПа
-        assert "ситуация в СП" in r.text                   # блок СП
+        html = _zip_html(client.get("/api/client-rotation/export-managers").content)["М М.М..html"]
+        assert "Ключевой" in html                       # чип уровня
+        assert "Обороты по кварталам" in html            # график оборотов
+        assert "Холдинг" in html and "ЮЛ-2" in html      # разворот холдинга
+        assert "передаём потому что важно" in html       # комментарий РОПа
+        assert "ситуация в СП" in html                   # блок СП
 
     def test_403_without_module(self, client, db):
         t = _tenant(db)
@@ -628,5 +642,6 @@ class TestExportManagers:
         _login(client, "rop")
         r = client.get("/api/client-rotation/export-managers")
         assert r.status_code == 200
-        assert "Кривой" in r.text
-        assert "Низкий приоритет" in r.text  # score=None -> низкий
+        html = _zip_html(r.content)["М М.М..html"]
+        assert "Кривой" in html
+        assert "Низкий приоритет" in html  # score=None -> низкий

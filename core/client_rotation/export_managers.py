@@ -299,13 +299,42 @@ def _card(c: dict) -> str:
     )
 
 
-def build_managers_doc(db: DBSession, tenant_id: int) -> str:
-    """Собирает HTML-досье для принимающих менеджеров (строка)."""
+def _manager_doc(mgr: str, clients: list[dict], date_str: str) -> str:
+    """Самодостаточное HTML-досье для ОДНОГО принимающего менеджера."""
+    cnt = len(clients)
+    head = (
+        '<header class="dochead"><div class="dh-l">'
+        '<div class="brand"><span class="logo"></span>Ротация клиентской базы</div>'
+        f'<h1>Досье для МОП: {esc(mgr) or "без МОП"}</h1>'
+        f'<div class="dhmeta">Сформировано {esc(date_str)} &middot; '
+        f'{cnt} {_plural(cnt, "клиент", "клиента", "клиентов")}</div>'
+        '</div></header>'
+    )
+    cards = "".join(_card(c) for c in clients)
+    title = f"Ротация - досье для {mgr or 'без МОП'} · {date_str}"
+    return (
+        '<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8">'
+        '<meta name="viewport" content="width=device-width,initial-scale=1">'
+        f'<title>{esc(title)}</title>'
+        f'<style>{_CSS}</style></head><body>'
+        '<div class="page">'
+        + head
+        + f'<section class="mgr">{cards}</section>'
+        + '<footer class="docfoot">Конфиденциально · внутренний документ. Приоритет = очерёдность обзвона по score.</footer>'
+        + '</div></body></html>'
+    )
+
+
+def build_manager_docs(db: DBSession, tenant_id: int) -> list[tuple[str, str]]:
+    """[(crm_name принимающего, HTML-досье)] - отдельный файл на каждого МОП.
+
+    Клиенты группируются по принимающему менеджеру (внутри - по score DESC),
+    каждому отдаётся своя самодостаточная HTML-страница. Отсортировано по МОП.
+    """
     rows = _client_rows(db, tenant_id)
     today = date.today()
     date_str = f"{today.day} {_MONTHS_GEN[today.month - 1]} {today.year}"
 
-    # Группировка по принимающему менеджеру; внутри - по score DESC.
     groups: dict[str, list[dict]] = {}
     for mgr, c in rows:
         groups.setdefault(mgr or "", []).append(c)
@@ -313,55 +342,7 @@ def build_managers_doc(db: DBSession, tenant_id: int) -> str:
     for m in mgr_names:
         groups[m].sort(key=lambda c: (c["score"] or 0), reverse=True)
 
-    total = len(rows)
-
-    toc = ""
-    if total:
-        items = "".join(
-            f'<li><a href="#mgr-{i}">{esc(m)}</a><span class="num">{len(groups[m])}</span></li>'
-            for i, m in enumerate(mgr_names)
-        )
-        toc = f'<nav class="toc"><div class="tocl">Содержание · {total} клиентов</div><ul>{items}</ul></nav>'
-
-    sections = ""
-    for i, m in enumerate(mgr_names):
-        cnt = len(groups[m])
-        cards = "".join(_card(c) for c in groups[m])
-        sections += (
-            f'<section class="mgr" id="mgr-{i}">'
-            f'<div class="mgrh"><h2>{esc(m)}</h2>'
-            f'<span class="cnt num">{cnt} {_plural(cnt, "клиент", "клиента", "клиентов")}</span></div>'
-            f'{cards}</section>'
-        )
-
-    empty = (
-        '<div class="emptydoc">Нет клиентов с назначенным получателем. '
-        'Назначьте принимающих менеджеров и повторите выгрузку.</div>'
-        if total == 0 else ""
-    )
-
-    head = (
-        '<header class="dochead"><div class="dh-l">'
-        '<div class="brand"><span class="logo"></span>Ротация клиентской базы</div>'
-        '<h1>Досье для принимающих менеджеров</h1>'
-        f'<div class="dhmeta">Сформировано {esc(date_str)} &middot; {total} {_plural(total, "клиент", "клиента", "клиентов")} '
-        f'&middot; {len(mgr_names)} {_plural(len(mgr_names), "менеджер", "менеджера", "менеджеров")}</div>'
-        '</div></header>'
-    )
-
-    return (
-        '<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8">'
-        '<meta name="viewport" content="width=device-width,initial-scale=1">'
-        f'<title>Ротация клиентской базы - досье для менеджеров · {esc(date_str)}</title>'
-        f'<style>{_CSS}</style></head><body>'
-        '<div class="page">'
-        + head
-        + (toc if total else "")
-        + sections
-        + empty
-        + '<footer class="docfoot">Конфиденциально · внутренний документ. Приоритет = очерёдность обзвона по score.</footer>'
-        + '</div></body></html>'
-    )
+    return [(m, _manager_doc(m, groups[m], date_str)) for m in mgr_names]
 
 
 # CSS перенесён дословно из client-rotate (managerDocCSS).
