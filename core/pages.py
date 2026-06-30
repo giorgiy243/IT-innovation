@@ -43,3 +43,8 @@ def admin_users_page(request: Request) -> HTMLResponse:
 @router.get("/employees", response_class=HTMLResponse)
 def employees_page(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(request, "employees.html")
+
+
+@router.get("/client-rotation", response_class=HTMLResponse)
+def client_rotation_page(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse(request, "client_rotation.html")

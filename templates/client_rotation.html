@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ротация клиентов - IT-innovation</title>
+<style>
+:root{
+  --brand:#81B446;--brand-d:#6a9338;--dark:#1E2832;--slate:#323C50;
+  --mid:#8296AA;--light:#D7DCE6;--bg:#F5FAFA;
+  --nav-bg:#1E2832;--nav-hover:#323C50;
+  --sidebar-w:232px;--topbar-h:56px;
+  --sh:0 2px 10px rgba(30,40,50,.08),0 1px 3px rgba(30,40,50,.05);
+  --sh-hover:0 8px 28px rgba(30,40,50,.13),0 2px 6px rgba(30,40,50,.07);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,sans-serif;color:var(--dark);-webkit-font-smoothing:antialiased;}
+
+.layout{display:flex;height:100vh;overflow:hidden;}
+
+/* Sidebar */
+.sidebar{width:var(--sidebar-w);flex:none;background:var(--nav-bg);display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,.05);}
+.s-logo{height:var(--topbar-h);display:flex;align-items:center;padding:0 16px;gap:10px;border-bottom:1px solid rgba(255,255,255,.07);flex:none;text-decoration:none;transition:background .12s;}
+.s-logo:hover{background:rgba(255,255,255,.05);}
+.logo-mark{width:30px;height:30px;border-radius:8px;flex:none;background:var(--brand);display:flex;align-items:center;justify-content:center;}
+.logo-mark svg{width:16px;height:16px;fill:#fff;}
+.logo-text{font-size:14px;font-weight:700;color:#fff;letter-spacing:-.01em;}
+.nav-body{flex:1;overflow-y:auto;padding:10px 8px;}
+.nav-group-label{font-size:10.5px;font-weight:600;color:rgba(130,150,170,.7);text-transform:uppercase;letter-spacing:.08em;padding:10px 10px 4px;}
+.nav-item{display:flex;align-items:center;gap:9px;height:38px;padding:0 10px;border-radius:7px;font-size:13px;font-weight:500;color:rgba(255,255,255,.6);cursor:pointer;margin-bottom:1px;border-left:2px solid transparent;transition:background .12s,color .12s;text-decoration:none;}
+.nav-item:hover{background:var(--nav-hover);color:#fff;}
+.nav-item.act{background:rgba(129,180,70,.14);color:#fff;border-left-color:var(--brand);}
+.nav-item svg{width:16px;height:16px;flex:none;opacity:.7;}
+.nav-item.act svg{opacity:1;}
+.s-footer{padding:10px 8px;border-top:1px solid rgba(255,255,255,.06);flex:none;}
+.user-row{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;cursor:pointer;}
+.user-row:hover{background:var(--nav-hover);}
+.avatar{width:30px;height:30px;border-radius:8px;flex:none;background:var(--slate);display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:#fff;}
+.u-info{flex:1;min-width:0;}
+.u-name{font-size:12.5px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.u-role{font-size:11px;color:var(--mid);}
+.logout-btn{width:24px;height:24px;display:flex;align-items:center;justify-content:center;border:none;background:transparent;cursor:pointer;border-radius:5px;color:rgba(255,255,255,.3);transition:color .15s,background .15s;flex:none;font-size:16px;line-height:1;}
+.logout-btn:hover{color:#fff;background:rgba(255,255,255,.08);}
+
+/* Main */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{height:var(--topbar-h);flex:none;display:flex;align-items:center;padding:0 24px;background:#fff;border-bottom:1px solid var(--light);gap:12px;}
+.page-h{font-size:15px;font-weight:700;color:var(--dark);}
+.content{flex:1;overflow-y:auto;padding:20px 24px;}
+
+.placeholder{padding:40px 24px;text-align:center;color:var(--mid);}
+.placeholder h3{font-size:16px;color:var(--dark);margin-bottom:8px;}
+</style>
+</head>
+<body>
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <a href="/" class="s-logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 18 18"><path d="M9 2L2 6v6l7 4 7-4V6z" opacity=".3"/><path d="M9 2l7 4-7 4L2 6z"/></svg>
+      </div>
+      <span class="logo-text">IT-innovation</span>
+    </a>
+
+    <div class="nav-body" id="navBody">
+      <div class="nav-group-label">Загрузка...</div>
+    </div>
+
+    <div class="s-footer">
+      <div class="user-row">
+        <div class="avatar" id="userAvatar">?</div>
+        <div class="u-info">
+          <div class="u-name" id="userName">...</div>
+          <div class="u-role" id="userRole">...</div>
+        </div>
+        <button class="logout-btn" title="Выйти" id="logoutBtn">⏻</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <span class="page-h">Ротация клиентов</span>
+    </div>
+    <div class="content">
+      <div class="placeholder">
+        <h3>Ротация клиентов</h3>
+        <p>Функционал в разработке</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const STAFF_ICON = `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M5 7a2.5 2.5 0 100-5 2.5 2.5 0 000 5zm-4 7a4 4 0 018 0H1zm9-7a2 2 0 100-4 2 2 0 000 4zm1 1a3 3 0 012.83 2H10a5 5 0 00-.8-2.75A3 3 0 0111 8z"/></svg>`;
+
+const NAV_ICONS = {
+  sales:    `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 10l4-4 3 3 5-5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>`,
+  client_rotation:`<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 110 14A7 7 0 018 1zm0 1.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zm1.5 5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/></svg>`,
+  presale:  `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2a6 6 0 100 12A6 6 0 008 2zm0 1.5a4.5 4.5 0 110 9 4.5 4.5 0 010-9zM7 5v4l3 1.5.5-1L8 8V5H7z"/></svg>`,
+  marketing:`<svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 8a5 5 0 0110 0H3zm5-6a1 1 0 110 2 1 1 0 010-2zM2 9h12v1H2z"/></svg>`,
+  bidding:  `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1l2 4h4l-3 3 1 4-4-2-4 2 1-4-3-3h4z"/></svg>`,
+  logistics:`<svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 4h9v6H1zM10 6h3l2 2v2h-5V6zM3 10a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm8 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"/></svg>`,
+  docs:     `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h7l3 3v9H3V2zm7 0v3h3M6 7h5M6 9h5M6 11h3"/></svg>`,
+};
+
+function defaultIcon() {
+  return `<svg viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="12" height="12" rx="2" opacity=".3"/><rect x="5" y="5" width="6" height="1.5" rx=".75"/><rect x="5" y="8" width="6" height="1.5" rx=".75"/></svg>`;
+}
+
+const MODULE_URLS = {sales: '/vendors', client_rotation: '/client-rotation'};
+
+async function init() {
+  const meRes = await fetch('/me');
+  if (!meRes.ok) { window.location.href = '/login'; return; }
+  const me = await meRes.json();
+  if (me.must_change_password) { window.location.href = '/login'; return; }
+
+  document.getElementById('userName').textContent = me.login;
+  document.getElementById('userAvatar').textContent = me.login.slice(0, 2).toUpperCase();
+
+  const navRes = await fetch('/nav');
+  const nav = await navRes.json();
+
+  document.getElementById('userRole').textContent = nav.roles.join(', ') || 'нет роли';
+
+  const navBody = document.getElementById('navBody');
+  navBody.innerHTML = '';
+  if (nav.modules.length === 0) {
+    navBody.innerHTML = '<div class="nav-empty">Модули не назначены.</div>';
+  } else {
+    const label = document.createElement('div');
+    label.className = 'nav-group-label';
+    label.textContent = 'Модули';
+    navBody.appendChild(label);
+    nav.modules.forEach((m) => {
+      const url = MODULE_URLS[m.code];
+      const item = document.createElement(url ? 'a' : 'div');
+      item.className = 'nav-item' + (m.code === 'client_rotation' ? ' act' : '');
+      if (url) {
+        item.href = url;
+        item.style.textDecoration = 'none';
+      }
+      item.innerHTML = (NAV_ICONS[m.code] || defaultIcon()) + `<span>${m.name}</span>`;
+      navBody.appendChild(item);
+    });
+    const staffItem = document.createElement('a');
+    staffItem.className = 'nav-item';
+    staffItem.href = '/employees';
+    staffItem.style.textDecoration = 'none';
+    staffItem.innerHTML = STAFF_ICON + '<span>Сотрудники</span>';
+    navBody.appendChild(staffItem);
+  }
+}
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await fetch('/logout', {method: 'POST'});
+  window.location.href = '/login';
+});
+
+init();
+</script>
+</body>
+</html>

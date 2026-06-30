@@ -11,6 +11,7 @@ from __future__ import annotations
 # заведены в каталоге, но выключены - появятся в меню, когда будет их код.
 DEFAULT_MODULES: list[tuple[str, str, bool, int]] = [
     ("sales", "Вендоры", True, 10),
+    ("client_rotation", "Ротация клиентов", True, 15),
     ("presale", "Presale", False, 20),
     ("marketing", "Маркетинг", False, 30),
     ("bidding", "Торги на ЭП", False, 40),
@@ -36,7 +37,7 @@ DEFAULT_ROLES: list[tuple[str, str]] = [
 # - domain_head: модуль(и) назначаются на конкретный домен при найме, поэтому пусто.
 ROLE_MODULE_GRANTS: dict[str, list[str]] = {
     "mop": ["sales"],
-    "rop": ["sales"],
+    "rop": ["sales", "client_rotation"],
     "marketer": ["sales", "marketing"],
     "presale_engineer": ["sales"],
     "domain_head": [],

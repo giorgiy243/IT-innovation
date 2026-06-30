@@ -157,12 +157,13 @@ html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,san
 
 <script>
 const SCOPE_LABEL = {own: 'Свои данные', team: 'Команда', domain: 'Домен', all: 'Все данные'};
-const MODULE_URLS = {sales: '/vendors'};
-const MODULE_COLORS = {sales:'c-green',presale:'c-blue',marketing:'c-amber',bidding:'c-gray',logistics:'c-blue',docs:'c-gray'};
+const MODULE_URLS = {sales: '/vendors', client_rotation: '/client-rotation'};
+const MODULE_COLORS = {sales:'c-green',client_rotation:'c-green',presale:'c-blue',marketing:'c-amber',bidding:'c-gray',logistics:'c-blue',docs:'c-gray'};
 const STAFF_ICON = `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M5 7a2.5 2.5 0 100-5 2.5 2.5 0 000 5zm-4 7a4 4 0 018 0H1zm9-7a2 2 0 100-4 2 2 0 000 4zm1 1a3 3 0 012.83 2H10a5 5 0 00-.8-2.75A3 3 0 0111 8z"/></svg>`;
 
 const NAV_ICONS = {
   sales:    `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 10l4-4 3 3 5-5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>`,
+  client_rotation:`<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 110 14A7 7 0 018 1zm0 1.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zm1.5 5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/></svg>`,
   presale:  `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2a6 6 0 100 12A6 6 0 008 2zm0 1.5a4.5 4.5 0 110 9 4.5 4.5 0 010-9zM7 5v4l3 1.5.5-1L8 8V5H7z"/></svg>`,
   marketing:`<svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 8a5 5 0 0110 0H3zm5-6a1 1 0 110 2 1 1 0 010-2zM2 9h12v1H2z"/></svg>`,
   bidding:  `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1l2 4h4l-3 3 1 4-4-2-4 2 1-4-3-3h4z"/></svg>`,
