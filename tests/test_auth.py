@@ -85,7 +85,7 @@ def test_login_unknown_user(client):
 def test_login_success_sets_cookie(client):
     r = client.post("/login", json={"login": TEST_LOGIN, "password": TEST_PASSWORD})
     assert r.status_code == 200
-    assert r.json() == {"login": TEST_LOGIN, "tenant_id": 1}
+    assert r.json() == {"login": TEST_LOGIN, "tenant_id": 1, "must_change_password": False}
     assert SESSION_COOKIE in r.cookies
 
 

@@ -202,8 +202,12 @@ class EmployeePosition(Base):
 
 
 class Company(Base):
-    """Компания-клиент (мастер-данные). ИНН - ключ клиента.
+    """Компания-клиент (мастер-данные).
 
+    source_key - стабильный ключ клиента из источника: ИНН (если есть) либо
+    суррогат для клиентов без ИНН (в client-rotate - "|Имя|Менеджер"). Именно
+    он уникален в рамках tenant и служит точкой связи для модулей. inn nullable:
+    в выгрузках ИНН есть не у всех (~15% без него), но клиент - реальный.
     holding_id - текстовая метка холдинга для группировки (не FK,
     холдинг не самостоятельная сущность). is_holding_head отмечает
     головную компанию холдинга. ИНН - PII; доступ по роли (см. RBAC).
@@ -211,14 +215,15 @@ class Company(Base):
 
     __tablename__ = "companies"
     __table_args__ = (
-        UniqueConstraint("tenant_id", "inn", name="uq_companies_tenant_inn"),
+        UniqueConstraint("tenant_id", "source_key", name="uq_companies_tenant_source_key"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     tenant_id: Mapped[int] = mapped_column(
         ForeignKey("tenants.id", ondelete="RESTRICT"), nullable=False, index=True
     )
-    inn: Mapped[str] = mapped_column(String(12), nullable=False)
+    source_key: Mapped[str] = mapped_column(String(150), nullable=False)
+    inn: Mapped[str | None] = mapped_column(String(12), nullable=True)
     name: Mapped[str] = mapped_column(String(500), nullable=False)
     city: Mapped[str | None] = mapped_column(String(255), nullable=True)
     segment: Mapped[str | None] = mapped_column(String(100), nullable=True)

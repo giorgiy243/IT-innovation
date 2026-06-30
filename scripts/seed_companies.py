@@ -1,8 +1,9 @@
 """Сид компаний из client_rotation.db (client-rotate).
 
 Читает таблицу clients, отбирает записи с валидным ИНН (10 или 12 цифр),
-делает upsert в companies по (tenant_id, inn). Идемпотентен: повторный запуск
-обновляет name/city/segment/holding_id/is_holding_head, не дублирует строки.
+делает upsert в companies по (tenant_id, source_key), где source_key=ИНН.
+Идемпотентен: повторный запуск обновляет name/city/segment/holding_id/
+is_holding_head, не дублирует строки. Клиенты без ИНН - Фаза 2.1 плана ротации.
 
 Использование:
     python scripts/seed_companies.py --db /path/to/client_rotation.db
@@ -49,6 +50,9 @@ def load_clients(db_path: str) -> list[dict]:
         if not INN_RE.match(inn):
             continue
         result.append({
+            # У валидного ИНН ключ = сам ИНН. Клиенты без ИНН (суррогаты) пока
+            # не заводятся - расширение на них в Фазе 2.1 плана ротации.
+            "source_key": inn,
             "inn": inn,
             "name": r["name"] or "",
             "city": r["city"] or None,
@@ -71,7 +75,7 @@ def seed(db_path: str, tenant_id: int) -> None:
         print(f"Арендатор: {tenant.name} (id={tenant.id})")
 
         existing = {
-            c.inn: c
+            c.source_key: c
             for c in db.execute(
                 select(Company).where(Company.tenant_id == tenant_id)
             ).scalars().all()
@@ -79,9 +83,9 @@ def seed(db_path: str, tenant_id: int) -> None:
 
         created = updated = skipped = 0
         for data in clients:
-            inn = data["inn"]
-            if inn in existing:
-                c = existing[inn]
+            key = data["source_key"]
+            if key in existing:
+                c = existing[key]
                 changed = False
                 for field in ("name", "city", "segment", "holding_id", "is_holding_head"):
                     if getattr(c, field) != data[field]:
