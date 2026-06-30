@@ -101,13 +101,13 @@ def _expanded_rows(db: DBSession, tenant_id: int) -> list[tuple[str, dict]]:
     return out
 
 
-def export_assignments_xlsx(db: DBSession, tenant_id: int) -> bytes:
-    """Возвращает .xlsx (bytes) с назначенными клиентами (с разворотом холдингов)."""
+def _rows_to_xlsx(rows: list[tuple[str, dict]]) -> bytes:
+    """Собирает .xlsx (bytes) по шаблону ДСП из готовых строк (mgr, client_row)."""
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = TEMPLATE_SHEET
     ws.append(TEMPLATE_HEADERS)
-    for mgr, r in _expanded_rows(db, tenant_id):
+    for mgr, r in rows:
         ws.append([
             mgr, r["name"], r["phone"], r["contact_person"], r["email"],
             r["activity"], r["site"], r["employees"], r["inn"],
@@ -115,3 +115,15 @@ def export_assignments_xlsx(db: DBSession, tenant_id: int) -> bytes:
     buf = io.BytesIO()
     wb.save(buf)
     return buf.getvalue()
+
+
+def export_assignments_by_manager(db: DBSession, tenant_id: int) -> list[tuple[str, bytes]]:
+    """Отдельный файл на каждого принимающего МОП: [(crm_name, .xlsx bytes)].
+
+    Строки (с разворотом холдингов) группируются по принимающему менеджеру;
+    каждому отдаётся своя книга по тому же шаблону ДСП. Отсортировано по МОП.
+    """
+    grouped: dict[str, list[tuple[str, dict]]] = {}
+    for mgr, r in _expanded_rows(db, tenant_id):
+        grouped.setdefault(mgr or "", []).append((mgr, r))
+    return [(mgr, _rows_to_xlsx(grouped[mgr])) for mgr in sorted(grouped)]

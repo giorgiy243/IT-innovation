@@ -50,34 +50,78 @@ html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,san
 .btn-export{margin-left:auto;height:34px;padding:0 16px;border-radius:7px;font-size:13px;font-family:inherit;font-weight:600;color:#fff;background:var(--brand);border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background .12s;}
 .btn-export:hover{background:var(--brand-d);}
 .btn-export svg{width:15px;height:15px;}
+/* Вторичная выгрузка (для МОП) - контурная, рядом с основной «в 1С». */
+.btn-export.sec{margin-left:8px;background:#fff;color:var(--brand-d);border:1px solid var(--brand);}
+.btn-export.sec:hover{background:rgba(129,180,70,.08);}
 .content{flex:1;overflow-y:auto;padding:20px 24px;}
 
 /* Filters */
 .filters{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
-.filter-input{height:34px;border:1px solid var(--light);border-radius:7px;padding:0 10px;font-size:13px;font-family:inherit;color:var(--dark);background:#fff;outline:none;width:260px;}
-.filter-input:focus{border-color:var(--brand);}
-.filter-select{height:34px;border:1px solid var(--light);border-radius:7px;padding:0 8px;font-size:13px;font-family:inherit;color:var(--dark);background:#fff;outline:none;cursor:pointer;}
-.filter-select:focus{border-color:var(--brand);}
+.filters-hint{font-size:12px;color:var(--mid);}
+#resetBtn{margin-left:auto;}
 .btn-reset{height:34px;padding:0 14px;border:1px solid var(--light);border-radius:7px;font-size:13px;font-family:inherit;color:var(--mid);background:#fff;cursor:pointer;transition:border-color .12s,color .12s;display:inline-flex;align-items:center;justify-content:center;}
 .btn-reset:hover{border-color:var(--mid);color:var(--dark);}
 
 /* Table */
 .table-wrap{background:#fff;border-radius:10px;box-shadow:var(--sh);overflow:hidden;}
 table.cr{width:100%;border-collapse:collapse;font-size:13px;}
-table.cr thead th{background:var(--bg);color:var(--slate);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;text-align:left;padding:10px 12px;border-bottom:1px solid var(--light);white-space:nowrap;}
-table.cr thead th.num{text-align:right;}
-table.cr tbody td{padding:9px 12px;border-bottom:1px solid var(--bg);vertical-align:middle;}
+table.cr thead th{background:var(--bg);color:var(--slate);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;text-align:center;padding:8px 12px;border-bottom:1px solid var(--light);white-space:nowrap;vertical-align:top;position:sticky;top:0;z-index:2;}
+table.cr thead th.num{text-align:center;}
+/* Заголовки шапки - все по центру. Данные столбца «Клиент» (2-й) - по левому краю. */
+table.cr tbody td:nth-child(2){text-align:left;}
+.th-t{margin-bottom:6px;}
+.th-f{width:100%;min-width:0;height:28px;border:1px solid var(--light);border-radius:6px;padding:0 7px;font-size:12px;font-family:inherit;font-weight:400;text-transform:none;letter-spacing:normal;color:var(--dark);background:#fff;outline:none;}
+/* Зауженные колонки: «Скоринг» и «Клиент» (~40% уже прежнего). */
+.col-score{width:66px;}
+.col-client{width:200px;}
+table.cr thead th:first-child,
+table.cr tbody td:first-child{padding-left:8px;padding-right:8px;}
+.th-f:focus{border-color:var(--brand);}
+.th-f.th-num{text-align:left;padding-right:7px;}
+select.th-f{cursor:pointer;padding:0 4px;}
+
+/* Мультиселект (несколько сотрудников) */
+.ms{position:relative;width:100%;}
+.ms-btn{width:100%;height:28px;display:flex;align-items:center;gap:4px;border:1px solid var(--light);border-radius:6px;padding:0 7px;font-size:12px;font-family:inherit;font-weight:400;text-transform:none;letter-spacing:normal;color:var(--dark);background:#fff;cursor:pointer;outline:none;text-align:left;}
+.ms-btn:focus{border-color:var(--brand);}
+.ms.ms-has .ms-btn{border-color:var(--brand);background:rgba(129,180,70,.06);}
+.ms-label{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--mid);}
+.ms.ms-has .ms-label{color:var(--dark);font-weight:500;}
+.ms-caret{flex:none;font-size:9px;color:var(--mid);}
+.ms-panel{display:none;position:fixed;z-index:100;background:#fff;border:1px solid var(--light);border-radius:8px;box-shadow:var(--sh-hover);width:240px;max-height:320px;flex-direction:column;overflow:hidden;}
+.ms.open .ms-panel{display:flex;}
+.ms-search{padding:8px;border-bottom:1px solid var(--bg);flex:none;}
+.ms-search input{width:100%;height:30px;border:1px solid var(--light);border-radius:6px;padding:0 8px;font-size:12px;font-family:inherit;outline:none;}
+.ms-search input:focus{border-color:var(--brand);}
+.ms-options{overflow-y:auto;padding:4px;flex:1;}
+.ms-opt{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;font-size:12.5px;color:var(--dark);cursor:pointer;text-transform:none;letter-spacing:normal;font-weight:400;}
+.ms-opt:hover{background:var(--bg);}
+.ms-opt input{flex:none;width:15px;height:15px;cursor:pointer;accent-color:var(--brand);}
+.ms-opt span{flex:1;min-width:0;white-space:normal;word-break:break-word;}
+.ms-empty{padding:12px;text-align:center;color:var(--mid);font-size:12px;}
+.ms-foot{padding:6px 8px;border-top:1px solid var(--bg);flex:none;display:flex;justify-content:flex-end;}
+.ms-clear{background:none;border:none;font-family:inherit;font-size:12px;color:var(--brand-d);cursor:pointer;padding:4px 6px;border-radius:5px;font-weight:600;}
+.ms-clear:hover{background:var(--bg);}
+table.cr tbody td{padding:9px 12px;border-bottom:1px solid var(--bg);vertical-align:middle;text-align:center;}
 table.cr tbody tr{cursor:pointer;transition:background .1s;}
 table.cr tbody tr:hover{background:rgba(129,180,70,.06);}
 table.cr tbody tr:last-child td{border-bottom:none;}
 .c-name{font-weight:600;color:var(--dark);}
 .c-inn{font-size:11px;color:var(--mid);margin-top:1px;}
-.c-num{text-align:right;font-variant-numeric:tabular-nums;}
-.c-score{font-weight:700;color:var(--brand-d);text-align:right;font-variant-numeric:tabular-nums;}
+.c-num{font-variant-numeric:tabular-nums;}
+.c-score{font-weight:700;color:var(--brand-d);font-variant-numeric:tabular-nums;}
 .c-mgr{color:var(--slate);white-space:nowrap;}
-.c-days{text-align:right;font-variant-numeric:tabular-nums;color:var(--slate);}
+.c-days{font-variant-numeric:tabular-nums;color:var(--slate);}
 .c-days.warn{color:#b45309;font-weight:600;}
 .assigned-pill{font-size:11.5px;color:#3a6320;background:rgba(129,180,70,.14);border-radius:5px;padding:2px 8px;white-space:nowrap;}
+
+/* Инлайн-редактирование статуса и принимающего прямо в строке */
+td.cell-status,td.cell-assigned{cursor:pointer;}
+td.cell-status::after,td.cell-assigned::after{content:'\25BE';font-size:9px;color:var(--mid);margin-left:5px;opacity:.45;}
+td.cell-status:hover,td.cell-assigned:hover{background:rgba(129,180,70,.12);}
+td.cell-status:has(select)::after,td.cell-assigned:has(select)::after{content:none;}
+.inline-sel{height:28px;max-width:100%;border:1px solid var(--brand);border-radius:6px;padding:0 6px;font-size:12px;font-family:inherit;color:var(--dark);background:#fff;outline:none;cursor:pointer;}
+.assign-empty{color:var(--mid);}
 
 /* Badges */
 .badge{display:inline-block;font-size:11px;font-weight:600;border-radius:5px;padding:2px 8px;white-space:nowrap;}
@@ -160,31 +204,78 @@ table.cr tbody tr:last-child td{border-bottom:none;}
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1v8m0 0L5 6m3 3l3-3M2 12v2h12v-2"/></svg>
         Выгрузка в 1С
       </button>
+      <button class="btn-export sec" id="btnExportMop" title="Скачать HTML-досье для принимающих менеджеров">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1v8m0 0L5 6m3 3l3-3M2 12v2h12v-2"/></svg>
+        Выгрузка для МОП
+      </button>
     </div>
     <div class="content">
       <div class="filters">
-        <input id="searchInput" class="filter-input" type="search" placeholder="Поиск по названию или ИНН...">
-        <select id="statusSelect" class="filter-select">
-          <option value="">Все статусы</option>
-          <option value="active">Активный</option>
-          <option value="progress">В работе</option>
-          <option value="transfer">На передачу</option>
-        </select>
-        <button class="btn-reset" id="resetBtn">Сбросить</button>
+        <span class="filters-hint">Фильтры по столбцам - в шапке таблицы. Числовые поля фильтруют «от и больше».</span>
+        <button class="btn-reset" id="resetBtn">Сбросить фильтры</button>
       </div>
 
       <div class="table-wrap">
         <table class="cr">
+          <colgroup>
+            <col class="col-score">
+            <col class="col-client">
+            <col><col><col><col><col><col>
+          </colgroup>
           <thead>
             <tr>
-              <th class="num">Скоринг</th>
-              <th>Клиент</th>
-              <th>Текущий менеджер</th>
-              <th class="num">Без контакта</th>
-              <th class="num">Без КП</th>
-              <th class="num">Без отгрузки</th>
-              <th>Статус</th>
-              <th>Принимающий</th>
+              <th class="num">
+                <div class="th-t">Скоринг</div>
+                <input type="number" min="0" class="th-f th-num" data-f="score" placeholder="от">
+              </th>
+              <th>
+                <div class="th-t">Клиент</div>
+                <input type="search" class="th-f" data-f="name" placeholder="Название или ИНН">
+              </th>
+              <th>
+                <div class="th-t">Текущий менеджер</div>
+                <div class="ms" id="msManager">
+                  <button type="button" class="ms-btn"><span class="ms-label">Все</span><span class="ms-caret">&#x25BE;</span></button>
+                  <div class="ms-panel">
+                    <div class="ms-search"><input type="text" placeholder="Найти МОП..."></div>
+                    <div class="ms-options"></div>
+                    <div class="ms-foot"><button type="button" class="ms-clear">Очистить</button></div>
+                  </div>
+                </div>
+              </th>
+              <th class="num">
+                <div class="th-t">Без контакта</div>
+                <input type="number" min="0" class="th-f th-num" data-f="days_no_contact" placeholder="от">
+              </th>
+              <th class="num">
+                <div class="th-t">Без КП</div>
+                <input type="number" min="0" class="th-f th-num" data-f="days_no_kp" placeholder="от">
+              </th>
+              <th class="num">
+                <div class="th-t">Без отгрузки</div>
+                <input type="number" min="0" class="th-f th-num" data-f="days_no_shipment" placeholder="от">
+              </th>
+              <th>
+                <div class="th-t">Статус</div>
+                <select class="th-f" data-f="transfer_status">
+                  <option value="">Все</option>
+                  <option value="active">Активный</option>
+                  <option value="progress">В работе</option>
+                  <option value="transfer">На передачу</option>
+                  <option value="__none__">Не задан</option>
+                </select>
+              </th>
+              <th>
+                <div class="th-t">Принимающий</div>
+                <div class="ms" id="msAssigned">
+                  <button type="button" class="ms-btn"><span class="ms-label">Все</span><span class="ms-caret">&#x25BE;</span></button>
+                  <div class="ms-panel">
+                    <div class="ms-search"><input type="text" placeholder="Найти..."></div>
+                    <div class="ms-options"></div>
+                    <div class="ms-foot"><button type="button" class="ms-clear">Очистить</button></div>
+                  </div>
+                </div>
+              </th>
             </tr>
           </thead>
           <tbody id="tableBody">
@@ -255,8 +346,18 @@ const MODULE_URLS = {sales:'/vendors', client_rotation:'/client-rotation'};
 const STATUS_LABEL = {active:'Активный', progress:'В работе', transfer:'На передачу'};
 const STATUS_CLASS = {active:'badge-active', progress:'badge-progress', transfer:'badge-transfer'};
 
-let _filters = {q:'', status:''};
+// current_manager и assigned_to - массивы (мультивыбор), остальные - скаляры.
+function emptyFilters(){
+  return {
+    score:null, name:'', current_manager:[],
+    days_no_contact:null, days_no_kp:null, days_no_shipment:null,
+    transfer_status:'', assigned_to:[],
+  };
+}
+let _filters = emptyFilters();
+let _allClients = [];
 let _managers = [];
+const _multiSelects = [];
 
 function esc(s){
   if (s === null || s === undefined) return '';
@@ -306,23 +407,141 @@ async function buildSidebar(){
 }
 
 // ─── Список клиентов ───────────────────────────────────────────────────────
-function buildUrl(f){
-  const p = new URLSearchParams();
-  if (f.q) p.set('q', f.q);
-  if (f.status) p.set('status', f.status);
-  const s = p.toString();
-  return '/api/client-rotation/clients' + (s ? '?'+s : '');
-}
-
+// Грузим всех видимых клиентов один раз, фильтруем по столбцам на клиенте -
+// мгновенно и по любому полю шапки (датасет в пределах scope невелик).
 async function loadClients(){
   const body = document.getElementById('tableBody');
-  const res = await fetch(buildUrl(_filters));
+  const res = await fetch('/api/client-rotation/clients');
   if (res.status === 401){ window.location.href='/login'; return; }
   if (res.status === 403){ body.innerHTML = '<tr><td colspan="8" class="empty-state">Нет доступа к модулю.</td></tr>'; return; }
   if (!res.ok){ body.innerHTML = '<tr><td colspan="8" class="empty-state">Ошибка загрузки.</td></tr>'; return; }
   const data = await res.json();
-  renderTable(data.clients, data.total);
+  _allClients = data.clients || [];
   document.getElementById('scopeBadge').textContent = 'Видимость: ' + (data.scope || '-');
+  populateFilterOptions();
+  applyFilters();
+}
+
+// Уникальные непустые значения поля по всем клиентам, отсортированные по-русски.
+function distinctSorted(key){
+  const s = new Set();
+  _allClients.forEach(c => { const v = c[key]; if (v) s.add(v); });
+  return [...s].sort((a, b) => String(a).localeCompare(String(b), 'ru'));
+}
+
+// Мультиселект с чекбоксами и поиском. Выбор хранится в _filters[key] (массив).
+// opts: {field - поле данных для значений, includeNone - опция «не назначен»,
+// noneLabel - её подпись}.
+function setupMultiSelect(rootId, key, opts){
+  const root = document.getElementById(rootId);
+  const btn = root.querySelector('.ms-btn');
+  const panel = root.querySelector('.ms-panel');
+  const label = root.querySelector('.ms-label');
+  const box = root.querySelector('.ms-options');
+  const search = root.querySelector('.ms-search input');
+  const clearBtn = root.querySelector('.ms-clear');
+
+  function renderLabel(){
+    const sel = _filters[key];
+    if (!sel.length){ label.textContent = 'Все'; root.classList.remove('ms-has'); return; }
+    root.classList.add('ms-has');
+    if (sel.length === 1){
+      label.textContent = sel[0] === '__none__' ? (opts.noneLabel || 'Не назначен') : sel[0];
+    } else {
+      label.textContent = sel.length + ' выбрано';
+    }
+  }
+  function buildOptions(){
+    const sel = new Set(_filters[key]);
+    const items = [];
+    if (opts.includeNone) items.push({v:'__none__', t: opts.noneLabel || 'Не назначен'});
+    distinctSorted(opts.field).forEach(v => items.push({v, t:v}));
+    const q = (search.value || '').trim().toLowerCase();
+    box.innerHTML = items
+      .filter(it => !q || it.t.toLowerCase().includes(q))
+      .map(it => `<label class="ms-opt"><input type="checkbox" value="${esc(it.v)}"${sel.has(it.v) ? ' checked' : ''}><span>${esc(it.t)}</span></label>`)
+      .join('') || '<div class="ms-empty">Ничего не найдено</div>';
+  }
+  function positionPanel(){
+    const r = btn.getBoundingClientRect();
+    const pw = 240;
+    let left = r.left;
+    if (left + pw > window.innerWidth - 8) left = Math.max(8, window.innerWidth - pw - 8);
+    panel.style.left = left + 'px';
+    panel.style.top = (r.bottom + 4) + 'px';
+  }
+  function open(){
+    closeAllMultiSelects(root);
+    search.value = '';
+    buildOptions();
+    positionPanel();
+    root.classList.add('open');
+    search.focus();
+  }
+  function close(){ root.classList.remove('open'); }
+
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    root.classList.contains('open') ? close() : open();
+  });
+  panel.addEventListener('click', e => e.stopPropagation());
+  search.addEventListener('input', buildOptions);
+  box.addEventListener('change', e => {
+    if (e.target.type !== 'checkbox') return;
+    const v = e.target.value;
+    const arr = _filters[key].slice();
+    const i = arr.indexOf(v);
+    if (e.target.checked){ if (i < 0) arr.push(v); }
+    else if (i >= 0){ arr.splice(i, 1); }
+    _filters = {..._filters, [key]: arr};
+    renderLabel();
+    applyFilters();
+  });
+  clearBtn.addEventListener('click', () => {
+    _filters = {..._filters, [key]: []};
+    buildOptions(); renderLabel(); applyFilters();
+  });
+
+  const api = {
+    refresh(){ if (root.classList.contains('open')) buildOptions(); renderLabel(); },
+    reset(){ close(); renderLabel(); },
+  };
+  _multiSelects.push(api);
+  return api;
+}
+function closeAllMultiSelects(except){
+  document.querySelectorAll('.ms.open').forEach(el => { if (el !== except) el.classList.remove('open'); });
+}
+
+function populateFilterOptions(){
+  _multiSelects.forEach(ms => ms.refresh());
+}
+
+function applyFilters(){
+  const f = _filters;
+  let rows = _allClients;
+  if (f.name){
+    const n = f.name.toLowerCase();
+    rows = rows.filter(c => (c.name || '').toLowerCase().includes(n) || String(c.inn || '').includes(f.name));
+  }
+  if (f.score != null) rows = rows.filter(c => c.score != null && c.score >= f.score);
+  if (f.current_manager.length){
+    const set = new Set(f.current_manager);
+    rows = rows.filter(c => set.has(c.current_manager || ''));
+  }
+  if (f.days_no_contact != null) rows = rows.filter(c => c.days_no_contact != null && c.days_no_contact >= f.days_no_contact);
+  if (f.days_no_kp != null) rows = rows.filter(c => c.days_no_kp != null && c.days_no_kp >= f.days_no_kp);
+  if (f.days_no_shipment != null) rows = rows.filter(c => c.days_no_shipment != null && c.days_no_shipment >= f.days_no_shipment);
+  if (f.transfer_status){
+    rows = f.transfer_status === '__none__'
+      ? rows.filter(c => !c.transfer_status)
+      : rows.filter(c => c.transfer_status === f.transfer_status);
+  }
+  if (f.assigned_to.length){
+    const set = new Set(f.assigned_to);
+    rows = rows.filter(c => set.has(c.assigned_to ? c.assigned_to : '__none__'));
+  }
+  renderTable(rows, _allClients.length);
 }
 
 function renderTable(clients, total){
@@ -344,13 +563,110 @@ function renderTable(clients, total){
       ${daysCell(c.days_no_contact)}
       ${daysCell(c.days_no_kp)}
       ${daysCell(c.days_no_shipment)}
-      <td>${statusBadge(c.transfer_status)}</td>
-      <td>${c.assigned_to ? `<span class="assigned-pill">${esc(c.assigned_to)}</span>` : '-'}</td>
+      <td class="cell-status" title="Нажмите, чтобы изменить статус">${statusBadge(c.transfer_status)}</td>
+      <td class="cell-assigned" title="Нажмите, чтобы назначить принимающего">${assignedDisplay(c)}</td>
     </tr>`).join('');
-  // клик по строке -> модал (клиент берётся из замыкания clients по индексу строки)
+  // Клик по строке -> модал; клик по ячейкам статуса/принимающего -> инлайн-выбор.
   body.querySelectorAll('tr[data-idx]').forEach(tr => {
-    tr.addEventListener('click', () => openAssign(clients[+tr.dataset.idx]));
+    const c = clients[+tr.dataset.idx];
+    tr.addEventListener('click', () => openAssign(c));
+    const stTd = tr.querySelector('.cell-status');
+    stTd.addEventListener('click', e => { e.stopPropagation(); if (!stTd.querySelector('select')) editStatus(stTd, c); });
+    const asTd = tr.querySelector('.cell-assigned');
+    asTd.addEventListener('click', e => { e.stopPropagation(); if (!asTd.querySelector('select')) editAssigned(asTd, c); });
   });
+}
+
+function assignedDisplay(c){
+  return c.assigned_to
+    ? `<span class="assigned-pill">${esc(c.assigned_to)}</span>`
+    : '<span class="assign-empty">-</span>';
+}
+
+// Инлайн-редактор: подменяет ячейку на select, по выбору сохраняет в БД и
+// возвращает отрисовку. Объект client - ссылка из _allClients, обновляем на месте.
+function editStatus(td, client){
+  const cur = client.transfer_status || '';
+  const opts = [['', '—'], ['active', 'Активный'], ['progress', 'В работе'], ['transfer', 'На передачу']];
+  if (cur && !opts.some(([v]) => v === cur)) opts.push([cur, cur]); // сохранить нестандартный статус
+  const sel = document.createElement('select');
+  sel.className = 'inline-sel';
+  opts.forEach(([v, t]) => {
+    const o = document.createElement('option');
+    o.value = v; o.textContent = t; if (v === cur) o.selected = true;
+    sel.appendChild(o);
+  });
+  mountInlineEditor(td, sel, async () => {
+    const nv = sel.value || null;
+    if (nv === cur) return false;            // без изменений
+    if (await saveField(client, {transfer_status: nv})){ client.transfer_status = nv; }
+    return true;
+  }, () => statusBadge(client.transfer_status));
+}
+
+function editAssigned(td, client){
+  const curId = client.assigned_to_employee_id;
+  const sel = document.createElement('select');
+  sel.className = 'inline-sel';
+  const none = document.createElement('option');
+  none.value = ''; none.textContent = '— не назначен —';
+  sel.appendChild(none);
+  let found = false;
+  _managers.forEach(m => {
+    const o = document.createElement('option');
+    o.value = m.employee_id; o.textContent = m.crm_name;
+    if (curId === m.employee_id){ o.selected = true; found = true; }
+    sel.appendChild(o);
+  });
+  if (!found && curId != null){            // назначен уволенному/отсутствующему - не потерять
+    const o = document.createElement('option');
+    o.value = curId; o.textContent = client.assigned_to || ('#' + curId); o.selected = true;
+    sel.appendChild(o);
+  }
+  mountInlineEditor(td, sel, async () => {
+    const nv = sel.value ? parseInt(sel.value, 10) : null;
+    if (nv === (curId ?? null)) return false;
+    if (await saveField(client, {assigned_to_employee_id: nv})){
+      client.assigned_to_employee_id = nv;
+      const m = _managers.find(x => x.employee_id === nv);
+      client.assigned_to = m ? m.crm_name : (nv != null ? client.assigned_to : null);
+    }
+    return true;
+  }, () => assignedDisplay(client));
+}
+
+// Общая обвязка инлайн-селекта: монтирует, фокусирует, по change сохраняет,
+// по blur без изменений возвращает прежний вид. Защита от двойного завершения.
+function mountInlineEditor(td, sel, onCommit, render){
+  td.innerHTML = '';
+  td.appendChild(sel);
+  sel.focus();
+  try { sel.showPicker(); } catch { /* не во всех браузерах - тогда откроется по клику */ }
+  let done = false;
+  const finish = async (commit) => {
+    if (done) return;
+    done = true;
+    if (commit) await onCommit();
+    td.innerHTML = render();
+  };
+  sel.addEventListener('change', () => finish(true));
+  sel.addEventListener('blur', () => finish(false));
+}
+
+async function saveField(client, patch){
+  const body = {company_id: client.company_id, ...patch};
+  try {
+    const r = await fetch('/api/client-rotation/assignments', {
+      method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body),
+    });
+    if (r.ok){ showToast('Сохранено'); return true; }
+    const err = await r.json().catch(() => ({}));
+    showToast(err.detail || 'Ошибка сохранения', true);
+    return false;
+  } catch {
+    showToast('Ошибка сети', true);
+    return false;
+  }
 }
 
 // ─── Модал назначения ──────────────────────────────────────────────────────
@@ -451,7 +767,28 @@ async function exportXlsx(){
     const blob = await r.blob();
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'dsp_export.xlsx';
+    a.download = '1c_export.zip';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(a.href);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// Выгрузка для МОП: standalone HTML-досье (то же, что в client-rotate).
+async function exportMop(){
+  const btn = document.getElementById('btnExportMop');
+  btn.disabled = true;
+  try {
+    const r = await fetch('/api/client-rotation/export-managers');
+    if (!r.ok){ showToast('Ошибка выгрузки', true); return; }
+    const blob = await r.blob();
+    const d = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    const stamp = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'rotation_managers_' + stamp + '.html';
     document.body.appendChild(a); a.click(); a.remove();
     URL.revokeObjectURL(a.href);
   } finally {
@@ -470,20 +807,40 @@ function showToast(msg, isErr=false){
 }
 
 // ─── Слушатели и init ──────────────────────────────────────────────────────
-let searchTimer = null;
-document.getElementById('searchInput').addEventListener('input', e => {
-  clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => { _filters = {..._filters, q:e.target.value.trim()}; loadClients(); }, 300);
-});
-document.getElementById('statusSelect').addEventListener('change', e => {
-  _filters = {..._filters, status:e.target.value}; loadClients();
+// Привязка фильтров шапки: текст/число - input с дебаунсом, select - change.
+document.querySelectorAll('.th-f').forEach(el => {
+  const key = el.dataset.f;
+  const isNum = el.type === 'number';
+  const read = () => {
+    if (isNum) return el.value === '' ? null : Number(el.value);
+    if (el.tagName === 'SELECT') return el.value;
+    return el.value.trim();
+  };
+  if (el.tagName === 'SELECT'){
+    el.addEventListener('change', () => { _filters = {..._filters, [key]: read()}; applyFilters(); });
+  } else {
+    let t = null;
+    el.addEventListener('input', () => {
+      clearTimeout(t);
+      t = setTimeout(() => { _filters = {..._filters, [key]: read()}; applyFilters(); }, 250);
+    });
+  }
 });
 document.getElementById('resetBtn').addEventListener('click', () => {
-  document.getElementById('searchInput').value = '';
-  document.getElementById('statusSelect').value = '';
-  _filters = {q:'', status:''}; loadClients();
+  document.querySelectorAll('.th-f').forEach(el => { el.value = ''; });
+  _filters = emptyFilters();
+  _multiSelects.forEach(ms => ms.reset());
+  applyFilters();
 });
+
+// Мультиселекты сотрудников + закрытие по клику вне/прокрутке/ресайзу.
+setupMultiSelect('msManager', 'current_manager', {field:'current_manager'});
+setupMultiSelect('msAssigned', 'assigned_to', {field:'assigned_to', includeNone:true, noneLabel:'Не назначен'});
+document.addEventListener('click', () => closeAllMultiSelects(null));
+document.querySelector('.content').addEventListener('scroll', () => closeAllMultiSelects(null));
+window.addEventListener('resize', () => closeAllMultiSelects(null));
 document.getElementById('btnExport').addEventListener('click', exportXlsx);
+document.getElementById('btnExportMop').addEventListener('click', exportMop);
 document.getElementById('mCloseBtn').addEventListener('click', closeAssign);
 document.getElementById('mCancelBtn').addEventListener('click', closeAssign);
 document.getElementById('mSaveBtn').addEventListener('click', saveAssign);

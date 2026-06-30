@@ -548,6 +548,9 @@ class ClientRotationData(Base):
     # Текущий менеджер из выгрузки (строка-имя; не FK - может быть уволенный/внешний).
     current_manager: Mapped[str | None] = mapped_column(String(255), nullable=True)
     industry: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    # Уровень клиента (Ключевой/Корпоративный/Малый бизнес/Микробизнес) - из выгрузки
+    # УКБ. Используется чипом уровня в HTML-досье для МОП (export_managers.py).
+    level: Mapped[str | None] = mapped_column(String(100), nullable=True)
     source_file: Mapped[str | None] = mapped_column(String(255), nullable=True)
     is_orphan: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     in_sp: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)

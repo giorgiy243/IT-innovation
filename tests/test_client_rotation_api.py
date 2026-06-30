@@ -11,6 +11,7 @@ SQLite in-memory (StaticPool) - изоляция от prod-БД. Покрыва�
 from __future__ import annotations
 
 import io
+import zipfile
 
 import openpyxl
 import pytest
@@ -279,6 +280,66 @@ class TestAssignment:
         assert db.query(Assignment).filter(Assignment.company_id == c.id).count() == 1
         assert db.query(Assignment).filter(Assignment.company_id == c.id).one().transfer_status == "второй"
 
+    def test_partial_update_status_keeps_assignee(self, client, db):
+        # Инлайн-смена статуса не должна обнулять ранее назначенного принимающего.
+        t = _tenant(db)
+        _user(db, t, "rop", "rop", "all")
+        emp = _employee(db, t.id, "Принимающий", "Принимающий П.П.")
+        c = _company(db, t.id, "Клиент", "7700000001", "7700000001")
+        _crd(db, t.id, c.id)
+        db.commit()
+        _login(client, "rop")
+        client.post("/api/client-rotation/assignments", json={
+            "company_id": c.id, "assigned_to_employee_id": emp.id, "transfer_status": "active",
+        })
+        # приходит только статус
+        client.post("/api/client-rotation/assignments", json={"company_id": c.id, "transfer_status": "transfer"})
+        row = db.query(Assignment).filter(Assignment.company_id == c.id).one()
+        assert row.transfer_status == "transfer"
+        assert row.assigned_to_employee_id == emp.id  # принимающий сохранён
+
+    def test_partial_update_assignee_keeps_status(self, client, db):
+        # Инлайн-смена принимающего не должна стирать статус.
+        t = _tenant(db)
+        _user(db, t, "rop", "rop", "all")
+        emp = _employee(db, t.id, "Принимающий", "Принимающий П.П.")
+        c = _company(db, t.id, "Клиент", "7700000001", "7700000001")
+        _crd(db, t.id, c.id)
+        db.commit()
+        _login(client, "rop")
+        client.post("/api/client-rotation/assignments", json={"company_id": c.id, "transfer_status": "progress"})
+        client.post("/api/client-rotation/assignments", json={"company_id": c.id, "assigned_to_employee_id": emp.id})
+        row = db.query(Assignment).filter(Assignment.company_id == c.id).one()
+        assert row.assigned_to_employee_id == emp.id
+        assert row.transfer_status == "progress"  # статус сохранён
+
+    def test_unassign_sets_null(self, client, db):
+        # Явный null очищает принимающего (в отличие от отсутствия ключа).
+        t = _tenant(db)
+        _user(db, t, "rop", "rop", "all")
+        emp = _employee(db, t.id, "Принимающий", "Принимающий П.П.")
+        c = _company(db, t.id, "Клиент", "7700000001", "7700000001")
+        _crd(db, t.id, c.id)
+        db.commit()
+        _login(client, "rop")
+        client.post("/api/client-rotation/assignments", json={"company_id": c.id, "assigned_to_employee_id": emp.id})
+        client.post("/api/client-rotation/assignments", json={"company_id": c.id, "assigned_to_employee_id": None})
+        row = db.query(Assignment).filter(Assignment.company_id == c.id).one()
+        assert row.assigned_to_employee_id is None
+
+    def test_list_item_exposes_assignee_id(self, client, db):
+        # Список отдаёт assigned_to_employee_id для предвыбора в инлайн-селекте.
+        t = _tenant(db)
+        _user(db, t, "rop", "rop", "all")
+        emp = _employee(db, t.id, "Принимающий", "Принимающий П.П.")
+        c = _company(db, t.id, "Клиент", "7700000001", "7700000001")
+        _crd(db, t.id, c.id, current_manager="Иванов И.И.")
+        db.add(Assignment(tenant_id=t.id, company_id=c.id, assigned_to_employee_id=emp.id))
+        db.commit()
+        _login(client, "rop")
+        data = client.get("/api/client-rotation/clients").json()
+        assert data["clients"][0]["assigned_to_employee_id"] == emp.id
+
     def test_missing_company_id_422(self, client, db):
         t = _tenant(db)
         _user(db, t, "rop", "rop", "all")
@@ -333,13 +394,18 @@ def test_tenant_isolation(client, db):
 
 # --- экспорт в 1С (xlsx) ---
 
-def _xlsx_rows(content: bytes) -> list[tuple]:
-    wb = openpyxl.load_workbook(io.BytesIO(content))
-    return list(wb.active.iter_rows(values_only=True))
+def _zip_files(content: bytes) -> dict[str, list[tuple]]:
+    """Имя файла внутри ZIP -> строки его xlsx (включая шапку)."""
+    out: dict[str, list[tuple]] = {}
+    with zipfile.ZipFile(io.BytesIO(content)) as zf:
+        for name in zf.namelist():
+            wb = openpyxl.load_workbook(io.BytesIO(zf.read(name)))
+            out[name] = list(wb.active.iter_rows(values_only=True))
+    return out
 
 
 class TestExport:
-    def test_returns_xlsx_with_assigned(self, client, db):
+    def test_returns_zip_with_per_manager_file(self, client, db):
         t = _tenant(db)
         _user(db, t, "rop", "rop", "all")
         emp = _employee(db, t.id, "Принимающий", "Принимающий П.П.")
@@ -350,10 +416,31 @@ class TestExport:
         _login(client, "rop")
         r = client.get("/api/client-rotation/export")
         assert r.status_code == 200
-        assert "spreadsheetml" in r.headers["content-type"]
-        rows = _xlsx_rows(r.content)
+        assert "zip" in r.headers["content-type"]
+        files = _zip_files(r.content)
+        assert "Принимающий П.П..xlsx" in files
+        rows = files["Принимающий П.П..xlsx"]
         assert rows[0] == tuple(TEMPLATE_HEADERS)
         assert any(row[1] == "Альфа" and row[0] == "Принимающий П.П." for row in rows[1:])
+
+    def test_separate_file_per_manager(self, client, db):
+        # Два разных принимающих МОП -> два файла в архиве.
+        t = _tenant(db)
+        _user(db, t, "rop", "rop", "all")
+        e1 = _employee(db, t.id, "Первый", "Первый П.П.")
+        e2 = _employee(db, t.id, "Второй", "Второй В.В.")
+        c1 = _company(db, t.id, "Альфа", "7700000001", "7700000001")
+        c2 = _company(db, t.id, "Бета", "7700000002", "7700000002")
+        _crd(db, t.id, c1.id)
+        _crd(db, t.id, c2.id)
+        db.add(Assignment(tenant_id=t.id, company_id=c1.id, assigned_to_employee_id=e1.id))
+        db.add(Assignment(tenant_id=t.id, company_id=c2.id, assigned_to_employee_id=e2.id))
+        db.commit()
+        _login(client, "rop")
+        files = _zip_files(client.get("/api/client-rotation/export").content)
+        assert set(files) == {"Первый П.П..xlsx", "Второй В.В..xlsx"}
+        assert any(row[1] == "Альфа" for row in files["Первый П.П..xlsx"][1:])
+        assert any(row[1] == "Бета" for row in files["Второй В.В..xlsx"][1:])
 
     def test_only_assigned_exported(self, client, db):
         t = _tenant(db)
@@ -363,8 +450,8 @@ class TestExport:
         db.add(Assignment(tenant_id=t.id, company_id=c.id, transfer_status="свой"))  # без менеджера
         db.commit()
         _login(client, "rop")
-        rows = _xlsx_rows(client.get("/api/client-rotation/export").content)
-        assert len(rows) == 1  # только шапка
+        files = _zip_files(client.get("/api/client-rotation/export").content)
+        assert files == {}  # ни одного принимающего - архив пуст
 
     def test_holding_expansion(self, client, db):
         t = _tenant(db)
@@ -379,7 +466,8 @@ class TestExport:
         db.add(Assignment(tenant_id=t.id, company_id=head.id, assigned_to_employee_id=emp.id))
         db.commit()
         _login(client, "rop")
-        rows = _xlsx_rows(client.get("/api/client-rotation/export").content)
+        files = _zip_files(client.get("/api/client-rotation/export").content)
+        rows = files["Босс Б.Б..xlsx"]
         names = {row[1] for row in rows[1:]}
         managers = {row[0] for row in rows[1:]}
         assert names == {"Голова", "Член"}  # холдинг развёрнут
@@ -395,7 +483,7 @@ class TestExport:
         db.add(Assignment(tenant_id=t.id, company_id=c.id, assigned_to_employee_id=emp.id))
         db.commit()
         _login(client, "rop")
-        rows = _xlsx_rows(client.get("/api/client-rotation/export").content)
+        rows = _zip_files(client.get("/api/client-rotation/export").content)["М М.М..xlsx"]
         row = rows[1]
         assert row[2] == "verified-phone"  # summary важнее crd
         assert row[3] == "verified-name"
@@ -409,7 +497,136 @@ class TestExport:
         db.add(Assignment(tenant_id=t.id, company_id=c.id, assigned_to_employee_id=emp.id))
         db.commit()
         _login(client, "rop")
-        rows = _xlsx_rows(client.get("/api/client-rotation/export").content)
+        rows = _zip_files(client.get("/api/client-rotation/export").content)["М М.М..xlsx"]
         # ИНН пустой (openpyxl читает пустую ячейку как None), суррогат не утёк.
         assert rows[1][8] in (None, "")
         assert "|" not in (rows[1][8] or "")
+
+
+# --- выгрузка для МОП (HTML-досье) ---
+
+class TestExportManagers:
+    def test_returns_html_with_manager_and_client(self, client, db):
+        t = _tenant(db)
+        _user(db, t, "rop", "rop", "all")
+        emp = _employee(db, t.id, "Принимающий", "Принимающий П.П.")
+        c = _company(db, t.id, "Альфа", "7700000001", "7700000001")
+        _crd(db, t.id, c.id, current_manager="Иванов И.И.", score=80)
+        db.add(Assignment(tenant_id=t.id, company_id=c.id, assigned_to_employee_id=emp.id))
+        db.commit()
+        _login(client, "rop")
+        r = client.get("/api/client-rotation/export-managers")
+        assert r.status_code == 200
+        assert "text/html" in r.headers["content-type"]
+        assert "attachment" in r.headers["content-disposition"]
+        assert "Принимающий П.П." in r.text
+        assert "Альфа" in r.text
+        assert "Высокий приоритет" in r.text  # вердикт по score=80
+
+    def test_only_assigned_clients_included(self, client, db):
+        t = _tenant(db)
+        _user(db, t, "rop", "rop", "all")
+        emp = _employee(db, t.id, "Принимающий", "Принимающий П.П.")
+        assigned = _company(db, t.id, "Назначенный", "7700000001", "7700000001")
+        orphan = _company(db, t.id, "БезПринимающего", "7700000002", "7700000002")
+        _crd(db, t.id, assigned.id)
+        _crd(db, t.id, orphan.id)
+        db.add(Assignment(tenant_id=t.id, company_id=assigned.id, assigned_to_employee_id=emp.id))
+        db.add(Assignment(tenant_id=t.id, company_id=orphan.id, transfer_status="свой"))  # без принимающего
+        db.commit()
+        _login(client, "rop")
+        r = client.get("/api/client-rotation/export-managers")
+        assert "Назначенный" in r.text
+        assert "БезПринимающего" not in r.text
+
+    def test_empty_doc_when_no_assignments(self, client, db):
+        t = _tenant(db)
+        _user(db, t, "rop", "rop", "all")
+        c = _company(db, t.id, "Альфа", "7700000001", "7700000001")
+        _crd(db, t.id, c.id)
+        db.commit()
+        _login(client, "rop")
+        r = client.get("/api/client-rotation/export-managers")
+        assert r.status_code == 200
+        assert "Нет клиентов с назначенным получателем" in r.text
+
+    def test_grouping_by_manager(self, client, db):
+        t = _tenant(db)
+        _user(db, t, "rop", "rop", "all")
+        e1 = _employee(db, t.id, "Первый", "Первый П.П.")
+        e2 = _employee(db, t.id, "Второй", "Второй В.В.")
+        c1 = _company(db, t.id, "Альфа", "7700000001", "7700000001")
+        c2 = _company(db, t.id, "Бета", "7700000002", "7700000002")
+        _crd(db, t.id, c1.id)
+        _crd(db, t.id, c2.id)
+        db.add(Assignment(tenant_id=t.id, company_id=c1.id, assigned_to_employee_id=e1.id))
+        db.add(Assignment(tenant_id=t.id, company_id=c2.id, assigned_to_employee_id=e2.id))
+        db.commit()
+        _login(client, "rop")
+        r = client.get("/api/client-rotation/export-managers")
+        assert "Первый П.П." in r.text and "Второй В.В." in r.text
+        assert "Альфа" in r.text and "Бета" in r.text
+
+    def test_html_escaping(self, client, db):
+        t = _tenant(db)
+        _user(db, t, "rop", "rop", "all")
+        emp = _employee(db, t.id, "М", "М М.М.")
+        c = _company(db, t.id, "Злой <script>", "7700000001", "7700000001")
+        _crd(db, t.id, c.id)
+        db.add(Assignment(tenant_id=t.id, company_id=c.id, assigned_to_employee_id=emp.id))
+        db.commit()
+        _login(client, "rop")
+        r = client.get("/api/client-rotation/export-managers")
+        assert "<script>" not in r.text  # экранировано
+        assert "&lt;script&gt;" in r.text
+
+    def test_rich_fields_render(self, client, db):
+        t = _tenant(db)
+        _user(db, t, "rop", "rop", "all")
+        emp = _employee(db, t.id, "М", "М М.М.")
+        head = _company(db, t.id, "Голова", "7700000010", "7700000010")
+        head.is_holding_head = True
+        _crd(
+            db, t.id, head.id, score=75, level="Ключевой",
+            in_sp=True, sp_info="ситуация в СП",
+            turnover_json=[10, 20, 30], score_breakdown_json={"size": 60, "engagement": 10, "freshness": 5},
+            holding_members_json=[{"name": "ЮЛ-2"}],
+        )
+        db.add(Assignment(
+            tenant_id=t.id, company_id=head.id, assigned_to_employee_id=emp.id,
+            comment="передаём потому что важно",
+        ))
+        db.commit()
+        _login(client, "rop")
+        r = client.get("/api/client-rotation/export-managers")
+        assert "Ключевой" in r.text                       # чип уровня
+        assert "Обороты по кварталам" in r.text            # график оборотов
+        assert "Холдинг" in r.text and "ЮЛ-2" in r.text    # разворот холдинга
+        assert "передаём потому что важно" in r.text       # комментарий РОПа
+        assert "ситуация в СП" in r.text                   # блок СП
+
+    def test_403_without_module(self, client, db):
+        t = _tenant(db)
+        _user(db, t, "noaccess", "guest", "all", module="other_module")
+        db.commit()
+        _login(client, "noaccess")
+        r = client.get("/api/client-rotation/export-managers")
+        assert r.status_code == 403
+
+    def test_malformed_json_does_not_crash(self, client, db):
+        # Кривые turnover/score_breakdown (строки-мусор, неверный тип) не роняют 500.
+        t = _tenant(db)
+        _user(db, t, "rop", "rop", "all")
+        emp = _employee(db, t.id, "М", "М М.М.")
+        c = _company(db, t.id, "Кривой", "7700000001", "7700000001")
+        _crd(
+            db, t.id, c.id, score=None,
+            turnover_json=["мусор", None, "12.5"], score_breakdown_json={"size": "abc"},
+        )
+        db.add(Assignment(tenant_id=t.id, company_id=c.id, assigned_to_employee_id=emp.id))
+        db.commit()
+        _login(client, "rop")
+        r = client.get("/api/client-rotation/export-managers")
+        assert r.status_code == 200
+        assert "Кривой" in r.text
+        assert "Низкий приоритет" in r.text  # score=None -> низкий

@@ -149,6 +149,7 @@ def _to_list_item(
         "recommendation": crd.recommendation,
         "transfer_status": effective_status,
         "assigned_to": assigned_to,
+        "assigned_to_employee_id": assignment.assigned_to_employee_id if assignment else None,
         "comment": comment,
         # Из LLM-саммари (summaries), приоритетный проверенный контакт.
         "summary_llm": summary.summary if summary else None,
@@ -178,16 +179,24 @@ def list_receiving_managers(db: DBSession, tenant_id: int) -> list[dict]:
     return [{"employee_id": eid, "crm_name": crm} for eid, crm in rows]
 
 
+_UNSET = object()  # «поле не передано» - в отличие от None («очистить»).
+
+
 def upsert_assignment(
     db: DBSession,
     tenant_id: int,
     *,
     company_id: int,
-    assigned_to_employee_id: int | None,
-    comment: str | None,
-    transfer_status: str | None,
+    assigned_to_employee_id: int | None | object = _UNSET,
+    comment: str | None | object = _UNSET,
+    transfer_status: str | None | object = _UNSET,
 ) -> Assignment:
-    """Создать или обновить назначение по (tenant_id, company_id). 1:1 к компании."""
+    """Создать или обновить назначение по (tenant_id, company_id). 1:1 к компании.
+
+    Частичное обновление: переданные поля записываются, _UNSET - не трогаются.
+    Это позволяет инлайн-редактированию менять только статус ИЛИ только
+    принимающего, не обнуляя остальные поля назначения.
+    """
     existing = db.execute(
         select(Assignment).where(
             Assignment.tenant_id == tenant_id,
@@ -197,9 +206,12 @@ def upsert_assignment(
     if existing is None:
         existing = Assignment(tenant_id=tenant_id, company_id=company_id)
         db.add(existing)
-    existing.assigned_to_employee_id = assigned_to_employee_id
-    existing.comment = comment
-    existing.transfer_status = transfer_status
+    if assigned_to_employee_id is not _UNSET:
+        existing.assigned_to_employee_id = assigned_to_employee_id
+    if comment is not _UNSET:
+        existing.comment = comment
+    if transfer_status is not _UNSET:
+        existing.transfer_status = transfer_status
     return existing
 
 

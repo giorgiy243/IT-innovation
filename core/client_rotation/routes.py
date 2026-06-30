@@ -10,13 +10,18 @@ POST /api/client-rotation/assignments  - назначить менеджера /
 """
 from __future__ import annotations
 
+import io
+import re
+import zipfile
+
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from fastapi.responses import Response
 from sqlalchemy.orm import Session as DBSession
 
 from core.auth.deps import get_current_auth
 from core.auth.service import AuthContext
-from core.client_rotation.export import export_assignments_xlsx
+from core.client_rotation.export import export_assignments_by_manager
+from core.client_rotation.export_managers import build_managers_doc
 from core.client_rotation.service import (
     company_in_tenant,
     employee_in_tenant,
@@ -29,11 +34,21 @@ from core.db import get_db
 from core.rbac.deps import require_module
 from core.rbac.service import ModuleAccess
 
-_XLSX_MEDIA = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+_ZIP_MEDIA = "application/zip"
+_FNAME_BAD = re.compile(r'[\\/:*?"<>|]+')
 
 router = APIRouter(prefix="/api/client-rotation", tags=["client_rotation"])
 
 _MODULE = "client_rotation"
+
+
+def _safe_filename(name: str) -> str:
+    """Имя МОП -> безопасное имя файла (без запрещённых в ФС символов).
+
+    Точку в конце ФИО («П.П.») не трогаем - расширение .xlsx идёт следом.
+    """
+    safe = _FNAME_BAD.sub("_", (name or "").strip())
+    return (safe or "без_МОП")[:100]
 
 
 @router.get("/clients")
@@ -71,12 +86,45 @@ def api_export(
     auth: AuthContext = Depends(get_current_auth),
     db: DBSession = Depends(get_db),
 ) -> Response:
-    """Выгрузка назначений в 1С (xlsx по шаблону ДСП, с разворотом холдингов)."""
-    data = export_assignments_xlsx(db, auth.tenant_id)
+    """Выгрузка в 1С: ZIP с отдельным xlsx (шаблон ДСП) на каждого принимающего МОП.
+
+    Разворот холдингов сохранён. Имена файлов внутри архива - по ФИО МОП,
+    при совпадении имён добавляется числовой суффикс.
+    """
+    files = export_assignments_by_manager(db, auth.tenant_id)
+    buf = io.BytesIO()
+    used: dict[str, int] = {}
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        for mgr, data in files:
+            base = _safe_filename(mgr)
+            n = used.get(base, 0)
+            used[base] = n + 1
+            fname = f"{base}.xlsx" if n == 0 else f"{base} ({n}).xlsx"
+            zf.writestr(fname, data)
     return Response(
-        content=data,
-        media_type=_XLSX_MEDIA,
-        headers={"Content-Disposition": "attachment; filename=dsp_export.xlsx"},
+        content=buf.getvalue(),
+        media_type=_ZIP_MEDIA,
+        headers={"Content-Disposition": "attachment; filename=1c_export.zip"},
+    )
+
+
+@router.get("/export-managers")
+def api_export_managers(
+    _access: ModuleAccess = Depends(require_module(_MODULE)),
+    auth: AuthContext = Depends(get_current_auth),
+    db: DBSession = Depends(get_db),
+) -> Response:
+    """Выгрузка для МОП: standalone HTML-досье для принимающих менеджеров.
+
+    Один самодостаточный HTML-файл (инлайн-CSS) со всеми назначенными клиентами,
+    сгруппированными по принимающему менеджеру. ПД (контакты, ИНН) - только в
+    границах арендатора и под доступом к модулю.
+    """
+    html = build_managers_doc(db, auth.tenant_id)
+    return Response(
+        content=html,
+        media_type="text/html; charset=utf-8",
+        headers={"Content-Disposition": "attachment; filename=rotation_managers.html"},
     )
 
 
@@ -102,21 +150,24 @@ def api_save_assignment(
     if not company_in_tenant(db, auth.tenant_id, company_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Клиент не найден")
 
-    emp_id = body.get("assigned_to_employee_id")
-    if emp_id is not None:
-        if not isinstance(emp_id, int) or isinstance(emp_id, bool) or not employee_in_tenant(db, auth.tenant_id, emp_id):
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="assigned_to_employee_id неизвестен",
-            )
+    # Частичное обновление: пишем только те поля, что реально пришли в теле.
+    # Так инлайн-редактирование может менять статус ИЛИ принимающего по отдельности.
+    patch: dict = {}
+    if "assigned_to_employee_id" in body:
+        emp_id = body.get("assigned_to_employee_id")
+        if emp_id is not None:
+            if not isinstance(emp_id, int) or isinstance(emp_id, bool) or not employee_in_tenant(db, auth.tenant_id, emp_id):
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="assigned_to_employee_id неизвестен",
+                )
+        patch["assigned_to_employee_id"] = emp_id
+    if "transfer_status" in body:
+        patch["transfer_status"] = body.get("transfer_status") or None
+    if "comment" in body:
+        patch["comment"] = body.get("comment") or None
 
-    assignment = upsert_assignment(
-        db, auth.tenant_id,
-        company_id=company_id,
-        assigned_to_employee_id=emp_id,
-        comment=(body.get("comment") or None),
-        transfer_status=(body.get("transfer_status") or None),
-    )
+    assignment = upsert_assignment(db, auth.tenant_id, company_id=company_id, **patch)
     db.commit()
     return {
         "ok": True,

@@ -42,7 +42,7 @@ from core.models import (
 BOOL_FIELDS = ("is_orphan", "in_sp", "in_dsp")
 JSON_FIELDS = ("turnover_json", "score_breakdown_json", "holding_members_json")
 CRD_FIELDS = (
-    "current_manager", "industry", "source_file",
+    "current_manager", "industry", "level", "source_file",
     *BOOL_FIELDS,
     "days_no_contact", "days_no_kp", "days_no_shipment",
     "phone", "contact_person", "email", "site", "employees", "activity",
@@ -118,9 +118,13 @@ def seed(db_path: str, tenant_id: int) -> None:
             )
         }
 
-        crd_existing = {r.company_id for r in db.execute(
-            select(ClientRotationData.company_id).where(ClientRotationData.tenant_id == tenant_id)
-        )}
+        crd_by_company = {
+            r.company_id: r
+            for r in db.execute(
+                select(ClientRotationData).where(ClientRotationData.tenant_id == tenant_id)
+            ).scalars()
+        }
+        crd_existing = set(crd_by_company)
         sm_existing = {r.company_id for r in db.execute(
             select(Summary.company_id).where(Summary.tenant_id == tenant_id)
         )}
@@ -133,12 +137,20 @@ def seed(db_path: str, tenant_id: int) -> None:
 
         # 1) client_rotation_data
         crd_created = 0
+        crd_backfilled = 0
         for row in clients:
             cid = company_by_key.get(row.get("inn") or "")
             if cid is None:
                 unresolved_company += 1
                 continue
             if cid in crd_existing:
+                # Backfill: дозаполняем level у уже существующих строк (новая колонка),
+                # не пересобирая датасет и не трогая прочие поля.
+                existing = crd_by_company.get(cid)
+                src_level = row.get("level")
+                if existing is not None and src_level and existing.level != src_level:
+                    existing.level = src_level
+                    crd_backfilled += 1
                 continue
             db.add(ClientRotationData(tenant_id=tenant_id, company_id=cid, **_crd_values(row)))
             crd_existing.add(cid)
@@ -180,6 +192,8 @@ def seed(db_path: str, tenant_id: int) -> None:
         db.flush()
 
     print(f"Создано: client_rotation_data={crd_created}, summaries={sm_created}, assignments={as_created}")
+    if crd_backfilled:
+        print(f"Backfill level у существующих client_rotation_data: {crd_backfilled}")
     if unresolved_company:
         print(f"ВНИМАНИЕ: клиентов без компании в companies (пропущено): {unresolved_company}")
     if unresolved_mgr:
