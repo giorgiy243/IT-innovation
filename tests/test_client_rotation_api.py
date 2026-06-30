@@ -236,6 +236,27 @@ def test_effective_status_override(client, db):
     assert data["clients"][0]["transfer_status"] == "ручной"  # override важнее
 
 
+def test_holding_members_hidden_from_list(client, db):
+    # Как в client-rotate: ЮЛ-члены холдинга скрыты из списка; видны голова и
+    # самостоятельные компании.
+    t = _tenant(db)
+    _user(db, t, "rop", "rop", "all")
+    head = _company(db, t.id, "Голова", "7700000010", "7700000010")
+    head.holding_id, head.is_holding_head = "7700000010", True
+    member = _company(db, t.id, "ЧленХолдинга", "7700000011", "7700000011")
+    member.holding_id, member.is_holding_head = "7700000010", False
+    standalone = _company(db, t.id, "Самостоятельная", "7700000012", "7700000012")
+    _crd(db, t.id, head.id)
+    _crd(db, t.id, member.id)
+    _crd(db, t.id, standalone.id)
+    db.commit()
+    _login(client, "rop")
+    names = {c["name"] for c in client.get("/api/client-rotation/clients").json()["clients"]}
+    assert "Голова" in names
+    assert "Самостоятельная" in names
+    assert "ЧленХолдинга" not in names  # ЮЛ-член холдинга скрыт
+
+
 # --- менеджеры ---
 
 def test_managers_excludes_inactive(client, db):

@@ -82,6 +82,10 @@ def list_clients(
     JOIN: companies + client_rotation_data (+ assignments, summaries, принимающий
     сотрудник - опционально). Фильтры q (имя/ИНН) и status (эффективный статус)
     применяются после сборки эффективного статуса.
+
+    ЮЛ-члены холдинга СКРЫТЫ (как в client-rotate): в списке - только головы
+    холдингов и самостоятельные компании. Члены переходят вместе с головой
+    (разворот холдинга при выгрузке), отдельная строка в таблице им не нужна.
     """
     names = visible_manager_names(db, tenant_id, scope, employee)
     if names is not None and not names:
@@ -94,6 +98,8 @@ def list_clients(
         .outerjoin(Summary, Summary.company_id == Company.id)
         .outerjoin(Employee, Employee.id == Assignment.assigned_to_employee_id)
         .where(Company.tenant_id == tenant_id)
+        # Скрыть ЮЛ-члены холдинга: только головы или компании вне холдингов.
+        .where((Company.holding_id.is_(None)) | (Company.is_holding_head.is_(True)))
     )
     if names is not None:
         stmt = stmt.where(ClientRotationData.current_manager.in_(names))
