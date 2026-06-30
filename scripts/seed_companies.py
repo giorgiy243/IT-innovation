@@ -1,9 +1,10 @@
 """Сид компаний из client_rotation.db (client-rotate).
 
-Читает таблицу clients, отбирает записи с валидным ИНН (10 или 12 цифр),
-делает upsert в companies по (tenant_id, source_key), где source_key=ИНН.
-Идемпотентен: повторный запуск обновляет name/city/segment/holding_id/
-is_holding_head, не дублирует строки. Клиенты без ИНН - Фаза 2.1 плана ротации.
+Читает таблицу clients, заводит ВСЕХ клиентов: upsert в companies по
+(tenant_id, source_key). source_key = ИНН либо суррогат `|Имя|Менеджер`;
+companies.inn = ИНН только если валиден, иначе NULL. Идемпотентен:
+повторный запуск обновляет inn/name/city/segment/holding_id/is_holding_head,
+не дублирует строки.
 
 Использование:
     python scripts/seed_companies.py --db /path/to/client_rotation.db
@@ -34,7 +35,13 @@ def parse_args() -> argparse.Namespace:
 
 
 def load_clients(db_path: str) -> list[dict]:
-    """Читает clients из client_rotation.db, фильтрует по валидному ИНН."""
+    """Читает clients из client_rotation.db. Заводит ВСЕХ клиентов.
+
+    Поле `inn` в источнике содержит либо настоящий ИНН, либо суррогат
+    `|Имя|Менеджер` (для клиентов без ИНН). Отсюда:
+      - source_key = это значение как есть (стабильный ключ клиента);
+      - companies.inn = ИНН, только если валиден (10/12 цифр), иначе NULL.
+    """
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
@@ -46,14 +53,12 @@ def load_clients(db_path: str) -> list[dict]:
 
     result = []
     for r in rows:
-        inn = r["inn"] or ""
-        if not INN_RE.match(inn):
-            continue
+        raw = (r["inn"] or "").strip()
+        if not raw:
+            continue  # совсем без ключа - пропускаем (в источнике не встречается)
         result.append({
-            # У валидного ИНН ключ = сам ИНН. Клиенты без ИНН (суррогаты) пока
-            # не заводятся - расширение на них в Фазе 2.1 плана ротации.
-            "source_key": inn,
-            "inn": inn,
+            "source_key": raw,
+            "inn": raw if INN_RE.match(raw) else None,
             "name": r["name"] or "",
             "city": r["city"] or None,
             "segment": r["level"] or None,
@@ -65,7 +70,9 @@ def load_clients(db_path: str) -> list[dict]:
 
 def seed(db_path: str, tenant_id: int) -> None:
     clients = load_clients(db_path)
-    print(f"Загружено из client_rotation.db: {len(clients)} записей с валидным ИНН")
+    without_inn = sum(1 for c in clients if c["inn"] is None)
+    print(f"Загружено из client_rotation.db: {len(clients)} клиентов "
+          f"(из них без ИНН: {without_inn})")
 
     with session_scope() as db:
         tenant = db.get(Tenant, tenant_id)
@@ -87,7 +94,7 @@ def seed(db_path: str, tenant_id: int) -> None:
             if key in existing:
                 c = existing[key]
                 changed = False
-                for field in ("name", "city", "segment", "holding_id", "is_holding_head"):
+                for field in ("inn", "name", "city", "segment", "holding_id", "is_holding_head"):
                     if getattr(c, field) != data[field]:
                         setattr(c, field, data[field])
                         changed = True
