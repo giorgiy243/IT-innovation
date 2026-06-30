@@ -15,7 +15,6 @@
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,sans-serif;color:var(--dark);-webkit-font-smoothing:antialiased;}
-
 .layout{display:flex;height:100vh;overflow:hidden;}
 
 /* Sidebar */
@@ -46,10 +45,84 @@ html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,san
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 .topbar{height:var(--topbar-h);flex:none;display:flex;align-items:center;padding:0 24px;background:#fff;border-bottom:1px solid var(--light);gap:12px;}
 .page-h{font-size:15px;font-weight:700;color:var(--dark);}
+.count-badge{font-size:12px;color:var(--mid);background:var(--bg);border:1px solid var(--light);border-radius:20px;padding:2px 10px;}
+.scope-badge{font-size:11px;color:var(--slate);background:rgba(129,180,70,.12);border-radius:20px;padding:2px 10px;font-weight:600;}
+.btn-export{margin-left:auto;height:34px;padding:0 16px;border-radius:7px;font-size:13px;font-family:inherit;font-weight:600;color:#fff;background:var(--brand);border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background .12s;}
+.btn-export:hover{background:var(--brand-d);}
+.btn-export svg{width:15px;height:15px;}
 .content{flex:1;overflow-y:auto;padding:20px 24px;}
 
-.placeholder{padding:40px 24px;text-align:center;color:var(--mid);}
-.placeholder h3{font-size:16px;color:var(--dark);margin-bottom:8px;}
+/* Filters */
+.filters{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+.filter-input{height:34px;border:1px solid var(--light);border-radius:7px;padding:0 10px;font-size:13px;font-family:inherit;color:var(--dark);background:#fff;outline:none;width:260px;}
+.filter-input:focus{border-color:var(--brand);}
+.filter-select{height:34px;border:1px solid var(--light);border-radius:7px;padding:0 8px;font-size:13px;font-family:inherit;color:var(--dark);background:#fff;outline:none;cursor:pointer;}
+.filter-select:focus{border-color:var(--brand);}
+.btn-reset{height:34px;padding:0 14px;border:1px solid var(--light);border-radius:7px;font-size:13px;font-family:inherit;color:var(--mid);background:#fff;cursor:pointer;transition:border-color .12s,color .12s;display:inline-flex;align-items:center;justify-content:center;}
+.btn-reset:hover{border-color:var(--mid);color:var(--dark);}
+
+/* Table */
+.table-wrap{background:#fff;border-radius:10px;box-shadow:var(--sh);overflow:hidden;}
+table.cr{width:100%;border-collapse:collapse;font-size:13px;}
+table.cr thead th{background:var(--bg);color:var(--slate);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;text-align:left;padding:10px 12px;border-bottom:1px solid var(--light);white-space:nowrap;}
+table.cr thead th.num{text-align:right;}
+table.cr tbody td{padding:9px 12px;border-bottom:1px solid var(--bg);vertical-align:middle;}
+table.cr tbody tr{cursor:pointer;transition:background .1s;}
+table.cr tbody tr:hover{background:rgba(129,180,70,.06);}
+table.cr tbody tr:last-child td{border-bottom:none;}
+.c-name{font-weight:600;color:var(--dark);}
+.c-inn{font-size:11px;color:var(--mid);margin-top:1px;}
+.c-num{text-align:right;font-variant-numeric:tabular-nums;}
+.c-score{font-weight:700;color:var(--brand-d);text-align:right;font-variant-numeric:tabular-nums;}
+.c-mgr{color:var(--slate);white-space:nowrap;}
+.c-days{text-align:right;font-variant-numeric:tabular-nums;color:var(--slate);}
+.c-days.warn{color:#b45309;font-weight:600;}
+.assigned-pill{font-size:11.5px;color:#3a6320;background:rgba(129,180,70,.14);border-radius:5px;padding:2px 8px;white-space:nowrap;}
+
+/* Badges */
+.badge{display:inline-block;font-size:11px;font-weight:600;border-radius:5px;padding:2px 8px;white-space:nowrap;}
+.badge-active{background:#e8f5d9;color:#4a7a1e;}
+.badge-progress{background:#fef9c3;color:#854d0e;}
+.badge-transfer{background:#dbeafe;color:#1e40af;}
+.badge-none{background:#eef2f7;color:#64748b;}
+
+.empty-state{padding:48px;text-align:center;color:var(--mid);font-size:14px;}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(30,40,50,.55);display:none;align-items:center;justify-content:center;z-index:1000;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:#fff;border-radius:12px;width:600px;max-width:96vw;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(30,40,50,.28);}
+.modal-head{padding:16px 20px;border-bottom:1px solid var(--light);display:flex;align-items:flex-start;flex:none;gap:8px;}
+.modal-title{font-size:15px;font-weight:700;color:var(--dark);flex:1;}
+.modal-sub{font-size:12px;color:var(--mid);margin-top:2px;}
+.modal-close{width:30px;height:30px;border:none;background:transparent;cursor:pointer;border-radius:6px;font-size:18px;color:var(--mid);display:flex;align-items:center;justify-content:center;transition:background .12s,color .12s;line-height:1;flex:none;}
+.modal-close:hover{background:var(--bg);color:var(--dark);}
+.modal-body{flex:1;overflow-y:auto;padding:20px;}
+.modal-foot{padding:14px 20px;border-top:1px solid var(--light);display:flex;align-items:center;justify-content:flex-end;gap:10px;flex:none;}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;margin-bottom:18px;}
+.info-cell{min-width:0;}
+.info-lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--mid);margin-bottom:2px;}
+.info-val{font-size:13px;color:var(--dark);word-break:break-word;}
+.info-block{margin-bottom:14px;}
+.info-block .info-val{line-height:1.5;}
+.form-section-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mid);margin:18px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--bg);}
+.form-group{margin-bottom:12px;}
+.form-row{display:flex;gap:12px;}
+.form-row .form-group{flex:1;margin-bottom:0;}
+.form-label{display:block;font-size:12px;font-weight:600;color:var(--slate);margin-bottom:4px;}
+.form-inp{width:100%;background:rgba(50,60,80,.06);border:1.5px solid transparent;border-radius:7px;padding:8px 12px;font-size:13px;font-family:inherit;color:var(--dark);outline:none;transition:border-color .15s,background .15s;}
+.form-inp:focus{border-color:var(--brand);background:#fff;}
+.form-textarea{resize:vertical;min-height:54px;}
+.btn-cancel{height:36px;padding:0 18px;border-radius:7px;font-size:13px;font-family:inherit;font-weight:600;color:var(--mid);background:transparent;border:1.5px solid var(--light);cursor:pointer;transition:border-color .12s,color .12s;display:inline-flex;align-items:center;justify-content:center;}
+.btn-cancel:hover{border-color:var(--mid);color:var(--dark);}
+.btn-save{height:36px;padding:0 20px;border-radius:7px;font-size:13px;font-family:inherit;font-weight:600;color:#fff;background:var(--brand);border:none;cursor:pointer;transition:background .12s;display:inline-flex;align-items:center;justify-content:center;}
+.btn-save:hover{background:var(--brand-d);}
+.btn-save:disabled{background:var(--mid);cursor:not-allowed;}
+
+/* Toast */
+.toast{position:fixed;bottom:40px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--dark);color:#fff;font-size:13px;font-weight:500;padding:10px 20px;border-radius:8px;box-shadow:0 4px 16px rgba(30,40,50,.3);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:2000;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.err{background:#991b1b;}
 </style>
 </head>
 <body>
@@ -62,11 +135,9 @@ html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,san
       </div>
       <span class="logo-text">IT-innovation</span>
     </a>
-
     <div class="nav-body" id="navBody">
       <div class="nav-group-label">Загрузка...</div>
     </div>
-
     <div class="s-footer">
       <div class="user-row">
         <div class="avatar" id="userAvatar">?</div>
@@ -74,7 +145,7 @@ html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,san
           <div class="u-name" id="userName">...</div>
           <div class="u-role" id="userRole">...</div>
         </div>
-        <button class="logout-btn" title="Выйти" id="logoutBtn">⏻</button>
+        <button class="logout-btn" title="Выйти" id="logoutBtn">&#x23FB;</button>
       </div>
     </div>
   </aside>
@@ -83,83 +154,351 @@ html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,san
   <div class="main">
     <div class="topbar">
       <span class="page-h">Ротация клиентов</span>
+      <span class="count-badge" id="countBadge">...</span>
+      <span class="scope-badge" id="scopeBadge"></span>
+      <button class="btn-export" id="btnExport" title="Выгрузить назначения в 1С">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1v8m0 0L5 6m3 3l3-3M2 12v2h12v-2"/></svg>
+        Выгрузка в 1С
+      </button>
     </div>
     <div class="content">
-      <div class="placeholder">
-        <h3>Ротация клиентов</h3>
-        <p>Функционал в разработке</p>
+      <div class="filters">
+        <input id="searchInput" class="filter-input" type="search" placeholder="Поиск по названию или ИНН...">
+        <select id="statusSelect" class="filter-select">
+          <option value="">Все статусы</option>
+          <option value="active">Активный</option>
+          <option value="progress">В работе</option>
+          <option value="transfer">На передачу</option>
+        </select>
+        <button class="btn-reset" id="resetBtn">Сбросить</button>
+      </div>
+
+      <div class="table-wrap">
+        <table class="cr">
+          <thead>
+            <tr>
+              <th class="num">Скоринг</th>
+              <th>Клиент</th>
+              <th>Текущий менеджер</th>
+              <th class="num">Без контакта</th>
+              <th class="num">Без КП</th>
+              <th class="num">Без отгрузки</th>
+              <th>Статус</th>
+              <th>Принимающий</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr><td colspan="8" class="empty-state">Загрузка...</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
 </div>
 
-<script>
-const STAFF_ICON = `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M5 7a2.5 2.5 0 100-5 2.5 2.5 0 000 5zm-4 7a4 4 0 018 0H1zm9-7a2 2 0 100-4 2 2 0 000 4zm1 1a3 3 0 012.83 2H10a5 5 0 00-.8-2.75A3 3 0 0111 8z"/></svg>`;
+<!-- Модал назначения -->
+<div class="modal-overlay" id="assignModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div style="flex:1;min-width:0">
+        <div class="modal-title" id="mTitle">Клиент</div>
+        <div class="modal-sub" id="mSub"></div>
+      </div>
+      <button class="modal-close" id="mCloseBtn" aria-label="Закрыть">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="info-grid" id="mInfoGrid"></div>
+      <div class="info-block" id="mSummaryBlock" style="display:none">
+        <div class="info-lbl">Сводка</div>
+        <div class="info-val" id="mSummary"></div>
+      </div>
 
+      <div class="form-section-head">Решение по ротации</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="mManager">Принимающий менеджер</label>
+          <select class="form-inp" id="mManager"><option value="">— не назначен —</option></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="mStatus">Статус передачи</label>
+          <select class="form-inp" id="mStatus">
+            <option value="">—</option>
+            <option value="active">Активный</option>
+            <option value="progress">В работе</option>
+            <option value="transfer">На передачу</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="mComment">Комментарий</label>
+        <textarea class="form-inp form-textarea" id="mComment" rows="2"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn-cancel" id="mCancelBtn">Отмена</button>
+      <button type="button" class="btn-save" id="mSaveBtn">Сохранить</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── Навигация (sidebar) ───────────────────────────────────────────────────
+const STAFF_ICON = `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M5 7a2.5 2.5 0 100-5 2.5 2.5 0 000 5zm-4 7a4 4 0 018 0H1zm9-7a2 2 0 100-4 2 2 0 000 4zm1 1a3 3 0 012.83 2H10a5 5 0 00-.8-2.75A3 3 0 0111 8z"/></svg>`;
 const NAV_ICONS = {
   sales:    `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 10l4-4 3 3 5-5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>`,
   client_rotation:`<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 110 14A7 7 0 018 1zm0 1.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zm1.5 5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/></svg>`,
-  presale:  `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2a6 6 0 100 12A6 6 0 008 2zm0 1.5a4.5 4.5 0 110 9 4.5 4.5 0 010-9zM7 5v4l3 1.5.5-1L8 8V5H7z"/></svg>`,
-  marketing:`<svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 8a5 5 0 0110 0H3zm5-6a1 1 0 110 2 1 1 0 010-2zM2 9h12v1H2z"/></svg>`,
-  bidding:  `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1l2 4h4l-3 3 1 4-4-2-4 2 1-4-3-3h4z"/></svg>`,
-  logistics:`<svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 4h9v6H1zM10 6h3l2 2v2h-5V6zM3 10a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm8 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"/></svg>`,
-  docs:     `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h7l3 3v9H3V2zm7 0v3h3M6 7h5M6 9h5M6 11h3"/></svg>`,
 };
+function defaultIcon(){return `<svg viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="12" height="12" rx="2" opacity=".3"/><rect x="5" y="5" width="6" height="1.5" rx=".75"/><rect x="5" y="8" width="6" height="1.5" rx=".75"/></svg>`;}
+const MODULE_URLS = {sales:'/vendors', client_rotation:'/client-rotation'};
 
-function defaultIcon() {
-  return `<svg viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="12" height="12" rx="2" opacity=".3"/><rect x="5" y="5" width="6" height="1.5" rx=".75"/><rect x="5" y="8" width="6" height="1.5" rx=".75"/></svg>`;
+const STATUS_LABEL = {active:'Активный', progress:'В работе', transfer:'На передачу'};
+const STATUS_CLASS = {active:'badge-active', progress:'badge-progress', transfer:'badge-transfer'};
+
+let _filters = {q:'', status:''};
+let _managers = [];
+
+function esc(s){
+  if (s === null || s === undefined) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function statusBadge(st){
+  if (!st) return '<span class="badge badge-none">-</span>';
+  const cls = STATUS_CLASS[st] || 'badge-none';
+  return `<span class="badge ${cls}">${esc(STATUS_LABEL[st] || st)}</span>`;
+}
+function daysCell(v){
+  if (v === null || v === undefined) return '<td class="c-days">-</td>';
+  const warn = v >= 90 ? ' warn' : '';
+  return `<td class="c-days${warn}">${v}</td>`;
 }
 
-const MODULE_URLS = {sales: '/vendors', client_rotation: '/client-rotation'};
-
-async function init() {
+async function buildSidebar(){
   const meRes = await fetch('/me');
-  if (!meRes.ok) { window.location.href = '/login'; return; }
+  if (!meRes.ok){ window.location.href='/login'; return; }
   const me = await meRes.json();
-  if (me.must_change_password) { window.location.href = '/login'; return; }
-
+  if (me.must_change_password){ window.location.href='/login'; return; }
   document.getElementById('userName').textContent = me.login;
-  document.getElementById('userAvatar').textContent = me.login.slice(0, 2).toUpperCase();
+  document.getElementById('userAvatar').textContent = me.login.slice(0,2).toUpperCase();
 
-  const navRes = await fetch('/nav');
-  const nav = await navRes.json();
+  const nav = await (await fetch('/nav')).json();
+  document.getElementById('userRole').textContent = (nav.roles||[]).join(', ') || 'нет роли';
+  const body = document.getElementById('navBody');
+  body.innerHTML = '';
+  const label = document.createElement('div');
+  label.className = 'nav-group-label';
+  label.textContent = 'Модули';
+  body.appendChild(label);
+  (nav.modules||[]).forEach(m => {
+    const url = MODULE_URLS[m.code];
+    const item = document.createElement(url ? 'a' : 'div');
+    item.className = 'nav-item' + (m.code === 'client_rotation' ? ' act' : '');
+    if (url){ item.href = url; item.style.textDecoration = 'none'; }
+    item.innerHTML = (NAV_ICONS[m.code] || defaultIcon()) + `<span>${esc(m.name)}</span>`;
+    body.appendChild(item);
+  });
+  const staff = document.createElement('a');
+  staff.className = 'nav-item';
+  staff.href = '/employees';
+  staff.style.textDecoration = 'none';
+  staff.innerHTML = STAFF_ICON + '<span>Сотрудники</span>';
+  body.appendChild(staff);
+}
 
-  document.getElementById('userRole').textContent = nav.roles.join(', ') || 'нет роли';
+// ─── Список клиентов ───────────────────────────────────────────────────────
+function buildUrl(f){
+  const p = new URLSearchParams();
+  if (f.q) p.set('q', f.q);
+  if (f.status) p.set('status', f.status);
+  const s = p.toString();
+  return '/api/client-rotation/clients' + (s ? '?'+s : '');
+}
 
-  const navBody = document.getElementById('navBody');
-  navBody.innerHTML = '';
-  if (nav.modules.length === 0) {
-    navBody.innerHTML = '<div class="nav-empty">Модули не назначены.</div>';
+async function loadClients(){
+  const body = document.getElementById('tableBody');
+  const res = await fetch(buildUrl(_filters));
+  if (res.status === 401){ window.location.href='/login'; return; }
+  if (res.status === 403){ body.innerHTML = '<tr><td colspan="8" class="empty-state">Нет доступа к модулю.</td></tr>'; return; }
+  if (!res.ok){ body.innerHTML = '<tr><td colspan="8" class="empty-state">Ошибка загрузки.</td></tr>'; return; }
+  const data = await res.json();
+  renderTable(data.clients, data.total);
+  document.getElementById('scopeBadge').textContent = 'Видимость: ' + (data.scope || '-');
+}
+
+function renderTable(clients, total){
+  document.getElementById('countBadge').textContent =
+    total === clients.length ? `${total}` : `${clients.length} из ${total}`;
+  const body = document.getElementById('tableBody');
+  if (!clients.length){
+    body.innerHTML = '<tr><td colspan="8" class="empty-state">Нет клиентов по заданным фильтрам.</td></tr>';
+    return;
+  }
+  body.innerHTML = clients.map((c, i) => `
+    <tr data-idx="${i}">
+      <td class="c-score">${c.score ?? '-'}</td>
+      <td>
+        <div class="c-name">${esc(c.name)}</div>
+        <div class="c-inn">${c.inn ? 'ИНН '+esc(c.inn) : 'без ИНН'}</div>
+      </td>
+      <td class="c-mgr">${esc(c.current_manager) || '-'}</td>
+      ${daysCell(c.days_no_contact)}
+      ${daysCell(c.days_no_kp)}
+      ${daysCell(c.days_no_shipment)}
+      <td>${statusBadge(c.transfer_status)}</td>
+      <td>${c.assigned_to ? `<span class="assigned-pill">${esc(c.assigned_to)}</span>` : '-'}</td>
+    </tr>`).join('');
+  // клик по строке -> модал
+  _lastClients = clients;
+  body.querySelectorAll('tr[data-idx]').forEach(tr => {
+    tr.addEventListener('click', () => openAssign(clients[+tr.dataset.idx]));
+  });
+}
+
+// ─── Модал назначения ──────────────────────────────────────────────────────
+let _lastClients = [];
+let _modalClient = null;
+
+function infoCell(lbl, val){
+  if (val === null || val === undefined || val === '') return '';
+  return `<div class="info-cell"><div class="info-lbl">${esc(lbl)}</div><div class="info-val">${esc(val)}</div></div>`;
+}
+
+function openAssign(c){
+  _modalClient = c;
+  document.getElementById('mTitle').textContent = c.name;
+  document.getElementById('mSub').textContent = (c.inn ? 'ИНН '+c.inn : 'без ИНН') + (c.city ? ' · '+c.city : '');
+  const grid = document.getElementById('mInfoGrid');
+  grid.innerHTML = [
+    infoCell('Скоринг', c.score),
+    infoCell('Текущий менеджер', c.current_manager),
+    infoCell('Телефон', c.v_contact_phone || c.phone),
+    infoCell('Контактное лицо', c.v_contact_name || c.contact_person),
+    infoCell('Email', c.email),
+    infoCell('Сайт', c.site),
+    infoCell('Отрасль', c.activity || c.industry),
+    infoCell('Сотрудников', c.employees),
+    infoCell('ДСП', c.dsp_info),
+    infoCell('СП', c.sp_info),
+  ].join('');
+  const sumBlock = document.getElementById('mSummaryBlock');
+  const summary = c.summary_llm || c.summary || c.recommendation;
+  if (summary){
+    document.getElementById('mSummary').textContent = summary;
+    sumBlock.style.display = 'block';
   } else {
-    const label = document.createElement('div');
-    label.className = 'nav-group-label';
-    label.textContent = 'Модули';
-    navBody.appendChild(label);
-    nav.modules.forEach((m) => {
-      const url = MODULE_URLS[m.code];
-      const item = document.createElement(url ? 'a' : 'div');
-      item.className = 'nav-item' + (m.code === 'client_rotation' ? ' act' : '');
-      if (url) {
-        item.href = url;
-        item.style.textDecoration = 'none';
-      }
-      item.innerHTML = (NAV_ICONS[m.code] || defaultIcon()) + `<span>${m.name}</span>`;
-      navBody.appendChild(item);
+    sumBlock.style.display = 'none';
+  }
+  // форма
+  fillManagerSelect();
+  document.getElementById('mManager').value = '';
+  document.getElementById('mStatus').value = c.transfer_status || '';
+  document.getElementById('mComment').value = c.comment || '';
+  document.getElementById('assignModal').classList.add('open');
+}
+function closeAssign(){ document.getElementById('assignModal').classList.remove('open'); }
+
+function fillManagerSelect(){
+  const sel = document.getElementById('mManager');
+  while (sel.options.length > 1) sel.remove(1);
+  _managers.forEach(m => {
+    const o = document.createElement('option');
+    o.value = m.employee_id;
+    o.textContent = m.crm_name;
+    sel.appendChild(o);
+  });
+}
+
+async function loadManagers(){
+  const res = await fetch('/api/client-rotation/managers');
+  if (res.ok) _managers = await res.json();
+}
+
+async function saveAssign(){
+  if (!_modalClient) return;
+  const empVal = document.getElementById('mManager').value;
+  const body = {
+    company_id: _modalClient.company_id,
+    assigned_to_employee_id: empVal ? parseInt(empVal, 10) : null,
+    transfer_status: document.getElementById('mStatus').value || null,
+    comment: document.getElementById('mComment').value.trim() || null,
+  };
+  const btn = document.getElementById('mSaveBtn');
+  btn.disabled = true; btn.textContent = 'Сохраняю...';
+  try {
+    const r = await fetch('/api/client-rotation/assignments', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body),
     });
-    const staffItem = document.createElement('a');
-    staffItem.className = 'nav-item';
-    staffItem.href = '/employees';
-    staffItem.style.textDecoration = 'none';
-    staffItem.innerHTML = STAFF_ICON + '<span>Сотрудники</span>';
-    navBody.appendChild(staffItem);
+    if (r.ok){
+      closeAssign();
+      showToast('Сохранено');
+      await loadClients();
+    } else {
+      const err = await r.json().catch(() => ({}));
+      showToast(err.detail || 'Ошибка сохранения', true);
+    }
+  } catch {
+    showToast('Ошибка сети', true);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Сохранить';
   }
 }
 
+// ─── Export ────────────────────────────────────────────────────────────────
+async function exportXlsx(){
+  const btn = document.getElementById('btnExport');
+  btn.disabled = true;
+  try {
+    const r = await fetch('/api/client-rotation/export');
+    if (!r.ok){ showToast('Ошибка выгрузки', true); return; }
+    const blob = await r.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'dsp_export.xlsx';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(a.href);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ─── Toast ─────────────────────────────────────────────────────────────────
+function showToast(msg, isErr=false){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isErr ? ' err' : '');
+  void t.offsetWidth;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ─── Слушатели и init ──────────────────────────────────────────────────────
+let searchTimer = null;
+document.getElementById('searchInput').addEventListener('input', e => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => { _filters = {..._filters, q:e.target.value.trim()}; loadClients(); }, 300);
+});
+document.getElementById('statusSelect').addEventListener('change', e => {
+  _filters = {..._filters, status:e.target.value}; loadClients();
+});
+document.getElementById('resetBtn').addEventListener('click', () => {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('statusSelect').value = '';
+  _filters = {q:'', status:''}; loadClients();
+});
+document.getElementById('btnExport').addEventListener('click', exportXlsx);
+document.getElementById('mCloseBtn').addEventListener('click', closeAssign);
+document.getElementById('mCancelBtn').addEventListener('click', closeAssign);
+document.getElementById('mSaveBtn').addEventListener('click', saveAssign);
+document.getElementById('assignModal').addEventListener('click', function(e){ if (e.target === this) closeAssign(); });
 document.getElementById('logoutBtn').addEventListener('click', async () => {
-  await fetch('/logout', {method: 'POST'});
-  window.location.href = '/login';
+  await fetch('/logout', {method:'POST'}); window.location.href='/login';
 });
 
+async function init(){
+  await buildSidebar();
+  await loadManagers();
+  await loadClients();
+}
 init();
 </script>
 </body>
