@@ -181,7 +181,11 @@ def api_export_managers(
     return Response(
         content=buf.getvalue(),
         media_type=_ZIP_MEDIA,
-        headers={"Content-Disposition": "attachment; filename=rotation_managers.zip"},
+        headers={
+            "Content-Disposition": "attachment; filename=rotation_managers.zip",
+            # Число файлов в архиве - чтобы фронт не скачивал пустой zip молча.
+            "X-Export-Files": str(len(docs)),
+        },
     )
 
 

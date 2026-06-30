@@ -582,6 +582,7 @@ class TestExportManagers:
         r = client.post("/api/client-rotation/export-managers")
         assert r.status_code == 200
         assert "zip" in r.headers["content-type"]
+        assert r.headers["x-export-files"] == "1"
         files = _zip_html(r.content)
         assert "Принимающий П.П..html" in files
         html = files["Принимающий П.П..html"]
@@ -634,6 +635,7 @@ class TestExportManagers:
         _login(client, "rop")
         r = client.post("/api/client-rotation/export-managers")
         assert r.status_code == 200
+        assert r.headers["x-export-files"] == "0"  # фронт покажет «нет новых», не скачает
         assert _zip_html(r.content) == {}  # ни одного принимающего - архив пуст
 
     def test_html_escaping(self, client, db):
