@@ -146,6 +146,12 @@ td.cell-status:has(select)::after,td.cell-assigned:has(select)::after{content:no
 .modal-head{padding:16px 20px;border-bottom:1px solid var(--light);display:flex;align-items:flex-start;flex:none;gap:8px;}
 .modal-title{font-size:15px;font-weight:700;color:var(--dark);flex:1;}
 .modal-sub{font-size:12px;color:var(--mid);margin-top:2px;}
+/* Состав холдинга в карточке: ЮЛ-члены столбиком, на 2 пункта меньше имени (15->13px). */
+.modal-holding{margin-top:8px;}
+.mh-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--mid);margin-bottom:3px;}
+.mh-item{font-size:13px;color:var(--slate);line-height:1.5;}
+/* Число компаний в холдинге рядом с названием (в таблице) */
+.holding-count{color:var(--mid);font-weight:500;}
 .modal-close{width:30px;height:30px;border:none;background:transparent;cursor:pointer;border-radius:6px;font-size:18px;color:var(--mid);display:flex;align-items:center;justify-content:center;transition:background .12s,color .12s;line-height:1;flex:none;}
 .modal-close:hover{background:var(--bg);color:var(--dark);}
 .modal-body{flex:1;overflow-y:auto;padding:20px;}
@@ -312,6 +318,7 @@ td.cell-status:has(select)::after,td.cell-assigned:has(select)::after{content:no
       <div style="flex:1;min-width:0">
         <div class="modal-title" id="mTitle">Клиент</div>
         <div class="modal-sub" id="mSub"></div>
+        <div class="modal-holding" id="mHolding" style="display:none"></div>
       </div>
       <button class="modal-close" id="mCloseBtn" aria-label="Закрыть">&#x2715;</button>
     </div>
@@ -592,7 +599,7 @@ function renderTable(clients, total){
     <tr data-idx="${i}">
       <td class="c-score">${c.score ?? '-'}</td>
       <td>
-        <div class="c-name">${esc(c.name)}</div>
+        <div class="c-name">${esc(c.name)}${holdingCount(c)}</div>
         <div class="c-inn">${c.inn ? 'ИНН '+esc(c.inn) : 'без ИНН'}</div>
       </td>
       <td class="c-mgr">${esc(c.current_manager) || '-'}</td>
@@ -611,6 +618,18 @@ function renderTable(clients, total){
     const asTd = tr.querySelector('.cell-assigned');
     asTd.addEventListener('click', e => { e.stopPropagation(); if (!asTd.querySelector('select')) editAssigned(asTd, c); });
   });
+}
+
+// Состав холдинга: ЮЛ-члены (без головы) и счётчик «(всего ЮЛ)» включая голову.
+function holdingMembers(c){
+  return Array.isArray(c.holding_members) ? c.holding_members : [];
+}
+function memberName(m){ return (m && m.name) ? m.name : m; }
+function holdingCount(c){
+  const m = holdingMembers(c);
+  return (c.is_holding_head && m.length)
+    ? ` <span class="holding-count">(${m.length + 1})</span>`
+    : '';
 }
 
 function assignedDisplay(c){
@@ -723,6 +742,17 @@ function openAssign(c){
   _modalClient = c;
   document.getElementById('mTitle').textContent = c.name;
   document.getElementById('mSub').textContent = (c.inn ? 'ИНН '+c.inn : 'без ИНН') + (c.city ? ' · '+c.city : '');
+  // Состав холдинга под наименованием: остальные ЮЛ столбиком (только у головы).
+  const hold = document.getElementById('mHolding');
+  const members = holdingMembers(c);
+  if (c.is_holding_head && members.length){
+    hold.style.display = 'block';
+    hold.innerHTML = '<div class="mh-label">Ещё в холдинге</div>'
+      + members.map(m => `<div class="mh-item">${esc(memberName(m))}</div>`).join('');
+  } else {
+    hold.style.display = 'none';
+    hold.innerHTML = '';
+  }
   const grid = document.getElementById('mInfoGrid');
   grid.innerHTML = [
     infoCell('Скоринг', c.score),

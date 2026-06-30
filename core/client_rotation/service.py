@@ -164,6 +164,8 @@ def _to_list_item(
         "city": company.city,
         "holding_id": company.holding_id,
         "is_holding_head": company.is_holding_head,
+        # Состав холдинга (ЮЛ-члены без головы) - для счётчика «(N)» и списка в карточке.
+        "holding_members": crd.holding_members_json if isinstance(crd.holding_members_json, list) else [],
         "current_manager": crd.current_manager,
         "industry": crd.industry,
         "score": crd.score,

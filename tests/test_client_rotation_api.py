@@ -257,6 +257,21 @@ def test_holding_members_hidden_from_list(client, db):
     assert "ЧленХолдинга" not in names  # ЮЛ-член холдинга скрыт
 
 
+def test_holding_head_exposes_members(client, db):
+    # Голова отдаёт состав холдинга (для счётчика «(N)» и списка в карточке).
+    t = _tenant(db)
+    _user(db, t, "rop", "rop", "all")
+    head = _company(db, t.id, "Голова", "7700000010", "7700000010")
+    head.holding_id, head.is_holding_head = "7700000010", True
+    _crd(db, t.id, head.id, holding_members_json=[{"name": "ЮЛ-2", "key": "7700000011"},
+                                                  {"name": "ЮЛ-3", "key": "7700000012"}])
+    db.commit()
+    _login(client, "rop")
+    item = client.get("/api/client-rotation/clients").json()["clients"][0]
+    assert item["is_holding_head"] is True
+    assert [m["name"] for m in item["holding_members"]] == ["ЮЛ-2", "ЮЛ-3"]  # всего ЮЛ = 3
+
+
 # --- менеджеры ---
 
 def test_managers_excludes_inactive(client, db):
