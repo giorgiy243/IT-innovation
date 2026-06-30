@@ -50,6 +50,11 @@ def client_rotation_page(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(request, "client_rotation.html")
 
 
+@router.get("/client-rotation/handovers", response_class=HTMLResponse)
+def client_rotation_handovers_page(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse(request, "client_rotation_handovers.html")
+
+
 @router.get("/profile", response_class=HTMLResponse)
 def profile_page(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(request, "profile.html")

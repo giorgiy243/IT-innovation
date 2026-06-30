@@ -29,6 +29,7 @@ from core.db import get_db
 from core.models import (
     Assignment,
     Base,
+    ClientHandover,
     ClientRotationData,
     Company,
     Employee,
@@ -524,7 +525,7 @@ class TestExportManagers:
         db.add(Assignment(tenant_id=t.id, company_id=c.id, assigned_to_employee_id=emp.id))
         db.commit()
         _login(client, "rop")
-        r = client.get("/api/client-rotation/export-managers")
+        r = client.post("/api/client-rotation/export-managers")
         assert r.status_code == 200
         assert "zip" in r.headers["content-type"]
         files = _zip_html(r.content)
@@ -548,7 +549,7 @@ class TestExportManagers:
         db.add(Assignment(tenant_id=t.id, company_id=c2.id, assigned_to_employee_id=e2.id))
         db.commit()
         _login(client, "rop")
-        files = _zip_html(client.get("/api/client-rotation/export-managers").content)
+        files = _zip_html(client.post("/api/client-rotation/export-managers").content)
         assert set(files) == {"Первый П.П..html", "Второй В.В..html"}
         assert "Альфа" in files["Первый П.П..html"] and "Бета" not in files["Первый П.П..html"]
         assert "Бета" in files["Второй В.В..html"] and "Альфа" not in files["Второй В.В..html"]
@@ -565,7 +566,7 @@ class TestExportManagers:
         db.add(Assignment(tenant_id=t.id, company_id=orphan.id, transfer_status="свой"))  # без принимающего
         db.commit()
         _login(client, "rop")
-        files = _zip_html(client.get("/api/client-rotation/export-managers").content)
+        files = _zip_html(client.post("/api/client-rotation/export-managers").content)
         joined = "".join(files.values())
         assert "Назначенный" in joined
         assert "БезПринимающего" not in joined
@@ -577,7 +578,7 @@ class TestExportManagers:
         _crd(db, t.id, c.id)
         db.commit()
         _login(client, "rop")
-        r = client.get("/api/client-rotation/export-managers")
+        r = client.post("/api/client-rotation/export-managers")
         assert r.status_code == 200
         assert _zip_html(r.content) == {}  # ни одного принимающего - архив пуст
 
@@ -590,7 +591,7 @@ class TestExportManagers:
         db.add(Assignment(tenant_id=t.id, company_id=c.id, assigned_to_employee_id=emp.id))
         db.commit()
         _login(client, "rop")
-        html = _zip_html(client.get("/api/client-rotation/export-managers").content)["М М.М..html"]
+        html = _zip_html(client.post("/api/client-rotation/export-managers").content)["М М.М..html"]
         assert "<script>" not in html  # экранировано
         assert "&lt;script&gt;" in html
 
@@ -612,7 +613,7 @@ class TestExportManagers:
         ))
         db.commit()
         _login(client, "rop")
-        html = _zip_html(client.get("/api/client-rotation/export-managers").content)["М М.М..html"]
+        html = _zip_html(client.post("/api/client-rotation/export-managers").content)["М М.М..html"]
         assert "Ключевой" in html                       # чип уровня
         assert "Обороты по кварталам" in html            # график оборотов
         assert "Холдинг" in html and "ЮЛ-2" in html      # разворот холдинга
@@ -624,7 +625,7 @@ class TestExportManagers:
         _user(db, t, "noaccess", "guest", "all", module="other_module")
         db.commit()
         _login(client, "noaccess")
-        r = client.get("/api/client-rotation/export-managers")
+        r = client.post("/api/client-rotation/export-managers")
         assert r.status_code == 403
 
     def test_malformed_json_does_not_crash(self, client, db):
@@ -640,8 +641,156 @@ class TestExportManagers:
         db.add(Assignment(tenant_id=t.id, company_id=c.id, assigned_to_employee_id=emp.id))
         db.commit()
         _login(client, "rop")
-        r = client.get("/api/client-rotation/export-managers")
+        r = client.post("/api/client-rotation/export-managers")
         assert r.status_code == 200
         html = _zip_html(r.content)["М М.М..html"]
         assert "Кривой" in html
         assert "Низкий приоритет" in html  # score=None -> низкий
+
+
+# --- регулирование передачи: журнал + инкрементальная выгрузка ---
+
+def _assign(db, tenant_id, company_id, employee_id):
+    db.add(Assignment(tenant_id=tenant_id, company_id=company_id, assigned_to_employee_id=employee_id))
+    db.commit()
+
+
+class TestHandoverFlow:
+    def test_export_records_handover(self, client, db):
+        t = _tenant(db)
+        _user(db, t, "rop", "rop", "all")
+        emp = _employee(db, t.id, "Принимающий", "Принимающий П.П.")
+        c = _company(db, t.id, "Альфа", "7700000001", "7700000001")
+        _crd(db, t.id, c.id)
+        _assign(db, t.id, c.id, emp.id)
+        _login(client, "rop")
+        client.post("/api/client-rotation/export-managers")
+        hv = client.get("/api/client-rotation/handovers").json()
+        assert len(hv) == 1
+        assert hv[0]["company_name"] == "Альфа"
+        assert hv[0]["manager_name"] == "Принимающий П.П."
+        assert hv[0]["actor_login"] == "rop"
+        assert hv[0]["handed_over_at"]
+
+    def test_second_export_excludes_handed(self, client, db):
+        t = _tenant(db)
+        _user(db, t, "rop", "rop", "all")
+        emp = _employee(db, t.id, "Принимающий", "Принимающий П.П.")
+        c = _company(db, t.id, "Альфа", "7700000001", "7700000001")
+        _crd(db, t.id, c.id)
+        _assign(db, t.id, c.id, emp.id)
+        _login(client, "rop")
+        first = _zip_html(client.post("/api/client-rotation/export-managers").content)
+        assert "Принимающий П.П..html" in first       # первая выгрузка - есть
+        second = _zip_html(client.post("/api/client-rotation/export-managers").content)
+        assert second == {}                            # вторая - пусто (уже передан)
+        assert len(client.get("/api/client-rotation/handovers").json()) == 1  # без дублей
+
+    def test_mode_all_reexports_without_new_rows(self, client, db):
+        t = _tenant(db)
+        _user(db, t, "rop", "rop", "all")
+        emp = _employee(db, t.id, "Принимающий", "Принимающий П.П.")
+        c = _company(db, t.id, "Альфа", "7700000001", "7700000001")
+        _crd(db, t.id, c.id)
+        _assign(db, t.id, c.id, emp.id)
+        _login(client, "rop")
+        client.post("/api/client-rotation/export-managers")          # пометили
+        files = _zip_html(client.post("/api/client-rotation/export-managers?mode=all").content)
+        assert "Принимающий П.П..html" in files                      # перевыпуск включает переданного
+        assert len(client.get("/api/client-rotation/handovers").json()) == 1  # новых записей нет
+
+    def test_reassign_makes_pending_again(self, client, db):
+        t = _tenant(db)
+        _user(db, t, "rop", "rop", "all")
+        e1 = _employee(db, t.id, "Первый", "Первый П.П.")
+        e2 = _employee(db, t.id, "Второй", "Второй В.В.")
+        c = _company(db, t.id, "Альфа", "7700000001", "7700000001")
+        _crd(db, t.id, c.id)
+        _assign(db, t.id, c.id, e1.id)
+        _login(client, "rop")
+        client.post("/api/client-rotation/export-managers")          # передан Первому
+        # переназначаем Второму
+        r = client.post("/api/client-rotation/assignments",
+                        json={"company_id": c.id, "assigned_to_employee_id": e2.id})
+        assert r.status_code == 200
+        files = _zip_html(client.post("/api/client-rotation/export-managers").content)
+        assert "Второй В.В..html" in files                            # снова pending для нового МОП
+        hv = client.get("/api/client-rotation/handovers").json()
+        assert len(hv) == 2
+        assert {h["manager_name"] for h in hv} == {"Первый П.П.", "Второй В.В."}
+
+
+class TestHandoverStatusInList:
+    def test_clients_expose_handover_status(self, client, db):
+        t = _tenant(db)
+        _user(db, t, "rop", "rop", "all")
+        emp = _employee(db, t.id, "Принимающий", "Принимающий П.П.")
+        c = _company(db, t.id, "Альфа", "7700000001", "7700000001")
+        _crd(db, t.id, c.id)
+        _assign(db, t.id, c.id, emp.id)
+        _login(client, "rop")
+        before = client.get("/api/client-rotation/clients").json()["clients"][0]
+        assert before["handed_over_at"] is None          # назначен, не передан
+        client.post("/api/client-rotation/export-managers")
+        after = client.get("/api/client-rotation/clients").json()["clients"][0]
+        assert after["handed_over_at"]                   # передан
+        assert after["handed_over_to"] == "Принимающий П.П."
+
+
+class TestHandoversApi:
+    def test_filter_by_manager(self, client, db):
+        t = _tenant(db)
+        _user(db, t, "rop", "rop", "all")
+        e1 = _employee(db, t.id, "Первый", "Первый П.П.")
+        e2 = _employee(db, t.id, "Второй", "Второй В.В.")
+        c1 = _company(db, t.id, "Альфа", "7700000001", "7700000001")
+        c2 = _company(db, t.id, "Бета", "7700000002", "7700000002")
+        _crd(db, t.id, c1.id); _crd(db, t.id, c2.id)
+        _assign(db, t.id, c1.id, e1.id)
+        _assign(db, t.id, c2.id, e2.id)
+        _login(client, "rop")
+        client.post("/api/client-rotation/export-managers")
+        all_hv = client.get("/api/client-rotation/handovers").json()
+        assert len(all_hv) == 2
+        only_first = client.get("/api/client-rotation/handovers?manager=Первый П.П.").json()
+        assert len(only_first) == 1 and only_first[0]["company_name"] == "Альфа"
+
+    def test_filter_by_date_window(self, client, db):
+        t = _tenant(db)
+        _user(db, t, "rop", "rop", "all")
+        emp = _employee(db, t.id, "Принимающий", "Принимающий П.П.")
+        c = _company(db, t.id, "Альфа", "7700000001", "7700000001")
+        _crd(db, t.id, c.id)
+        _assign(db, t.id, c.id, emp.id)
+        _login(client, "rop")
+        client.post("/api/client-rotation/export-managers")
+        assert len(client.get("/api/client-rotation/handovers?from=2000-01-01").json()) == 1
+        assert len(client.get("/api/client-rotation/handovers?from=2099-01-01").json()) == 0
+        assert len(client.get("/api/client-rotation/handovers?to=2000-01-01").json()) == 0
+
+    def test_401_without_session(self, client, db):
+        r = client.get("/api/client-rotation/handovers")
+        assert r.status_code == 401
+
+    def test_403_without_module(self, client, db):
+        t = _tenant(db)
+        _user(db, t, "noaccess", "guest", "all", module="other_module")
+        db.commit()
+        _login(client, "noaccess")
+        r = client.get("/api/client-rotation/handovers")
+        assert r.status_code == 403
+
+    def test_tenant_isolation(self, client, db):
+        # Передача в чужом арендаторе не видна.
+        t1 = _tenant(db, "Один")
+        t2 = _tenant(db, "Два")
+        _user(db, t1, "rop1", "rop", "all")
+        emp2 = _employee(db, t2.id, "Чужой", "Чужой Ч.Ч.")
+        c2 = _company(db, t2.id, "ЧужойКлиент", "7700000099", "7700000099")
+        _crd(db, t2.id, c2.id)
+        _assign(db, t2.id, c2.id, emp2.id)
+        db.add(ClientHandover(tenant_id=t2.id, company_id=c2.id, employee_id=emp2.id,
+                              manager_name="Чужой Ч.Ч.", actor_login="other"))
+        db.commit()
+        _login(client, "rop1")
+        assert client.get("/api/client-rotation/handovers").json() == []

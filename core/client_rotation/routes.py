@@ -13,6 +13,7 @@ from __future__ import annotations
 import io
 import re
 import zipfile
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from fastapi.responses import Response
@@ -21,12 +22,14 @@ from sqlalchemy.orm import Session as DBSession
 from core.auth.deps import get_current_auth
 from core.auth.service import AuthContext
 from core.client_rotation.export import export_assignments_by_manager
-from core.client_rotation.export_managers import build_manager_docs
+from core.client_rotation.export_managers import build_manager_export
+from core.models import ClientHandover
 from core.client_rotation.service import (
     company_in_tenant,
     employee_in_tenant,
     get_user_employee,
     list_clients,
+    list_handovers,
     list_receiving_managers,
     upsert_assignment,
 )
@@ -49,6 +52,16 @@ def _safe_filename(name: str) -> str:
     """
     safe = _FNAME_BAD.sub("_", (name or "").strip())
     return (safe or "без_МОП")[:100]
+
+
+def _parse_date(value: str | None) -> datetime | None:
+    """'YYYY-MM-DD' -> datetime (начало дня). Некорректное/пустое -> None."""
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value)
+    except ValueError:
+        return None
 
 
 @router.get("/clients")
@@ -108,20 +121,36 @@ def api_export(
     )
 
 
-@router.get("/export-managers")
+@router.post("/export-managers")
 def api_export_managers(
+    mode: str = Query("new", pattern="^(new|all)$"),
     _access: ModuleAccess = Depends(require_module(_MODULE)),
     auth: AuthContext = Depends(get_current_auth),
     db: DBSession = Depends(get_db),
 ) -> Response:
     """Выгрузка для МОП: ZIP с отдельным HTML-досье на каждого принимающего МОП.
 
+    Скачивание ФИКСИРУЕТ передачу: вошедшие (ещё не переданные текущему МОП)
+    компании пишутся в журнал передач и исключаются из следующих выгрузок.
+    mode=new (по умолчанию) - только новые; mode=all - перевыпуск всех назначенных
+    (новые записи журнала только по ещё не переданным, без дублей).
+
     Каждый файл - самодостаточная HTML-страница (инлайн-CSS) с клиентами одного
-    принимающего менеджера. Имена файлов - по ФИО МОП, при совпадении добавляется
-    числовой суффикс. ПД (контакты, ИНН) - только в границах арендатора и под
-    доступом к модулю.
+    принимающего менеджера. Имена файлов - по ФИО МОП, при совпадении числовой
+    суффикс. ПД (контакты, ИНН) - только в границах арендатора и под доступом.
     """
-    docs = build_manager_docs(db, auth.tenant_id)
+    docs, to_mark = build_manager_export(db, auth.tenant_id, only_pending=(mode != "all"))
+    # Фиксация передачи: по каждой ещё не переданной вошедшей компании - запись журнала.
+    for company_id, employee_id, manager_name in to_mark:
+        db.add(ClientHandover(
+            tenant_id=auth.tenant_id,
+            company_id=company_id,
+            employee_id=employee_id,
+            manager_name=manager_name,
+            actor_user_id=auth.user_id,
+            actor_login=auth.login,
+        ))
+    db.commit()
     buf = io.BytesIO()
     used: dict[str, int] = {}
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
@@ -185,3 +214,23 @@ def api_save_assignment(
         "assigned_to_employee_id": assignment.assigned_to_employee_id,
         "transfer_status": assignment.transfer_status,
     }
+
+
+@router.get("/handovers")
+def api_handovers(
+    manager: str | None = Query(None, max_length=255),
+    date_from: str | None = Query(None, alias="from"),
+    date_to: str | None = Query(None, alias="to"),
+    _access: ModuleAccess = Depends(require_module(_MODULE)),
+    auth: AuthContext = Depends(get_current_auth),
+    db: DBSession = Depends(get_db),
+) -> list[dict]:
+    """Журнал передач арендатора (новые сверху). Фильтры: МОП и период from/to.
+
+    from/to - 'YYYY-MM-DD'; to включается целиком (сдвиг на конец дня).
+    """
+    df = _parse_date(date_from)
+    dt = _parse_date(date_to)
+    if dt is not None:
+        dt = dt + timedelta(days=1)  # верхняя граница включительно (до конца дня)
+    return list_handovers(db, auth.tenant_id, manager=manager or None, date_from=df, date_to=dt)

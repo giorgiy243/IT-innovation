@@ -638,3 +638,43 @@ class Summary(Base):
         DateTime(timezone=True), nullable=False,
         default=utcnow, onupdate=utcnow, server_default=func.now(),
     )
+
+
+class ClientHandover(Base):
+    """Журнал передач клиента принимающему МОП (append-only).
+
+    Одна строка - факт состоявшейся передачи (выгрузка для МОП) компании
+    конкретному принимающему менеджеру в конкретный момент. Источник правды
+    для (а) инкрементальной выгрузки (исключаем уже переданных текущему МОП)
+    и (б) аудита «какой клиент → какому МОП → когда → кто выгрузил».
+
+    Append-only, без UNIQUE по company: компания может быть передана несколько
+    раз (например, при переназначении другому МОП) - это история. Снимки
+    manager_name/actor_login переживают изменение/удаление сотрудника и учётки.
+    """
+
+    __tablename__ = "client_handovers"
+    __table_args__ = (
+        Index("ix_handovers_tenant_company", "tenant_id", "company_id"),
+        Index("ix_handovers_tenant_date", "tenant_id", "handed_over_at"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(
+        ForeignKey("tenants.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
+    company_id: Mapped[int] = mapped_column(
+        ForeignKey("companies.id", ondelete="CASCADE"), nullable=False
+    )
+    employee_id: Mapped[int | None] = mapped_column(
+        ForeignKey("employees.id", ondelete="SET NULL"), nullable=True
+    )
+    manager_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    handed_over_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False,
+        default=utcnow, server_default=func.now(),
+    )
+    actor_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    actor_login: Mapped[str | None] = mapped_column(String(150), nullable=True)

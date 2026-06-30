@@ -20,6 +20,7 @@ from sqlalchemy.orm import Session as DBSession
 
 from core.models import (
     Assignment,
+    ClientHandover,
     ClientRotationData,
     Company,
     Employee,
@@ -109,12 +110,24 @@ def _num(v) -> float:
         return 0.0
 
 
+def _handed_pairs(db: DBSession, tenant_id: int) -> set[tuple[int, int]]:
+    """Множество (company_id, employee_id), уже переданных (есть запись журнала)."""
+    rows = db.execute(
+        select(ClientHandover.company_id, ClientHandover.employee_id)
+        .where(ClientHandover.tenant_id == tenant_id, ClientHandover.employee_id.isnot(None))
+    ).all()
+    return {(cid, eid) for cid, eid in rows}
+
+
 def _client_rows(db: DBSession, tenant_id: int) -> list[tuple[str, dict]]:
     """[(crm_name принимающего, поля клиента)] для всех назначенных клиентов.
 
     JOIN: companies + client_rotation_data + назначение + принимающий сотрудник
     (+ summaries опц.). Фильтр - assignment с заданным принимающим сотрудником.
+    Каждая строка помечена флагом `handed` (передан ли уже текущему МОП) +
+    несёт company_id/employee_id для записи в журнал передач.
     """
+    handed = _handed_pairs(db, tenant_id)
     stmt = (
         select(Company, ClientRotationData, Summary, Assignment, Employee.crm_name)
         .join(ClientRotationData, ClientRotationData.company_id == Company.id)
@@ -125,7 +138,11 @@ def _client_rows(db: DBSession, tenant_id: int) -> list[tuple[str, dict]]:
     )
     out: list[tuple[str, dict]] = []
     for company, crd, summary, assignment, mgr in db.execute(stmt).all():
+        emp_id = assignment.assigned_to_employee_id
         out.append((mgr, {
+            "company_id": company.id,
+            "employee_id": emp_id,
+            "handed": (company.id, emp_id) in handed,
             "name": company.name,
             "inn": company.inn,
             "city": company.city,
@@ -325,24 +342,45 @@ def _manager_doc(mgr: str, clients: list[dict], date_str: str) -> str:
     )
 
 
-def build_manager_docs(db: DBSession, tenant_id: int) -> list[tuple[str, str]]:
-    """[(crm_name принимающего, HTML-досье)] - отдельный файл на каждого МОП.
+def _render_docs(rows: list[tuple[str, dict]]) -> list[tuple[str, str]]:
+    """[(crm_name, HTML-досье)] - отдельный файл на каждого МОП.
 
     Клиенты группируются по принимающему менеджеру (внутри - по score DESC),
     каждому отдаётся своя самодостаточная HTML-страница. Отсортировано по МОП.
     """
-    rows = _client_rows(db, tenant_id)
     today = date.today()
     date_str = f"{today.day} {_MONTHS_GEN[today.month - 1]} {today.year}"
-
     groups: dict[str, list[dict]] = {}
     for mgr, c in rows:
         groups.setdefault(mgr or "", []).append(c)
     mgr_names = sorted(groups, key=lambda m: m.lower())
     for m in mgr_names:
         groups[m].sort(key=lambda c: (c["score"] or 0), reverse=True)
-
     return [(m, _manager_doc(m, groups[m], date_str)) for m in mgr_names]
+
+
+def build_manager_export(
+    db: DBSession, tenant_id: int, *, only_pending: bool
+) -> tuple[list[tuple[str, str]], list[tuple[int, int, str]]]:
+    """Готовит выгрузку для МОП и список передач к фиксации.
+
+    only_pending=True  - в файлы попадают только ещё не переданные текущему МОП
+    клиенты («Только новые»); False - все назначенные («Все», перевыпуск).
+
+    Возвращает (docs, to_mark):
+      docs    - [(crm_name, HTML)] по каждому принимающему МОП;
+      to_mark - [(company_id, employee_id, crm_name)] для записи в журнал передач
+                (всегда только ещё НЕ переданные среди вошедших - без дублей).
+    """
+    rows = _client_rows(db, tenant_id)
+    included = [(m, c) for (m, c) in rows if (not only_pending) or (not c["handed"])]
+    docs = _render_docs(included)
+    to_mark = [
+        (c["company_id"], c["employee_id"], m)
+        for (m, c) in included
+        if not c["handed"]
+    ]
+    return docs, to_mark
 
 
 # CSS перенесён дословно из client-rotate (managerDocCSS).

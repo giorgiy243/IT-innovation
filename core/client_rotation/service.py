@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session as DBSession
 
 from core.models import (
     Assignment,
+    ClientHandover,
     ClientRotationData,
     Company,
     Employee,
@@ -102,9 +103,38 @@ def list_clients(
     stmt = stmt.order_by(ClientRotationData.score.desc().nullslast())
 
     items = [_to_list_item(*row) for row in db.execute(stmt).all()]
+    _attach_handover_status(db, tenant_id, items)
     if status:
         items = [it for it in items if it["transfer_status"] == status]
     return items
+
+
+def _attach_handover_status(db: DBSession, tenant_id: int, items: list[dict]) -> None:
+    """Проставляет каждому клиенту факт передачи ТЕКУЩЕМУ принимающему МОП.
+
+    handed_over_at/handed_over_to заполняются, только если в журнале есть передача
+    компании именно тому сотруднику, что назначен сейчас (переназначили -> снова
+    «не передан»). Берётся последняя по времени запись для этой пары.
+    """
+    rows = db.execute(
+        select(
+            ClientHandover.company_id,
+            ClientHandover.employee_id,
+            ClientHandover.handed_over_at,
+            ClientHandover.manager_name,
+        )
+        .where(ClientHandover.tenant_id == tenant_id, ClientHandover.employee_id.isnot(None))
+        .order_by(ClientHandover.handed_over_at.asc())
+    ).all()
+    # asc -> последняя запись по паре перезаписывает -> в карте остаётся самая свежая.
+    latest: dict[tuple[int, int], tuple] = {}
+    for cid, eid, at, name in rows:
+        latest[(cid, eid)] = (at, name)
+    for it in items:
+        emp_id = it["assigned_to_employee_id"]
+        h = latest.get((it["company_id"], emp_id)) if emp_id is not None else None
+        it["handed_over_at"] = h[0].isoformat() if h else None
+        it["handed_over_to"] = h[1] if h else None
 
 
 def _to_list_item(
@@ -177,6 +207,46 @@ def list_receiving_managers(db: DBSession, tenant_id: int) -> list[dict]:
         .order_by(Employee.crm_name)
     ).all()
     return [{"employee_id": eid, "crm_name": crm} for eid, crm in rows]
+
+
+def list_handovers(
+    db: DBSession,
+    tenant_id: int,
+    *,
+    manager: str | None = None,
+    date_from=None,
+    date_to=None,
+) -> list[dict]:
+    """Журнал передач арендатора (новые сверху). Фильтры: МОП и период.
+
+    date_from/date_to - datetime (включительно по началу/концу диапазона,
+    конец дня сдвигается на стороне роута). Возвращает снимки имён - журнал
+    остаётся читаемым даже после изменения сотрудника/учётки.
+    """
+    stmt = (
+        select(ClientHandover, Company.name, Company.inn)
+        .join(Company, Company.id == ClientHandover.company_id)
+        .where(ClientHandover.tenant_id == tenant_id)
+        .order_by(ClientHandover.handed_over_at.desc())
+    )
+    if manager:
+        stmt = stmt.where(ClientHandover.manager_name == manager)
+    if date_from is not None:
+        stmt = stmt.where(ClientHandover.handed_over_at >= date_from)
+    if date_to is not None:
+        stmt = stmt.where(ClientHandover.handed_over_at < date_to)
+    out: list[dict] = []
+    for h, name, inn in db.execute(stmt).all():
+        out.append({
+            "id": h.id,
+            "company_id": h.company_id,
+            "company_name": name,
+            "inn": inn,
+            "manager_name": h.manager_name,
+            "handed_over_at": h.handed_over_at.isoformat() if h.handed_over_at else None,
+            "actor_login": h.actor_login,
+        })
+    return out
 
 
 _UNSET = object()  # «поле не передано» - в отличие от None («очистить»).

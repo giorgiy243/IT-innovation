@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Журнал передач - IT-innovation</title>
+<style>
+:root{
+  --brand:#81B446;--brand-d:#6a9338;--dark:#1E2832;--slate:#323C50;
+  --mid:#8296AA;--light:#D7DCE6;--bg:#F5FAFA;
+  --nav-bg:#1E2832;--nav-hover:#323C50;
+  --sidebar-w:232px;--topbar-h:56px;
+  --sh:0 2px 10px rgba(30,40,50,.08),0 1px 3px rgba(30,40,50,.05);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,sans-serif;color:var(--dark);-webkit-font-smoothing:antialiased;}
+.layout{display:flex;height:100vh;overflow:hidden;}
+.sidebar{width:var(--sidebar-w);flex:none;background:var(--nav-bg);display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,.05);}
+.s-logo{height:var(--topbar-h);display:flex;align-items:center;padding:0 16px;gap:10px;border-bottom:1px solid rgba(255,255,255,.07);flex:none;text-decoration:none;transition:background .12s;}
+.s-logo:hover{background:rgba(255,255,255,.05);}
+.logo-mark{width:30px;height:30px;border-radius:8px;flex:none;background:var(--brand);display:flex;align-items:center;justify-content:center;}
+.logo-mark svg{width:16px;height:16px;fill:#fff;}
+.logo-text{font-size:14px;font-weight:700;color:#fff;letter-spacing:-.01em;}
+.nav-body{flex:1;overflow-y:auto;padding:10px 8px;}
+.nav-group-label{font-size:10.5px;font-weight:600;color:rgba(130,150,170,.7);text-transform:uppercase;letter-spacing:.08em;padding:10px 10px 4px;}
+.nav-item{display:flex;align-items:center;gap:9px;height:38px;padding:0 10px;border-radius:7px;font-size:13px;font-weight:500;color:rgba(255,255,255,.6);cursor:pointer;margin-bottom:1px;border-left:2px solid transparent;transition:background .12s,color .12s;text-decoration:none;}
+.nav-item:hover{background:var(--nav-hover);color:#fff;}
+.nav-item.act{background:rgba(129,180,70,.14);color:#fff;border-left-color:var(--brand);}
+.nav-item svg{width:16px;height:16px;flex:none;opacity:.7;}
+.nav-item.act svg{opacity:1;}
+.s-footer{padding:10px 8px;border-top:1px solid rgba(255,255,255,.06);flex:none;}
+.user-row{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;cursor:pointer;}
+.user-row:hover{background:var(--nav-hover);}
+.avatar{width:30px;height:30px;border-radius:8px;flex:none;background:var(--slate);display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:#fff;}
+.u-info{flex:1;min-width:0;}
+.u-name{font-size:12.5px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.u-role{font-size:11px;color:var(--mid);}
+.logout-btn{width:24px;height:24px;display:flex;align-items:center;justify-content:center;border:none;background:transparent;cursor:pointer;border-radius:5px;color:rgba(255,255,255,.3);transition:color .15s,background .15s;flex:none;font-size:16px;line-height:1;}
+.logout-btn:hover{color:#fff;background:rgba(255,255,255,.08);}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{height:var(--topbar-h);flex:none;display:flex;align-items:center;padding:0 24px;background:#fff;border-bottom:1px solid var(--light);gap:12px;}
+.page-h{font-size:15px;font-weight:700;color:var(--dark);}
+.count-badge{font-size:12px;color:var(--mid);background:var(--bg);border:1px solid var(--light);border-radius:20px;padding:2px 10px;}
+.back-link{margin-left:auto;height:34px;padding:0 14px;border:1px solid var(--light);border-radius:7px;font-size:13px;font-weight:600;color:var(--slate);background:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:6px;text-decoration:none;transition:border-color .12s,color .12s;}
+.back-link:hover{border-color:var(--mid);color:var(--dark);}
+.content{flex:1;overflow-y:auto;padding:20px 24px;}
+.filters{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+.f-label{font-size:12px;color:var(--slate);display:inline-flex;align-items:center;gap:6px;}
+.f-ctl{height:32px;border:1px solid var(--light);border-radius:7px;padding:0 8px;font-size:12.5px;font-family:inherit;color:var(--dark);background:#fff;outline:none;}
+.f-ctl:focus{border-color:var(--brand);}
+.btn-reset{height:32px;padding:0 14px;border:1px solid var(--light);border-radius:7px;font-size:13px;font-family:inherit;color:var(--mid);background:#fff;cursor:pointer;transition:border-color .12s,color .12s;display:inline-flex;align-items:center;}
+.btn-reset:hover{border-color:var(--mid);color:var(--dark);}
+.table-wrap{background:#fff;border-radius:10px;box-shadow:var(--sh);overflow:hidden;}
+table.hv{width:100%;border-collapse:collapse;font-size:13px;}
+table.hv thead th{background:var(--bg);color:var(--slate);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;text-align:left;padding:10px 14px;border-bottom:1px solid var(--light);white-space:nowrap;}
+table.hv tbody td{padding:10px 14px;border-bottom:1px solid var(--bg);vertical-align:middle;}
+table.hv tbody tr:last-child td{border-bottom:none;}
+.c-name{font-weight:600;color:var(--dark);}
+.c-inn{font-size:11px;color:var(--mid);margin-top:1px;}
+.c-mgr{color:#3a6320;background:rgba(129,180,70,.14);border-radius:5px;padding:2px 8px;font-size:12px;font-weight:600;white-space:nowrap;}
+.c-num{font-variant-numeric:tabular-nums;color:var(--slate);white-space:nowrap;}
+.c-actor{color:var(--mid);font-size:12px;}
+.empty-state{padding:48px;text-align:center;color:var(--mid);font-size:14px;}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <a href="/" class="s-logo">
+      <div class="logo-mark"><svg viewBox="0 0 18 18"><path d="M9 2L2 6v6l7 4 7-4V6z" opacity=".3"/><path d="M9 2l7 4-7 4L2 6z"/></svg></div>
+      <span class="logo-text">IT-innovation</span>
+    </a>
+    <div class="nav-body" id="navBody"><div class="nav-group-label">Загрузка...</div></div>
+    <div class="s-footer">
+      <div class="user-row" title="Личный кабинет" onclick="window.location.href='/profile'">
+        <div class="avatar" id="userAvatar">?</div>
+        <div class="u-info">
+          <div class="u-name" id="userName">...</div>
+          <div class="u-role" id="userRole">...</div>
+        </div>
+        <button class="logout-btn" title="Выйти" id="logoutBtn">&#x23FB;</button>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <span class="page-h">Журнал передач</span>
+      <span class="count-badge" id="countBadge">...</span>
+      <a class="back-link" href="/client-rotation">&#x2190; К ротации</a>
+    </div>
+    <div class="content">
+      <div class="filters">
+        <label class="f-label">МОП:
+          <select id="fManager" class="f-ctl" style="min-width:180px;"><option value="">Все</option></select>
+        </label>
+        <label class="f-label">С: <input type="date" id="fFrom" class="f-ctl"></label>
+        <label class="f-label">По: <input type="date" id="fTo" class="f-ctl"></label>
+        <button class="btn-reset" id="resetBtn">Сбросить</button>
+      </div>
+      <div class="table-wrap">
+        <table class="hv">
+          <thead>
+            <tr><th>Клиент</th><th>Принимающий МОП</th><th>Дата передачи</th><th>Кто выгрузил</th></tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr><td colspan="4" class="empty-state">Загрузка...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const STAFF_ICON = `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M5 7a2.5 2.5 0 100-5 2.5 2.5 0 000 5zm-4 7a4 4 0 018 0H1zm9-7a2 2 0 100-4 2 2 0 000 4zm1 1a3 3 0 012.83 2H10a5 5 0 00-.8-2.75A3 3 0 0111 8z"/></svg>`;
+const NAV_ICONS = {
+  sales:`<svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 10l4-4 3 3 5-5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>`,
+  client_rotation:`<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 110 14A7 7 0 018 1zm0 1.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zm1.5 5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/></svg>`,
+};
+function defaultIcon(){return `<svg viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="12" height="12" rx="2" opacity=".3"/><rect x="5" y="5" width="6" height="1.5" rx=".75"/><rect x="5" y="8" width="6" height="1.5" rx=".75"/></svg>`;}
+const MODULE_URLS = {sales:'/vendors', client_rotation:'/client-rotation'};
+
+function esc(s){
+  if (s === null || s === undefined) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtDate(iso){
+  if (!iso) return '-';
+  const d = new Date(iso);
+  const dd = String(d.getDate()).padStart(2,'0'), mm = String(d.getMonth()+1).padStart(2,'0');
+  const hh = String(d.getHours()).padStart(2,'0'), mi = String(d.getMinutes()).padStart(2,'0');
+  return `${dd}.${mm}.${d.getFullYear()} ${hh}:${mi}`;
+}
+
+async function buildSidebar(){
+  const meRes = await fetch('/me');
+  if (!meRes.ok){ window.location.href='/login'; return; }
+  const me = await meRes.json();
+  if (me.must_change_password){ window.location.href='/login'; return; }
+  document.getElementById('userName').textContent = me.login;
+  document.getElementById('userAvatar').textContent = me.login.slice(0,2).toUpperCase();
+  const nav = await (await fetch('/nav')).json();
+  document.getElementById('userRole').textContent = (nav.roles||[]).join(', ') || 'нет роли';
+  const body = document.getElementById('navBody');
+  body.innerHTML = '';
+  const label = document.createElement('div');
+  label.className = 'nav-group-label'; label.textContent = 'Модули';
+  body.appendChild(label);
+  (nav.modules||[]).forEach(m => {
+    const url = MODULE_URLS[m.code];
+    const item = document.createElement(url ? 'a' : 'div');
+    item.className = 'nav-item' + (m.code === 'client_rotation' ? ' act' : '');
+    if (url){ item.href = url; item.style.textDecoration = 'none'; }
+    item.innerHTML = (NAV_ICONS[m.code] || defaultIcon()) + `<span>${esc(m.name)}</span>`;
+    body.appendChild(item);
+  });
+  const staff = document.createElement('a');
+  staff.className = 'nav-item'; staff.href = '/employees'; staff.style.textDecoration = 'none';
+  staff.innerHTML = STAFF_ICON + '<span>Сотрудники</span>';
+  body.appendChild(staff);
+}
+
+let _managersFilled = false;
+
+function fillManagers(rows){
+  if (_managersFilled) return;
+  const names = [...new Set(rows.map(r => r.manager_name).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ru'));
+  const sel = document.getElementById('fManager');
+  names.forEach(n => { const o = document.createElement('option'); o.value = n; o.textContent = n; sel.appendChild(o); });
+  _managersFilled = true;
+}
+
+function renderRows(rows){
+  document.getElementById('countBadge').textContent = rows.length + ' передач';
+  const body = document.getElementById('tableBody');
+  if (!rows.length){
+    body.innerHTML = '<tr><td colspan="4" class="empty-state">Передач по заданным фильтрам нет.</td></tr>';
+    return;
+  }
+  body.innerHTML = rows.map(r => `
+    <tr>
+      <td><div class="c-name">${esc(r.company_name)}</div><div class="c-inn">${r.inn ? 'ИНН '+esc(r.inn) : 'без ИНН'}</div></td>
+      <td><span class="c-mgr">${esc(r.manager_name) || '-'}</span></td>
+      <td class="c-num">${fmtDate(r.handed_over_at)}</td>
+      <td class="c-actor">${esc(r.actor_login) || '-'}</td>
+    </tr>`).join('');
+}
+
+async function loadHandovers(){
+  const params = new URLSearchParams();
+  const mgr = document.getElementById('fManager').value;
+  const from = document.getElementById('fFrom').value;
+  const to = document.getElementById('fTo').value;
+  if (mgr) params.set('manager', mgr);
+  if (from) params.set('from', from);
+  if (to) params.set('to', to);
+  const body = document.getElementById('tableBody');
+  const res = await fetch('/api/client-rotation/handovers?' + params.toString());
+  if (res.status === 401){ window.location.href='/login'; return; }
+  if (res.status === 403){ body.innerHTML = '<tr><td colspan="4" class="empty-state">Нет доступа к модулю.</td></tr>'; return; }
+  if (!res.ok){ body.innerHTML = '<tr><td colspan="4" class="empty-state">Ошибка загрузки.</td></tr>'; return; }
+  const rows = await res.json();
+  fillManagers(rows);
+  renderRows(rows);
+}
+
+document.getElementById('fManager').addEventListener('change', loadHandovers);
+document.getElementById('fFrom').addEventListener('change', loadHandovers);
+document.getElementById('fTo').addEventListener('change', loadHandovers);
+document.getElementById('resetBtn').addEventListener('click', () => {
+  document.getElementById('fManager').value = '';
+  document.getElementById('fFrom').value = '';
+  document.getElementById('fTo').value = '';
+  loadHandovers();
+});
+document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+  e.stopPropagation();
+  await fetch('/logout', {method:'POST'}); window.location.href='/login';
+});
+
+async function init(){ await buildSidebar(); await loadHandovers(); }
+init();
+</script>
+</body>
+</html>

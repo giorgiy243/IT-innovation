@@ -53,6 +53,9 @@ html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,san
 /* Вторичная выгрузка (для МОП) - контурная, рядом с основной «в 1С». */
 .btn-export.sec{margin-left:8px;background:#fff;color:var(--brand-d);border:1px solid var(--brand);}
 .btn-export.sec:hover{background:rgba(129,180,70,.08);}
+/* Второстепенные действия рядом с выгрузкой: «Все» (перевыпуск) и журнал. */
+.btn-export-link{margin-left:8px;height:34px;padding:0 10px;border:none;background:none;color:var(--mid);font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;text-decoration:none;transition:color .12s,background .12s;}
+.btn-export-link:hover{color:var(--dark);background:var(--bg);}
 .content{flex:1;overflow-y:auto;padding:20px 24px;}
 
 /* Filters */
@@ -114,6 +117,10 @@ table.cr tbody tr:last-child td{border-bottom:none;}
 .c-days{font-variant-numeric:tabular-nums;color:var(--slate);}
 .c-days.warn{color:#b45309;font-weight:600;}
 .assigned-pill{font-size:11.5px;color:#3a6320;background:rgba(129,180,70,.14);border-radius:5px;padding:2px 8px;white-space:nowrap;}
+/* Метка факта передачи рядом с принимающим МОП */
+.handed-mark{display:inline-block;margin-left:6px;font-size:11px;font-weight:600;color:#2F7D52;white-space:nowrap;}
+.pending-mark{display:inline-block;margin-left:6px;font-size:11px;font-weight:600;color:#b45309;white-space:nowrap;}
+.hf-label{font-size:12px;color:var(--slate);display:inline-flex;align-items:center;gap:6px;}
 
 /* Инлайн-редактирование статуса и принимающего прямо в строке */
 td.cell-status,td.cell-assigned{cursor:pointer;}
@@ -200,18 +207,29 @@ td.cell-status:has(select)::after,td.cell-assigned:has(select)::after{content:no
       <span class="page-h">Ротация клиентов</span>
       <span class="count-badge" id="countBadge">...</span>
       <span class="scope-badge" id="scopeBadge"></span>
+      <span class="count-badge" id="handedBadge"></span>
       <button class="btn-export" id="btnExport" title="Выгрузить назначения в 1С">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1v8m0 0L5 6m3 3l3-3M2 12v2h12v-2"/></svg>
         Выгрузка в 1С
       </button>
-      <button class="btn-export sec" id="btnExportMop" title="Скачать HTML-досье для принимающих менеджеров">
+      <button class="btn-export sec" id="btnExportMop" title="Скачать досье для МОП (только новые) и зафиксировать передачу">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1v8m0 0L5 6m3 3l3-3M2 12v2h12v-2"/></svg>
         Выгрузка для МОП
       </button>
+      <button class="btn-export-link" id="btnExportMopAll" title="Перевыпустить досье по всем назначенным (журнал для уже переданных не меняется)">Все</button>
+      <a class="btn-export-link" href="/client-rotation/handovers" title="Журнал передач: какой клиент, какому МОП и когда">Журнал передач</a>
     </div>
     <div class="content">
       <div class="filters">
         <span class="filters-hint">Фильтры по столбцам - в шапке таблицы. Числовые поля фильтруют «от и больше».</span>
+        <label class="hf-label">Передача:
+          <select id="handedFilter" class="th-f" data-f="handed" style="width:auto;min-width:150px;">
+            <option value="">Все</option>
+            <option value="handed">Переданные</option>
+            <option value="pending">Назначен, не передан</option>
+            <option value="unassigned">Не назначен</option>
+          </select>
+        </label>
         <button class="btn-reset" id="resetBtn">Сбросить фильтры</button>
       </div>
 
@@ -351,7 +369,7 @@ function emptyFilters(){
   return {
     score:null, name:'', current_manager:[],
     days_no_contact:null, days_no_kp:null, days_no_shipment:null,
-    transfer_status:'', assigned_to:[],
+    transfer_status:'', assigned_to:[], handed:'',
   };
 }
 let _filters = emptyFilters();
@@ -420,6 +438,7 @@ async function loadClients(){
   document.getElementById('scopeBadge').textContent = 'Видимость: ' + (data.scope || '-');
   populateFilterOptions();
   applyFilters();
+  updateHandedBadge();
 }
 
 // Уникальные непустые значения поля по всем клиентам, отсортированные по-русски.
@@ -541,7 +560,24 @@ function applyFilters(){
     const set = new Set(f.assigned_to);
     rows = rows.filter(c => set.has(c.assigned_to ? c.assigned_to : '__none__'));
   }
+  if (f.handed === 'handed') rows = rows.filter(c => c.handed_over_at);
+  else if (f.handed === 'pending') rows = rows.filter(c => c.assigned_to && !c.handed_over_at);
+  else if (f.handed === 'unassigned') rows = rows.filter(c => !c.assigned_to);
   renderTable(rows, _allClients.length);
+}
+
+// Дата ISO -> ДД.ММ.ГГГГ для бейджа передачи.
+function fmtDate(iso){
+  if (!iso) return '';
+  const d = new Date(iso);
+  return String(d.getDate()).padStart(2,'0') + '.' + String(d.getMonth()+1).padStart(2,'0') + '.' + d.getFullYear();
+}
+
+// «Передано N · Ожидает M» по всем видимым клиентам (в пределах scope).
+function updateHandedBadge(){
+  const handed = _allClients.filter(c => c.handed_over_at).length;
+  const pending = _allClients.filter(c => c.assigned_to && !c.handed_over_at).length;
+  document.getElementById('handedBadge').textContent = `Передано ${handed} · Ожидает ${pending}`;
 }
 
 function renderTable(clients, total){
@@ -578,9 +614,12 @@ function renderTable(clients, total){
 }
 
 function assignedDisplay(c){
-  return c.assigned_to
-    ? `<span class="assigned-pill">${esc(c.assigned_to)}</span>`
-    : '<span class="assign-empty">-</span>';
+  if (!c.assigned_to) return '<span class="assign-empty">-</span>';
+  const pill = `<span class="assigned-pill">${esc(c.assigned_to)}</span>`;
+  if (c.handed_over_at){
+    return pill + `<span class="handed-mark" title="Передан ${esc(c.handed_over_to || c.assigned_to)} ${fmtDate(c.handed_over_at)}">&#x2713; ${fmtDate(c.handed_over_at)}</span>`;
+  }
+  return pill + '<span class="pending-mark" title="Назначен, ещё не передан (не было выгрузки)">ожидает</span>';
 }
 
 // Инлайн-редактор: подменяет ячейку на select, по выбору сохраняет в БД и
@@ -630,6 +669,9 @@ function editAssigned(td, client){
       client.assigned_to_employee_id = nv;
       const m = _managers.find(x => x.employee_id === nv);
       client.assigned_to = m ? m.crm_name : (nv != null ? client.assigned_to : null);
+      // Переназначение -> новый МОП ещё не получал выгрузку: метка передачи сбрасывается.
+      client.handed_over_at = null; client.handed_over_to = null;
+      updateHandedBadge();
     }
     return true;
   }, () => assignedDisplay(client));
@@ -775,12 +817,14 @@ async function exportXlsx(){
   }
 }
 
-// Выгрузка для МОП: ZIP с отдельным HTML-досье на каждого принимающего МОП.
-async function exportMop(){
-  const btn = document.getElementById('btnExportMop');
-  btn.disabled = true;
+// Выгрузка для МОП: POST -> ZIP (файл на каждого МОП). Скачивание ФИКСИРУЕТ
+// передачу: mode=new берёт только не переданных текущему МОП и пишет их в журнал;
+// mode=all перевыпускает все назначенные (без новых записей для уже переданных).
+async function exportMop(mode){
+  const ids = ['btnExportMop', 'btnExportMopAll'];
+  ids.forEach(id => { const b = document.getElementById(id); if (b) b.disabled = true; });
   try {
-    const r = await fetch('/api/client-rotation/export-managers');
+    const r = await fetch('/api/client-rotation/export-managers?mode=' + (mode || 'new'), {method: 'POST'});
     if (!r.ok){ showToast('Ошибка выгрузки', true); return; }
     const blob = await r.blob();
     const d = new Date();
@@ -791,8 +835,9 @@ async function exportMop(){
     a.download = 'rotation_managers_' + stamp + '.zip';
     document.body.appendChild(a); a.click(); a.remove();
     URL.revokeObjectURL(a.href);
+    if (mode !== 'all') await loadClients();  // обновить бейджи передачи в таблице
   } finally {
-    btn.disabled = false;
+    ids.forEach(id => { const b = document.getElementById(id); if (b) b.disabled = false; });
   }
 }
 
@@ -840,7 +885,8 @@ document.addEventListener('click', () => closeAllMultiSelects(null));
 document.querySelector('.content').addEventListener('scroll', () => closeAllMultiSelects(null));
 window.addEventListener('resize', () => closeAllMultiSelects(null));
 document.getElementById('btnExport').addEventListener('click', exportXlsx);
-document.getElementById('btnExportMop').addEventListener('click', exportMop);
+document.getElementById('btnExportMop').addEventListener('click', () => exportMop('new'));
+document.getElementById('btnExportMopAll').addEventListener('click', () => exportMop('all'));
 document.getElementById('mCloseBtn').addEventListener('click', closeAssign);
 document.getElementById('mCancelBtn').addEventListener('click', closeAssign);
 document.getElementById('mSaveBtn').addEventListener('click', saveAssign);
