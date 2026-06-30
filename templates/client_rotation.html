@@ -150,6 +150,9 @@ td.cell-status:has(select)::after,td.cell-assigned:has(select)::after{content:no
 .modal-holding{margin-top:8px;}
 .mh-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--mid);margin-bottom:3px;}
 .mh-item{font-size:13px;color:var(--slate);line-height:1.5;}
+.mh-link{cursor:pointer;color:var(--brand-d);width:fit-content;}
+.mh-link:hover{text-decoration:underline;}
+.mh-link:focus{outline:2px solid var(--brand);outline-offset:1px;border-radius:3px;}
 /* Число компаний в холдинге рядом с названием (в таблице) */
 .holding-count{color:var(--mid);font-weight:500;}
 .modal-close{width:30px;height:30px;border:none;background:transparent;cursor:pointer;border-radius:6px;font-size:18px;color:var(--mid);display:flex;align-items:center;justify-content:center;transition:background .12s,color .12s;line-height:1;flex:none;}
@@ -732,13 +735,23 @@ async function saveField(client, patch){
 
 // ─── Модал назначения ──────────────────────────────────────────────────────
 let _modalClient = null;
+let _modalStack = [];   // стек карточек: переход к ЮЛ холдинга открывает карточку поверх
 
 function infoCell(lbl, val){
   if (val === null || val === undefined || val === '') return '';
   return `<div class="info-cell"><div class="info-lbl">${esc(lbl)}</div><div class="info-val">${esc(val)}</div></div>`;
 }
 
-function openAssign(c){
+// Открыть карточку. stacked=true - поверх текущей (переход к ЮЛ холдинга),
+// закрытие вернёт к предыдущей; иначе - новый стек с одной карточкой.
+function openAssign(c, stacked){
+  if (!stacked) _modalStack = [];
+  _modalStack.push(c);
+  renderModalCard(c);
+  document.getElementById('assignModal').classList.add('open');
+}
+
+function renderModalCard(c){
   _modalClient = c;
   document.getElementById('mTitle').textContent = c.name;
   document.getElementById('mSub').textContent = (c.inn ? 'ИНН '+c.inn : 'без ИНН') + (c.city ? ' · '+c.city : '');
@@ -748,7 +761,13 @@ function openAssign(c){
   if (c.is_holding_head && members.length){
     hold.style.display = 'block';
     hold.innerHTML = '<div class="mh-label">Ещё в холдинге</div>'
-      + members.map(m => `<div class="mh-item">${esc(memberName(m))}</div>`).join('');
+      + members.map(m => {
+          const k = (m && m.key) ? String(m.key) : '';
+          const nm = esc(memberName(m));
+          return k
+            ? `<div class="mh-item mh-link" data-key="${esc(k)}" role="button" tabindex="0">${nm}</div>`
+            : `<div class="mh-item">${nm}</div>`;
+        }).join('');
   } else {
     hold.style.display = 'none';
     hold.innerHTML = '';
@@ -779,9 +798,29 @@ function openAssign(c){
   document.getElementById('mManager').value = '';
   document.getElementById('mStatus').value = c.transfer_status || '';
   document.getElementById('mComment').value = c.comment || '';
-  document.getElementById('assignModal').classList.add('open');
 }
-function closeAssign(){ document.getElementById('assignModal').classList.remove('open'); }
+// Закрытие: если есть карточка под текущей (стек) - вернуться к ней, иначе закрыть.
+function closeAssign(){
+  _modalStack.pop();
+  if (_modalStack.length){
+    renderModalCard(_modalStack[_modalStack.length - 1]);
+  } else {
+    document.getElementById('assignModal').classList.remove('open');
+    _modalClient = null;
+  }
+}
+
+// Переход к компании холдинга по клику: догружаем её карточку и открываем поверх.
+async function openHoldingMember(key){
+  if (!key) return;
+  try {
+    const r = await fetch('/api/client-rotation/client?key=' + encodeURIComponent(key));
+    if (!r.ok){ showToast('Компания не найдена', true); return; }
+    openAssign(await r.json(), true);
+  } catch {
+    showToast('Ошибка сети', true);
+  }
+}
 
 function fillManagerSelect(){
   const sel = document.getElementById('mManager');
@@ -921,6 +960,15 @@ document.getElementById('mCloseBtn').addEventListener('click', closeAssign);
 document.getElementById('mCancelBtn').addEventListener('click', closeAssign);
 document.getElementById('mSaveBtn').addEventListener('click', saveAssign);
 document.getElementById('assignModal').addEventListener('click', function(e){ if (e.target === this) closeAssign(); });
+document.getElementById('mHolding').addEventListener('click', e => {
+  const item = e.target.closest('.mh-link');
+  if (item) openHoldingMember(item.getAttribute('data-key'));
+});
+document.getElementById('mHolding').addEventListener('keydown', e => {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const item = e.target.closest('.mh-link');
+  if (item){ e.preventDefault(); openHoldingMember(item.getAttribute('data-key')); }
+});
 document.getElementById('logoutBtn').addEventListener('click', async (e) => {
   e.stopPropagation();
   await fetch('/logout', {method:'POST'}); window.location.href='/login';

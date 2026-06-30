@@ -272,6 +272,24 @@ def test_holding_head_exposes_members(client, db):
     assert [m["name"] for m in item["holding_members"]] == ["ЮЛ-2", "ЮЛ-3"]  # всего ЮЛ = 3
 
 
+def test_get_client_by_key_returns_hidden_member(client, db):
+    # Член холдинга скрыт из списка, но доступен по ключу (для перехода из карточки).
+    t = _tenant(db)
+    _user(db, t, "rop", "rop", "all")
+    head = _company(db, t.id, "Голова", "7700000010", "7700000010")
+    head.holding_id, head.is_holding_head = "7700000010", True
+    member = _company(db, t.id, "ЧленХолдинга", "MEMBERKEY", "7700000011")
+    member.holding_id, member.is_holding_head = "7700000010", False
+    _crd(db, t.id, head.id)
+    _crd(db, t.id, member.id, current_manager="Иванов И.И.")
+    db.commit()
+    _login(client, "rop")
+    r = client.get("/api/client-rotation/client?key=MEMBERKEY")
+    assert r.status_code == 200
+    assert r.json()["name"] == "ЧленХолдинга"
+    assert client.get("/api/client-rotation/client?key=NOPE").status_code == 404
+
+
 # --- менеджеры ---
 
 def test_managers_excludes_inactive(client, db):

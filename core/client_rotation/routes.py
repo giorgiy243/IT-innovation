@@ -27,6 +27,7 @@ from core.models import ClientHandover
 from core.client_rotation.service import (
     company_in_tenant,
     employee_in_tenant,
+    get_client_by_key,
     get_user_employee,
     list_clients,
     list_handovers,
@@ -81,6 +82,23 @@ def api_clients(
         db, auth.tenant_id, scope=access.scope, employee=employee, q=q, status=status_filter
     )
     return {"clients": clients, "total": len(clients), "scope": access.scope}
+
+
+@router.get("/client")
+def api_client(
+    key: str = Query(..., max_length=255),
+    _access: ModuleAccess = Depends(require_module(_MODULE)),
+    auth: AuthContext = Depends(get_current_auth),
+    db: DBSession = Depends(get_db),
+) -> dict:
+    """Карточка одной компании по source_key (переход к ЮЛ холдинга из карточки).
+
+    Возвращает компанию даже если она скрыта из общего списка как член холдинга.
+    """
+    item = get_client_by_key(db, auth.tenant_id, key)
+    if item is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Компания не найдена")
+    return item
 
 
 @router.get("/managers")

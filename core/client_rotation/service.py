@@ -143,6 +143,27 @@ def _attach_handover_status(db: DBSession, tenant_id: int, items: list[dict]) ->
         it["handed_over_to"] = h[1] if h else None
 
 
+def get_client_by_key(db: DBSession, tenant_id: int, source_key: str) -> dict | None:
+    """Карточка одной компании по source_key (для перехода к ЮЛ холдинга).
+
+    Без скрытия членов холдинга - именно так открывается спрятанный из списка
+    член по клику из карточки головы. Возвращает тот же формат, что list_clients.
+    """
+    row = db.execute(
+        select(Company, ClientRotationData, Assignment, Summary, Employee.crm_name)
+        .join(ClientRotationData, ClientRotationData.company_id == Company.id)
+        .outerjoin(Assignment, Assignment.company_id == Company.id)
+        .outerjoin(Summary, Summary.company_id == Company.id)
+        .outerjoin(Employee, Employee.id == Assignment.assigned_to_employee_id)
+        .where(Company.tenant_id == tenant_id, Company.source_key == source_key)
+    ).first()
+    if row is None:
+        return None
+    item = _to_list_item(*row)
+    _attach_handover_status(db, tenant_id, [item])
+    return item
+
+
 def _to_list_item(
     company: Company,
     crd: ClientRotationData,
