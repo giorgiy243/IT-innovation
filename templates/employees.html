@@ -160,7 +160,7 @@ html,body{height:100%;background:var(--bg);font-family:'Vela Sans',system-ui,san
       <div class="nav-group-label">Загрузка...</div>
     </div>
     <div class="s-footer">
-      <div class="user-row">
+      <div class="user-row" title="Личный кабинет" onclick="window.location.href='/profile'">
         <div class="avatar" id="userAvatar">?</div>
         <div class="u-info">
           <div class="u-name" id="userName">...</div>
@@ -784,7 +784,8 @@ async function init() {
   loadEmployees();
 }
 
-document.getElementById('logoutBtn').addEventListener('click', async () => {
+document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+  e.stopPropagation();
   await fetch('/logout', {method:'POST'});
   window.location.href = '/login';
 });

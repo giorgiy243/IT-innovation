@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse
 from core.admin.routes import router as admin_router
 from core.auth.routes import router as auth_router
 from core.client_rotation.routes import router as client_rotation_router
+from core.me.routes import router as me_router
 from core.pages import router as pages_router
 from core.rbac.routes import router as rbac_router
 from core.vendors.routes import router as vendors_router
@@ -24,6 +25,7 @@ app.include_router(rbac_router)
 app.include_router(vendors_router)
 app.include_router(admin_router)
 app.include_router(client_rotation_router)
+app.include_router(me_router)
 
 
 @app.get("/health")

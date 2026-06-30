@@ -139,7 +139,7 @@ table.cr tbody tr:last-child td{border-bottom:none;}
       <div class="nav-group-label">Загрузка...</div>
     </div>
     <div class="s-footer">
-      <div class="user-row">
+      <div class="user-row" title="Личный кабинет" onclick="window.location.href='/profile'">
         <div class="avatar" id="userAvatar">?</div>
         <div class="u-info">
           <div class="u-name" id="userName">...</div>
@@ -490,7 +490,8 @@ document.getElementById('mCloseBtn').addEventListener('click', closeAssign);
 document.getElementById('mCancelBtn').addEventListener('click', closeAssign);
 document.getElementById('mSaveBtn').addEventListener('click', saveAssign);
 document.getElementById('assignModal').addEventListener('click', function(e){ if (e.target === this) closeAssign(); });
-document.getElementById('logoutBtn').addEventListener('click', async () => {
+document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+  e.stopPropagation();
   await fetch('/logout', {method:'POST'}); window.location.href='/login';
 });
 
