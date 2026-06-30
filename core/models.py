@@ -15,6 +15,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from sqlalchemy import (
+    JSON,
     Boolean,
     Date,
     DateTime,
@@ -26,8 +27,13 @@ from sqlalchemy import (
     UniqueConstraint,
     func,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from datetime import date
+
+# JSON-поля: JSONB на PostgreSQL (прод), generic JSON на SQLite (тесты).
+# Один экземпляр типа переиспользуется столбцами - это допустимо в SQLAlchemy.
+_JSON = JSON().with_variant(JSONB, "postgresql")
 
 
 def utcnow() -> datetime:
@@ -192,11 +198,15 @@ class EmployeePosition(Base):
     __tablename__ = "employee_positions"
     __table_args__ = (
         UniqueConstraint("tenant_id", "name", name="uq_emp_pos_tenant_name"),
+        # Явное имя индекса под фактическое в БД (миграция 0108) - иначе
+        # index=True даёт автоимя ix_employee_positions_tenant_id и autogenerate
+        # видит ложный drift. Имя в стиле сокращений этой таблицы (uq_emp_pos_*).
+        Index("ix_emp_pos_tenant_id", "tenant_id"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     tenant_id: Mapped[int] = mapped_column(
-        ForeignKey("tenants.id", ondelete="RESTRICT"), nullable=False, index=True
+        ForeignKey("tenants.id", ondelete="RESTRICT"), nullable=False
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
 
@@ -457,3 +467,132 @@ class RoleModule(Base):
 
     role: Mapped[Role] = relationship(back_populates="role_modules")
     module: Mapped[Module] = relationship(back_populates="role_modules")
+
+
+# --- Ротация клиентов (модуль client_rotation, план 2026-06-30) ---
+#
+# Перенос инструмента client-rotate в платформу. Идентичность клиента -
+# в companies (master-data, source_key). Здесь - три таблицы модуля,
+# все ссылаются на companies.id (а не на текстовый ИНН), tenant_id везде.
+#
+# Разделение источников (как в client-rotate):
+#  - client_rotation_data.summary - детерминированное саммари (из скоринга);
+#    summaries.summary - LLM-саммари (анализ комментариев). Это РАЗНЫЕ поля.
+#  - client_rotation_data.transfer_status - исходный статус из выгрузки;
+#    assignments.transfer_status - ручной override РОПа (важнее исходного).
+# PII: phone, email, contact_person, comments_corpus (комментарии менеджеров -
+# контент третьих лиц). Доступ строго по роли/scope (см. RBAC).
+
+
+class ClientRotationData(Base):
+    """Расширенные данные клиента для ротации (1:1 к companies).
+
+    Хранит всё, чего нет в companies: скоринг, признаки присутствия в ДСП/СП,
+    «давность» контактов, контакты, обогащение из CRM. Переживает пересборку
+    companies. Пересборка датасета перезаписывает эту таблицу; назначения и
+    LLM-саммари живут отдельно (assignments, summaries).
+    """
+
+    __tablename__ = "client_rotation_data"
+    __table_args__ = (
+        UniqueConstraint("company_id", name="uq_crd_company"),
+        Index("ix_crd_score", "score"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(
+        ForeignKey("tenants.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
+    company_id: Mapped[int] = mapped_column(
+        ForeignKey("companies.id", ondelete="CASCADE"), nullable=False
+    )
+    # Текущий менеджер из выгрузки (строка-имя; не FK - может быть уволенный/внешний).
+    current_manager: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    industry: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    source_file: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    is_orphan: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    in_sp: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    in_dsp: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    days_no_contact: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    days_no_kp: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    days_no_shipment: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    phone: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    contact_person: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    site: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    employees: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    activity: Mapped[str | None] = mapped_column(Text, nullable=True)
+    turnover_json: Mapped[dict | list | None] = mapped_column(_JSON, nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    dsp_info: Mapped[str | None] = mapped_column(Text, nullable=True)
+    sp_info: Mapped[str | None] = mapped_column(Text, nullable=True)
+    comments_corpus: Mapped[str | None] = mapped_column(Text, nullable=True)
+    score: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    score_breakdown_json: Mapped[dict | list | None] = mapped_column(_JSON, nullable=True)
+    summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    recommendation: Mapped[str | None] = mapped_column(Text, nullable=True)
+    transfer_status: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    holding_members_json: Mapped[dict | list | None] = mapped_column(_JSON, nullable=True)
+
+
+class Assignment(Base):
+    """Решение по ротации клиента: кому передать + ручной статус.
+
+    Живёт отдельно от client_rotation_data, чтобы переживать пересборку датасета.
+    assigned_to_employee_id - принимающий менеджер (FK employees, SET NULL: при
+    деактивации/удалении сотрудника назначение остаётся, ссылка обнуляется).
+    transfer_status здесь - ручной override РОПа (приоритетнее исходного).
+    """
+
+    __tablename__ = "assignments"
+    __table_args__ = (
+        UniqueConstraint("company_id", name="uq_assignments_company"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(
+        ForeignKey("tenants.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
+    company_id: Mapped[int] = mapped_column(
+        ForeignKey("companies.id", ondelete="CASCADE"), nullable=False
+    )
+    assigned_to_employee_id: Mapped[int | None] = mapped_column(
+        ForeignKey("employees.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    comment: Mapped[str | None] = mapped_column(Text, nullable=True)
+    transfer_status: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False,
+        default=utcnow, onupdate=utcnow, server_default=func.now(),
+    )
+
+
+class Summary(Base):
+    """LLM-саммари клиента (анализ комментариев) + проверенный контакт.
+
+    Источник правды - data/analysis.json в client-rotate; здесь хранится
+    применённый результат. Живёт отдельно от датасета (переживает пересборку).
+    contact_name/contact_phone - проверенный контакт, приоритетнее авто-контакта.
+    """
+
+    __tablename__ = "summaries"
+    __table_args__ = (
+        UniqueConstraint("company_id", name="uq_summaries_company"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(
+        ForeignKey("tenants.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
+    company_id: Mapped[int] = mapped_column(
+        ForeignKey("companies.id", ondelete="CASCADE"), nullable=False
+    )
+    summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    size_tier: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    workstations: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    contact_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    contact_phone: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False,
+        default=utcnow, onupdate=utcnow, server_default=func.now(),
+    )
